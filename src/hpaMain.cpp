@@ -95,7 +95,7 @@ NumericVector hpaMain(
 	NumericVector pdf_product(n);
 
 	//Initialize indexes for observable unconditioned components
-	LogicalVector d_cond = (!given_ind & !omit_ind);
+	LogicalVector d_cond = ((!given_ind) & (!omit_ind));
 
 	if (type != "expectation")
 	{
@@ -138,7 +138,7 @@ NumericVector hpaMain(
 			std::fill(pdf_product.begin(), pdf_product.end(), 1);
 			for (int i = 0; i < pol_degrees_n; i++)
 			{
-				if ((!omit_ind[i]) & (!given_ind[i]))
+				if (d_cond[i])
 				{
 					pdf_product = pdf_product * pdf_upper(_, i);
 				}
@@ -313,13 +313,13 @@ NumericVector hpaMain(
 							value_sum_element = value_sum_element *
 								tr_moments_r(_, polynomial_sum + expectation_powers[r]);
 						} else {
-							NumericMatrix moments_r_e = moments[r];
+							NumericVector moments_r_e = moments[r];
 							value_sum_element = value_sum_element *
 								moments_r_e[polynomial_sum + expectation_powers[r]];
 						}
 					}
 				} else {
-					NumericMatrix moments_r = moments[r];
+					NumericVector moments_r = moments[r];
 					value_sum_element = value_sum_element * moments_r[polynomial_sum];
 				}
 				//psi
@@ -330,12 +330,11 @@ NumericVector hpaMain(
 				} else {
 					if (type != "expectation truncated")
 					{
-						NumericMatrix moments_r = moments[r];
+						NumericVector moments_r = moments[r];
 						psi_sum_element = psi_sum_element * moments_r[polynomial_sum];
 					} else {
 						NumericMatrix tr_moments_r = tr_moments[r];
-						psi_sum_element = psi_sum_element * 
-							tr_moments_r(_, polynomial_sum);
+						psi_sum_element = psi_sum_element * tr_moments_r(_, polynomial_sum);
 					}
 				}
 			}

@@ -14,9 +14,10 @@ normalMoment(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE,
 
 \item{sd}{positive numeric standard deviation.}
 
-\item{return_all_moments}{logical; if \code{TRUE}, function returns the matrix (1 row, k+1 columns)
-of moments of normaly distributed random variable with mean = \code{mean}
-and standard deviation = \code{sd}. Note that i-th column value corresponds to the (i-1)-th moment.}
+\item{return_all_moments}{logical; if \code{TRUE}, function returns (k+1)-dimensional numeric
+vector of moments of normaly distributed random variable with mean = \code{mean}
+and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
+to the (i-1)-th moment.}
 
 \item{is_validation}{bool value indicating whether function input arguments should be validated. 
 Set it to FALSE for slight perfomance boost (default value is TRUE).}

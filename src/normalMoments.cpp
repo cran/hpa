@@ -1,6 +1,7 @@
 #include <RcppArmadillo.h>
 using namespace Rcpp;
 using namespace RcppArmadillo;
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 //' Calculate k-th order moment of normal distribution
@@ -8,9 +9,10 @@ using namespace RcppArmadillo;
 //' @param k non-negative integer moment order.
 //' @param mean numeric expected value.
 //' @param sd positive numeric standard deviation.
-//' @param return_all_moments logical; if \code{TRUE}, function returns the matrix (1 row, k+1 columns)
-//' of moments of normaly distributed random variable with mean = \code{mean}
-//' and standard deviation = \code{sd}. Note that i-th column value corresponds to the (i-1)-th moment.
+//' @param return_all_moments logical; if \code{TRUE}, function returns (k+1)-dimensional numeric
+//' vector of moments of normaly distributed random variable with mean = \code{mean}
+//' and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
+//' to the (i-1)-th moment.
 //' @template is_validation_Template
 //' @details This function estimates \code{k}-th order moment of
 //' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd}.\cr
@@ -31,7 +33,7 @@ using namespace RcppArmadillo;
 //'
 //' @export
 // [[Rcpp::export]]
-NumericMatrix normalMoment(int k = 0, 
+NumericVector normalMoment(int k = 0, 
 						   double mean = 0, double sd = 1,
 						   bool return_all_moments = false, 
 						   bool is_validation = true)
@@ -52,7 +54,7 @@ NumericMatrix normalMoment(int k = 0,
 	//------------------------------------------------------------
 
 	//Initialize matrix to store the moments
-	NumericMatrix moments(1, k + 1);
+	NumericVector moments(k + 1, 1.0);
 
 	//If order is 0 just return 1
 	if (k == 0)
@@ -61,8 +63,6 @@ NumericMatrix normalMoment(int k = 0,
 		return(moments);
 	}
 
-	std::fill(moments.begin(), moments.end(), 1);
-
 	moments[1] = mean;
 
 	//If moment is 1 it's equals to mean
@@ -70,9 +70,8 @@ NumericMatrix normalMoment(int k = 0,
 	{
 		if (!return_all_moments)
 		{
-			NumericMatrix moment = NumericMatrix(1, 1);
-			moment(0, 0) = moments[k];
-			return(moment);
+			NumericVector moments_return = NumericVector::create(moments[k]);
+			return(moments_return);
 		}
 		return(moments);
 	}
@@ -90,9 +89,8 @@ NumericMatrix normalMoment(int k = 0,
 
 	if (!return_all_moments)
 	{
-		NumericMatrix moment = NumericMatrix(1, 1);
-		moment(0, 0) = moments[k];
-		return(moment);
+		NumericVector moments_return = NumericVector::create(moments[k]);
+		return(moments_return);
 	}
 
 	return(moments);

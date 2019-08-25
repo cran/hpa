@@ -457,9 +457,10 @@ logLik_hpaSelection <- function(object) {
 #' @param k non-negative integer moment order.
 #' @param mean numeric expected value.
 #' @param sd positive numeric standard deviation.
-#' @param return_all_moments logical; if \code{TRUE}, function returns the matrix (1 row, k+1 columns)
-#' of moments of normaly distributed random variable with mean = \code{mean}
-#' and standard deviation = \code{sd}. Note that i-th column value corresponds to the (i-1)-th moment.
+#' @param return_all_moments logical; if \code{TRUE}, function returns (k+1)-dimensional numeric
+#' vector of moments of normaly distributed random variable with mean = \code{mean}
+#' and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
+#' to the (i-1)-th moment.
 #' @template is_validation_Template
 #' @details This function estimates \code{k}-th order moment of
 #' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd}.\cr

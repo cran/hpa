@@ -155,12 +155,12 @@ List hpaML(NumericMatrix x,
 	{
 		if (tr_left.size() == 0)
 		{
-			tr_left = (pol_degrees_n, R_NegInf);
+			tr_left = NumericVector(pol_degrees_n, R_NegInf);
 		}
 
 		if (tr_right.size() == 0)
 		{
-			tr_right = (pol_degrees_n, R_PosInf);
+			tr_right = NumericVector(pol_degrees_n, R_PosInf);
 		}
 
 		tr_left_mat(0, _) = tr_left;
@@ -473,7 +473,7 @@ void print_summary_hpaML(List x)
 	print(as_table(cbind(results, stars)));
 
 	Rprintf("%s", "---\n");
-	Rprintf("%s", "Signif. codes:  0 ‘***’ 0.001 ‘**’ 0.01 ‘*’ 0.05 ‘.’ 0.1 ‘ ’ 1\n");
+	Rprintf("%s", "Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
 
 	Rprintf("%s", "--------------------------------------------------------------\n");
 }
@@ -504,7 +504,7 @@ StringVector starVector(NumericVector p_values)
 						stars[i] = "*";
 					} else
 					{
-						if ((0.05 < p_values[i]) & (0.05 < p_values[i] <= 0.1))
+						if ((0.05 < p_values[i]) & (p_values[i] <= 0.1))
 						{
 							stars[i] = ".";
 						} else

@@ -382,7 +382,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // normalMoment
-NumericMatrix normalMoment(int k, double mean, double sd, bool return_all_moments, bool is_validation);
+NumericVector normalMoment(int k, double mean, double sd, bool return_all_moments, bool is_validation);
 RcppExport SEXP _hpa_normalMoment(SEXP kSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP return_all_momentsSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
