@@ -4,8 +4,14 @@
 \alias{predict.hpaSelection}
 \title{Predict outcome and selection equation values from hpaSelection model}
 \usage{
-\method{predict}{hpaSelection}(object, ..., newdata = NULL,
-  method = "HPA", is_cond = TRUE, is_outcome = TRUE)
+\method{predict}{hpaSelection}(
+  object,
+  ...,
+  newdata = NULL,
+  method = "HPA",
+  is_cond = TRUE,
+  is_outcome = TRUE
+)
 }
 \arguments{
 \item{object}{Object of class "hpaSelection"}

@@ -10,7 +10,9 @@ summary_hpaML(object)
 \item{object}{Object of class "hpaML"}
 }
 \value{
-This function returns the same list as \code{\link[hpa]{hpaML}} function changing it's class to "summary.hpaML".
+This function returns the same 
+list as \code{\link[hpa]{hpaML}} function changing 
+it's class to "summary.hpaML".
 }
 \description{
 Summarizing hpaML Fits

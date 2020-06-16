@@ -16,15 +16,16 @@ using namespace RcppArmadillo;
 //' for variables while columns are related to powers.
 //' @export
 // [[Rcpp::export]]
-NumericMatrix polynomialIndex(NumericVector pol_degrees = 0) {
-
+NumericMatrix polynomialIndex(NumericVector pol_degrees = 0) 
+{
+  // Convert pol_degrees to std vector of integer values
 	std::vector<int> degrees = as<std::vector<int> >(pol_degrees);
 
-	//Initializing degrees related variables
+	// Initiale degrees related variables
 	int degrees_size = degrees.size();
 	std::vector<int> degrees_products(degrees_size);
 
-	//Calculating number of coefficients and degrees products
+	// Calculate number of coefficients and degrees products
 	
 	int coefficients_size = 1;
 
@@ -39,14 +40,14 @@ NumericMatrix polynomialIndex(NumericVector pol_degrees = 0) {
 		}
 	}
 
-	//Assign vector index to coefficients
-	std::vector<std::vector<int>> ind_pattern_full = std::vector<std::vector<int> >(degrees_size);
+	// Assign vector index to coefficients
+	std::vector<std::vector<int>> ind_pattern_full = std::vector<std::vector<int>>(degrees_size);
 	std::vector<std::vector<int>> coefficients_ind(coefficients_size);
 	NumericMatrix coefficients_vec(degrees_size, coefficients_size);
 
 	for (int i = 0; i < degrees_size; i++)
 	{
-		//Calculate pattern for i-th variable
+		// Calculate pattern for i-th variable
 		std::vector<int> ind_pattern = std::vector<int>(degrees_products[i] * (degrees[i] + 1));
 		int counter = 0;
 
@@ -64,12 +65,13 @@ NumericMatrix polynomialIndex(NumericVector pol_degrees = 0) {
 
 		for (int j = 0; j < ind_pattern_times; j++)
 		{
-			//Repeat pattern untill the end of the pattern matrix row
-			ind_pattern_full[i].insert(ind_pattern_full[i].end(), ind_pattern.begin(), ind_pattern.end());
+			// Repeat pattern untill the end of the pattern matrix row
+			ind_pattern_full[i].insert(ind_pattern_full[i].end(), 
+                                 ind_pattern.begin(), ind_pattern.end());
 		}
 
-		//Pattern defined for rows while coefficients indexes are located in columns
-		//of pattern matrix. Lets copy values from patterns to coefficients indexes
+		// Pattern defined for rows while coefficients indexes are located in columns
+		// of pattern matrix. Lets copy values from patterns to coefficients indexes
 		for (int j = 0; j < coefficients_size; j++)
 		{
 			coefficients_vec(i, j) = (double)(ind_pattern_full[i][j]);
@@ -92,20 +94,21 @@ NumericMatrix polynomialIndex(NumericVector pol_degrees = 0) {
 // [[Rcpp::export]]
 Rcpp::String printPolynomial(NumericVector pol_degrees, NumericVector pol_coefficients)
 {
-	//Load R environments
+	// Load R environments
 	Rcpp::Environment base_env("package:base");
 	Rcpp::Function paste0 = base_env["paste0"];
 
-	//Get polynomial matrix from polynomialIndex function
+	// Get polynomial matrix from polynomialIndex function
 	NumericVector pol_ind_mat = polynomialIndex(pol_degrees);
 
+	// Create dimensions related variables
 	int pol_coefficients_n = pol_coefficients.size();
 	int pol_degrees_n = pol_degrees.size();
 
-	//Initialize variable to store the polynomial symbolic representation
+	// Initialize variable to store the polynomial symbolic representation
 	std::string pol_string = "";
 
-	//Iteratite throught polynomial coefficients and variables
+	// Iteratite throught polynomial coefficients and variables
 	for (int i = 0; i < pol_coefficients_n; i++)
 	{
 		if ((pol_coefficients[i] != 0) | (i == 0))

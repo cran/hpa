@@ -4,9 +4,16 @@
 \alias{phpa}
 \title{Distribution function hermite polynomial approximation}
 \usage{
-phpa(x = matrix(1, 1), pol_coefficients = numeric(0),
-  pol_degrees = numeric(0), given_ind = logical(0),
-  omit_ind = logical(0), mean = numeric(0), sd = numeric(0))
+phpa(
+  x = matrix(1, 1),
+  pol_coefficients = numeric(0),
+  pol_degrees = numeric(0),
+  given_ind = logical(0),
+  omit_ind = logical(0),
+  mean = numeric(0),
+  sd = numeric(0),
+  is_parallel = FALSE
+)
 }
 \arguments{
 \item{x}{numeric matrix of cumulative distribution function arguments.
@@ -25,6 +32,9 @@ component is omitted. By default it is a logical vector of FALSE values.}
 \item{mean}{numeric vector of expected values.}
 
 \item{sd}{positive numeric vector of standard deviations.}
+
+\item{is_parallel}{if TRUE then multiple cores will be 
+used for some calculations.}
 }
 \value{
 This function returns cumulative distribution function hermite polynomial approximation at point \code{x}.

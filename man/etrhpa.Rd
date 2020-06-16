@@ -4,10 +4,16 @@
 \alias{etrhpa}
 \title{Expected powered product hermite polynomial approximation for truncated distribution}
 \usage{
-etrhpa(tr_left = matrix(1, 1), tr_right = matrix(1, 1),
-  pol_coefficients = numeric(0), pol_degrees = numeric(0),
-  mean = numeric(0), sd = numeric(0),
-  expectation_powers = numeric(0))
+etrhpa(
+  tr_left = matrix(1, 1),
+  tr_right = matrix(1, 1),
+  pol_coefficients = numeric(0),
+  pol_degrees = numeric(0),
+  mean = numeric(0),
+  sd = numeric(0),
+  expectation_powers = numeric(0),
+  is_parallel = FALSE
+)
 }
 \arguments{
 \item{tr_left}{numeric matrix of left (lower) truncation limits.
@@ -31,6 +37,9 @@ by the first rows of these matrices.}
 \item{sd}{positive numeric vector of standard deviations.}
 
 \item{expectation_powers}{integer vector of random vector components powers.}
+
+\item{is_parallel}{if TRUE then multiple cores will be 
+used for some calculations.}
 }
 \value{
 This function returns numeric vector of expected powered product hermite polynomial approximations for truncated distribution.

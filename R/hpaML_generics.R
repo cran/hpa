@@ -55,6 +55,7 @@ AIC.hpaML <- function (object, ..., k = 2)
 ###
 #' Calculates log-likelihood for "hpaML" object
 #' @description This function calculates log-likelihood for "hpaML" object
+#' @usage \method{logLik}{hpaML}(object, ...)
 #' @param object Object of class "hpaML"
 #' @template elipsis_Template
 logLik.hpaML <- function (object, ...)
@@ -63,5 +64,5 @@ logLik.hpaML <- function (object, ...)
   {
     warnings("Additional arguments passed throught ... are ignored.")   
   }
-  return(logLik_hpaML(object, ...))
+  return(logLik_hpaML(object))
 }

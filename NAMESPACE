@@ -1,6 +1,7 @@
 useDynLib(hpa, .registration=TRUE)
 exportPattern("^[[:alpha:]]+")
 importFrom(Rcpp, evalCpp)
+importFrom(RcppParallel, RcppParallelLibs)
 S3method(summary, hpaML)
 S3method(predict, hpaML)
 S3method(AIC, hpaML)

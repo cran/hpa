@@ -14,7 +14,8 @@ or numeric matrix (for \link[hpa]{hpaML}) in which to look for variables
 with which to predict. If omitted, the original dataframe (matrix) used.}
 }
 \value{
-This function returns predictions based on \code{\link[hpa]{hpaML}} estimation results.
+This function returns predictions based 
+on \code{\link[hpa]{hpaML}} estimation results.
 }
 \description{
 Predict method for hpaML

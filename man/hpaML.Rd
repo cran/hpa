@@ -4,9 +4,18 @@
 \alias{hpaML}
 \title{Semi-nonparametric maximum likelihood estimation}
 \usage{
-hpaML(x, pol_degrees = numeric(0), tr_left = numeric(0),
-  tr_right = numeric(0), given_ind = logical(0),
-  omit_ind = logical(0), x0 = numeric(0))
+hpaML(
+  x,
+  pol_degrees = numeric(0),
+  tr_left = numeric(0),
+  tr_right = numeric(0),
+  given_ind = logical(0),
+  omit_ind = logical(0),
+  x0 = numeric(0),
+  cov_type = "sandwich",
+  boot_iter = 100L,
+  is_parallel = FALSE
+)
 }
 \arguments{
 \item{x}{numeric matrix which rows are realizations of independend 
@@ -36,12 +45,26 @@ component is omitted. By default it is a logical vector of FALSE values.}
 Note that \code{x0=c(pol_coefficients[-1], mean, sd)}. For 
 \code{pol_coefficients}, \code{mean} and \code{sd} documentation 
 see \code{\link[hpa]{dhpa}} function.}
+
+\item{cov_type}{string value determinign the type of covariance matrix to be
+returned and used for summary. If \code{cov_type = "hessian"} then negative 
+inverse of hessian matrix will be applied. If \code{cov_type = "gop"} then
+inverse of jacobian outer products will be applied. 
+If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix 
+estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
+with \code{boot_iter} iterations will be applied.}
+
+\item{boot_iter}{the number of bootstrap iterations
+for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
+
+\item{is_parallel}{if TRUE then multiple cores will be 
+used for some calculations.}
 }
 \value{
 This function returns an object of class "hpaML".\cr \cr
 An object of class "hpaML" is a list containing the following components:
 \itemize{
-\item \code{optim} - \code{\link[stats]{optim}} function output.
+\item \code{optim} - \code{\link[maxLik]{maxLik}} function output.
 \item \code{x1} - numeric vector of distribution parameters estimates.
 \item \code{mean} - density function mean vector estimate.
 \item \code{sd} - density function sd vector estimate.
@@ -55,14 +78,15 @@ An object of class "hpaML" is a list containing the following components:
 \item \code{log-likelihood} - value of Log-Likelihood function.
 \item \code{AIC} - AIC value.
 \item \code{data} - the same as \code{x} input parameter but without \code{NA} observations.
-\item \code{n_obs} - number of observations.}
+\item \code{n_obs} - number of observations.
+\item \code{bootstrap} - list where bootstrap estimation results are stored.}
 }
 \description{
 This function performs semi-nonparametric maximum likelihood estimation
 via hermite polynomial densities approximation.
 }
 \details{
-Semi-nonparametric approach has been implemented via densities
+Semi-nonparametric (SNP) approach has been implemented via densities
 hermite polynomial approximation
 
 Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
@@ -78,34 +102,37 @@ should have the same length as \code{pol_degrees} parameter.
 The first polynomial coefficient (zero powers) set to identity constant
 for identification reasons.
 
-Standard errors and significance levels are derived under parametric assumptions
-i.e. it is assumed that distribution related to hermite polynomial density
-and real distribution are from the same family.
+The function calculates standard errors via sandwich estimator and significance 
+levels are reported taking into account quasi maximum likelihood estimator (QMLE) 
+asymptotic normality. If ones wants to switch from QMLE to semi-nonparametric estimator (SNPE) during
+hypothesis testing then covariance matrix should be reestimated using bootstrap.
 
 This function maximizes log-likelihood function via \code{\link[stats]{optim}}
-setting it's \code{method} argument to "BFGS".
+setting it's \code{method} argument to "BFGS". Please set \code{is_grad} to \code{TRUE}
+in order to sufficiently improve optimization convergence by the cost of greater
+computational burden.
 }
 \examples{
 \donttest{
-##Approximate student (t) distribution
+## Approximate student (t) distribution
 
-#Simulate 5000 realizations of student distribution with 5 degrees of freedom
+# Simulate 5000 realizations of student distribution with 5 degrees of freedom
 n <- 5000
 df <- 5
 x <- matrix(rt(n, df), ncol = 1)
 pol_degrees <- c(4)
 
-#Apply pseudo maximum likelihood routine
+# Apply pseudo maximum likelihood routine
 ml_result <- hpa::hpaML(x = x, pol_degrees = pol_degrees)
 summary(ml_result)
 
-#Get predicted probabilites (density values) approximations
+# Get predicted probabilites (density values) approximations
 predict(ml_result)
 
-##Approximate chi-squared distribution
+## Approximate chi-squared distribution
 
-#Simulate 5000 realizations of chi-squared distribution with 5 degrees of freedom
-#Let's set lower truncation point at sample minimum realization
+# Simulate 5000 realizations of chi-squared distribution with 5 degrees of freedom
+# Let's set lower truncation point at sample minimum realization
 n <- 5000
 df <- 5
 x <- matrix(rchisq(n, df), ncol = 1)
@@ -113,67 +140,67 @@ pol_degrees <- c(1)
 tr_left <- as.vector(min(x))
 tr_right <- as.vector(max(x))
 
-#Apply pseudo maximum likelihood routine
+# Apply pseudo maximum likelihood routine
 ml_result <- hpa::hpaML(x = x, pol_degrees = as.vector(pol_degrees), 
 				tr_left = as.vector(tr_left),
 				tr_right = as.vector(tr_right))
 summary(ml_result)
 
-#Get predicted probabilites (density values) approximations
+# Get predicted probabilites (density values) approximations
 predict(ml_result)
 
-##Approximate multivariate student (t) distribution
-##Note that calculations may take up to a minute
+## Approximate multivariate student (t) distribution
+## Note that calculations may take up to a minute
 
-#Simulate 5000 realizations of three dimensional student distribution with 5 degrees of freedom
+# Simulate 5000 realizations of three dimensional student distribution with 5 degrees of freedom
 library("mvtnorm")
 cov_mat <- matrix(c(1, 0.25, -0.25, 0.25, 1, 0.25, -0.25, 0.25, 1), ncol = 3)
 x <- rmvt(n = 5000, sigma = cov_mat, df = 5)
 
-#Estimate approximating joint distribution parameters
+# Estimate approximating joint distribution parameters
 model <- hpaML(x = x, pol_degrees = c(1,1,1))
 
-#Get summary
+# Get summary
 summary(model)
 
-#Get predicted values for joint density function
+# Get predicted values for joint density function
 predict(model)
 
-##Approximate student (t) distribution and plot densities approximated
-##under different hermite polynomial degrees against 
-##true density (of student distribution)
+## Approximate student (t) distribution and plot densities approximated
+## under different hermite polynomial degrees against 
+## true density (of student distribution)
 
-#Simulate 5000 realizations of t-distribution with 5 degrees of freedom
+# Simulate 5000 realizations of t-distribution with 5 degrees of freedom
 n <- 5000
 df <- 5
 x <- matrix(rt(n, df), ncol=1)
 
-#Apply pseudo maximum likelihood routine
-#Create matrix of lists where i-th element contains hpaML results for K=i
+# Apply pseudo maximum likelihood routine
+# Create matrix of lists where i-th element contains hpaML results for K=i
 ml_result <- matrix(list(), 4, 1)
 for(i in 1:4)
 {
  ml_result[[i]] <- hpa::hpaML(x = x, pol_degrees = i)
 }
 
-#Generate test values
+# Generate test values
 test_values <- seq(qt(0.001, df), qt(0.999, df), 0.001)
 n0 <- length(test_values)
 
-#t-distribution density function at test values points
+# t-distribution density function at test values points
 true_pred <- dt(test_values, df)
 
-#Create matrix of lists where i-th element contains densities predictions for K=i
+# Create matrix of lists where i-th element contains densities predictions for K=i
 PGN_pred <- matrix(list(), 4, 1)
 for(i in 1:4)
 {
-  PGN_pred[[i]] <- predict(model = ml_result[[i]], 
-                          newdata = matrix(test_values, ncol=1))
+  PGN_pred[[i]] <- predict(object = ml_result[[i]], 
+                           newdata = matrix(test_values, ncol=1))
 }
-#Plot the result
+# Plot the result
 library("ggplot2")
 
-#prepare the data
+# prepare the data
 h <- data.frame("values" = rep(test_values,5),
                 "predictions" = c(PGN_pred[[1]],PGN_pred[[2]],
                                   PGN_pred[[3]],PGN_pred[[4]],
@@ -184,31 +211,31 @@ h <- data.frame("values" = rep(test_values,5),
                   rep("t-distribution",n0))
                   )
                   
-#build the plot
+# build the plot
 ggplot(h, aes(values, predictions)) + geom_point(aes(color = Density)) +
   theme_minimal() + theme(legend.position = "top", text = element_text(size=26),
                          legend.title=element_text(size=20), legend.text=element_text(size=28)) +
   guides(colour = guide_legend(override.aes = list(size=10))
   )
 
-#Get informative estimates summary for K=4 (minimal AIC)
+# Get informative estimates summary for K=4 (minimal AIC)
 summary(ml_result[[4]])
 }
 \dontshow{
-##Approximate student (t) distribution
+## Approximate student (t) distribution
 
-#Simulate 250 realizations of student distribution with 5 degrees of freedom
+# Simulate 250 realizations of student distribution with 5 degrees of freedom
  set.seed(2)
  n <- 250
 df <- 5
 x <- matrix(rt(n, df), ncol = 1)
 pol_degrees <- c(2)
 
-#Apply pseudo maximum likelihood routine
+# Apply pseudo maximum likelihood routine
 ml_result <- hpa::hpaML(x = x, pol_degrees = pol_degrees)
  summary(ml_result)
 
-#Get predicted probabilites (density values) approximations
+# Get predicted probabilites (density values) approximations
 predict(ml_result)
 }
 }

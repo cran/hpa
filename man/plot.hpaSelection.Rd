@@ -4,10 +4,12 @@
 \alias{plot.hpaSelection}
 \title{Plot hpaSelection random errors approximated density}
 \usage{
-\method{plot}{hpaSelection}(x, ..., is_outcome = TRUE)
+\method{plot}{hpaSelection}(x, y = NULL, ..., is_outcome = TRUE)
 }
 \arguments{
 \item{x}{Object of class "hpaSelection"}
+
+\item{y}{this parameter currently ignored}
 
 \item{...}{further arguments (currently ignored)}
 

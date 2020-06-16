@@ -4,11 +4,21 @@
 \alias{truncatedNormalMoment}
 \title{Calculate k-th order moment of truncated normal distribution}
 \usage{
-truncatedNormalMoment(k = 1L, x_lower = numeric(0),
-  x_upper = numeric(0), mean = 0, sd = 1, pdf_lower = numeric(0),
-  cdf_lower = numeric(0), pdf_upper = numeric(0),
-  cdf_upper = numeric(0), cdf_difference = numeric(0),
-  return_all_moments = FALSE, is_validation = TRUE)
+truncatedNormalMoment(
+  k = 1L,
+  x_lower = numeric(0),
+  x_upper = numeric(0),
+  mean = 0,
+  sd = 1,
+  pdf_lower = numeric(0),
+  cdf_lower = numeric(0),
+  pdf_upper = numeric(0),
+  cdf_upper = numeric(0),
+  cdf_difference = numeric(0),
+  return_all_moments = FALSE,
+  is_validation = TRUE,
+  is_parallel = FALSE
+)
 }
 \arguments{
 \item{k}{non-negative integer moment order.}
@@ -44,6 +54,9 @@ order moment.}
 
 \item{is_validation}{bool value indicating whether function input arguments should be validated. 
 Set it to FALSE for slight perfomance boost (default value is TRUE).}
+
+\item{is_parallel}{if TRUE then multiple cores will be 
+used for some calculations.}
 }
 \value{
 This function returns vector of k-th order moments for normaly distributed random variable
@@ -60,7 +73,7 @@ This function estimates \code{k}-th order moment of
 normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd} truncated
 at points given by \code{x_lower} and \code{x_upper}. Note that the function is vectorized so you can provide
 \code{x_lower} and \code{x_upper} as vectors of equal size. If vectors values for \code{x_lower} and \code{x_upper} are not
-provided then their default values will be set to (-9999999999999.1) and (9999999999999.1) correspondingly.
+provided then their default values will be set to \code{-(.Machine$double.xmin * 0.99)} and \code{(.Machine$double.xmax * 0.99)} correspondingly.
 
 Note that parameter \code{k} value automatically converts to integer.
 So passing non-integer \code{k} value will not cause any errors but the calculations will be
@@ -72,19 +85,19 @@ then provide them throught \code{pdf_lower}, \code{pdf_upper}, \code{cdf_lower} 
 arguments in order to decrease number of calculations.
 }
 \examples{
-##Calculate 5-th order moment of three truncated normal random variables (x1,x2,x3) 
-##which mean is 5 and standard deviation is 3. 
-##These random variables truncation points are given as follows:-1<x1<1, 0<x2<2, 1<x3<3.
+## Calculate 5-th order moment of three truncated normal random variables (x1,x2,x3) 
+## which mean is 5 and standard deviation is 3. 
+## These random variables truncation points are given as follows:-1<x1<1, 0<x2<2, 1<x3<3.
 k <- 3
 x_lower <- c(-1, 0, 1)
 x_upper <- c(1, 2 ,3)
 mean <- 3
 sd <- 5
 
-#get the moments
+# get the moments
 truncatedNormalMoment(k, x_lower, x_upper, mean, sd)
 
-#get matrix of (0-5)-th moments (columns) for each variable (rows)
+# get matrix of (0-5)-th moments (columns) for each variable (rows)
 truncatedNormalMoment(k, x_lower, x_upper, mean, sd, return_all_moments = TRUE)
 
 }

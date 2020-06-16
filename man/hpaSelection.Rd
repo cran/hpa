@@ -4,8 +4,21 @@
 \alias{hpaSelection}
 \title{Perform semi-nonparametric selection model estimation}
 \usage{
-hpaSelection(selection, outcome, data, z_K = 1L, y_K = 1L,
-  pol_elements = 3L, is_Newey = FALSE, x0 = numeric(0))
+hpaSelection(
+  selection,
+  outcome,
+  data,
+  z_K = 1L,
+  y_K = 1L,
+  pol_elements = 3L,
+  is_Newey = FALSE,
+  x0 = numeric(0),
+  is_Newey_loocv = FALSE,
+  z_sd_fixed = -1,
+  cov_type = "sandwich",
+  boot_iter = 100L,
+  is_parallel = FALSE
+)
 }
 \arguments{
 \item{selection}{an object of class "formula" (or one that can be coerced to that class): 
@@ -20,12 +33,32 @@ a symbolic description of the outcome equation form.}
 
 \item{y_K}{non-negative integer representing polynomial degree related to outcome equation.}
 
-\item{pol_elements}{number of conditional expectation approximating terms for Newey method.}
+\item{pol_elements}{number of conditional expectation approximating terms for Newey's method. If \code{is_Newey_loocv} is \code{TRUE}
+then determines maximum number of these terms during leave-one-out cross-validation.}
 
 \item{is_Newey}{logical; if TRUE then returns only Newey's method estimation results (default value is FALSE).}
 
 \item{x0}{numeric vector of optimization routine initial values.
 Note that \code{x0=c(pol_coefficients[-1], mean, sd, z_coef, y_coef)}.}
+
+\item{is_Newey_loocv}{logical; if TRUE then number of conditional expectation approximating terms for Newey's method will be selected
+based on leave-one-out cross-validation criteria iterating througt 0 to pol_elements number of these terms.}
+
+\item{z_sd_fixed}{positive value that is fixed sigma parameter for selection equation.}
+
+\item{cov_type}{string value determinign the type of covariance matrix to be
+returned and used for summary. If \code{cov_type = "hessian"} then negative 
+inverse of hessian matrix will be applied. If \code{cov_type = "gop"} then
+inverse of jacobian outer products will be applied. 
+If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix 
+estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
+with \code{boot_iter} iterations will be applied.}
+
+\item{boot_iter}{the number of bootstrap iterations
+for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
+
+\item{is_parallel}{if TRUE then multiple cores will be 
+used for some calculations.}
 }
 \value{
 This function returns an object of class "hpaSelection".\cr \cr
@@ -59,7 +92,9 @@ Abovementioned list \code{Newey} has class "hpaNewey" and contains the following
 \item \code{constant_biased} - biased estimate of constant term.
 \item \code{inv_mills} - inverse mills rations estimates and their powers (including constant).
 \item \code{inv_mills_coef} - coefficients related to \code{inv_mills}.
-\item \code{pol_elements} - the same as \code{pol_elements} input parameter.
+\item \code{pol_elements} - the same as \code{pol_elements} input parameter. However if \code{is_Newey_loocv} is \code{TRUE}
+then it will equal to the number of conditional expectation approximating terms for Newey's method which
+minimize leave-one-out cross-validation criteria.
 \item \code{outcome_exp_cond} - dependend variable conditional expectation estimates.
 \item \code{selection_exp} - selection equation random error expectation estimate.
 \item \code{selection_var} - selection equation random error variance estimate.
@@ -78,7 +113,7 @@ This function performs semi-nonparametric selection model estimation
 via hermite polynomial densities approximation.
 }
 \details{
-Semi-nonparametric approach has been implemented via densities
+Semi-nonparametric (SNP) approach has been implemented via densities
 hermite polynomial approximation
 
 Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
@@ -103,9 +138,10 @@ provide better initial point for optimization routine. Please, extract
 
 All variables mentioned in \code{selection} and \code{outcome} should be numeric vectors.
 
-Standard errors and significance levels are derived under parametric assumptions
-i.e. it is assumed that distribution related to hermite polynomial density
-and real distribution are from the same family.
+The function calculates standard errors via sandwich estimator and significance 
+levels are reported taking into account quasi maximum likelihood estimator (QMLE) 
+asymptotic normality. If ones wants to switch from QMLE to semi-nonparametric estimator (SNPE) during
+hypothesis testing then covariance matrix should be reestimated using bootstrap.
 
 Initial values for optimization routine are obtained throught Newey method 
 (see the reference below).
@@ -114,7 +150,9 @@ Note that selection equation dependent variables should have exactly two levels 
 which leads to unobservable values of dependent variable in outcome equation.
 
 This function maximizes log-likelihood function via \code{\link[stats]{optim}}
-setting it's \code{method} argument to "BFGS".
+setting it's \code{method} argument to "BFGS". Please set \code{is_grad} to \code{TRUE}
+in order to sufficiently improve optimization convergence by the cost of greater
+computational burden.
 }
 \examples{
 \donttest{
@@ -135,9 +173,12 @@ h = data.frame("kids" = as.numeric(Mroz87$kids5 + Mroz87$kids618 > 0),
 	"lfp" = as.numeric(Mroz87$lfp))
 	
 #Estimate model parameters
-model <- hpaSelection(selection = lfp ~ age + I(age^2) + I(log(faminc)) + educ + kids,
-	outcome = log(wage) ~exper + I(exper ^ 2) + educ + city,
-	z_K = 1, y_K = 2, data = h)
+model <- hpaSelection(selection = lfp ~ educ + age + I(age ^ 2) + 
+                                  kids + faminc,
+                      outcome = log(wage) ~ exper + I(exper ^ 2) + 
+                                            educ + city,
+                                  z_K = 1, y_K = 3, data = h, 
+                                  pol_elements = 3, is_Newey_loocv = TRUE)
 summary(model)
 
 #Plot outcome equation random errorrs density
@@ -149,12 +190,13 @@ plot(model,is_outcome = FALSE)
 ##Estimate semi-nonparametric sample selection model
 ##parameters on simulated data given chi-squared random errors
 
-set.seed(123)
+\donttest{
+set.seed(100)
 library("mvtnorm")
 
 #Sample size
 
-n <- 500
+n <- 1000
 
 #Simulate independent variables
 X_rho <- 0.5
@@ -182,7 +224,7 @@ names(h) <- c("z", "y", "x1", "x2", "x3")
 #Estimate parameters
 model <- hpaSelection(selection = z ~ x1 + x2, 
                       outcome = y ~ x1 + x3,
-                      data = h, z_K = 1, y_K = 2)
+                      data = h, z_K = 1, y_K = 3)
 summary(model)
 
 #Get conditional predictions for outcome equation
@@ -201,6 +243,62 @@ model_pred_u$y
 predict(model, is_cond = TRUE, is_outcome = FALSE)
 #Get unconditional predictions for selection equation
 predict(model, is_cond = FALSE, is_outcome = FALSE)
+}
+
+\dontshow{
+set.seed(100)
+library("mvtnorm")
+
+#Sample size
+
+n <- 100
+
+#Simulate independent variables
+X_rho <- 0.5
+X_sigma <- matrix(c(1,X_rho,X_rho,X_rho,1,X_rho,X_rho,X_rho,1), ncol=3)
+X <- rmvnorm(n=n, mean = c(0,0,0), 
+             sigma = X_sigma)
+
+#Simulate random errors
+epsilon <- matrix(0, n, 2)
+epsilon_z_y <- rchisq(n, 5)
+epsilon[, 1] <- (rchisq(n, 5) + epsilon_z_y) * (sqrt(3/20)) - 3.8736
+epsilon[, 2] <- (rchisq(n, 5) + epsilon_z_y) * (sqrt(3/20)) - 3.8736
+#Simulate selection equation
+z_star <- 1 + 1 * X[,1] + 1 * X[,2] + epsilon[,1]
+z <- as.numeric((z_star > 0))
+
+#Simulate outcome equation
+y_star <- 1 + 1 * X[,1] + 1 * X[,3] + epsilon[,2]
+z <- as.numeric((z_star > 0))
+y <- y_star
+y[z==0] <- NA
+h <- as.data.frame(cbind(z, y, X))
+names(h) <- c("z", "y", "x1", "x2", "x3")
+
+#Estimate parameters
+model <- hpaSelection(selection = z ~ x1 + x2, 
+                      outcome = y ~ x1 + x3,
+                      data = h, z_K = 1, y_K = 0)
+summary(model)
+
+#Get conditional predictions for outcome equation
+model_pred_c <- predict(model,is_cond = TRUE)
+#Conditional predictions y|z=1
+model_pred_c$y_1
+#Conditional predictions y|z=0
+model_pred_c$y_0
+
+#Get unconditional predictions for outcome equation
+model_pred_u <- predict(model,is_cond = FALSE)
+model_pred_u$y
+
+#Get conditional predictions for selection equation
+#Note that for z=0 these predictions are NA
+predict(model, is_cond = TRUE, is_outcome = FALSE)
+#Get unconditional predictions for selection equation
+predict(model, is_cond = FALSE, is_outcome = FALSE)
+}
 }
 \references{
 A. Gallant and D. W. Nychka (1987) <doi:10.2307/1913241>

@@ -19,6 +19,7 @@ Rcpp::NumericMatrix truncatedNormalMoment(int,
 	Rcpp::NumericVector cdf_upper,
 	Rcpp::NumericVector cdf_difference,
 	bool return_all_moments,
-	bool is_validation);
+	bool is_validation,
+	bool is_parallel);
 
 #endif

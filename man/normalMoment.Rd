@@ -4,8 +4,13 @@
 \alias{normalMoment}
 \title{Calculate k-th order moment of normal distribution}
 \usage{
-normalMoment(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE,
-  is_validation = TRUE)
+normalMoment(
+  k = 0L,
+  mean = 0,
+  sd = 1,
+  return_all_moments = FALSE,
+  is_validation = TRUE
+)
 }
 \arguments{
 \item{k}{non-negative integer moment order.}
@@ -40,13 +45,13 @@ So passing non-integer \code{k} value will not cause any errors but the calculat
 performed for rounded \code{k} value only.
 }
 \examples{
-##Calculate 5-th order moment of normal random variable which
-##mean equals to 3 and standard deviation is 5.
+## Calculate 5-th order moment of normal random variable which
+## mean equals to 3 and standard deviation is 5.
 
-#5-th moment
+# 5-th moment
 normalMoment(k = 5, mean = 3, sd = 5)
 
-#(0-5)-th moments
+# (0-5)-th moments
 normalMoment(k = 5, mean = 3, sd = 5, return_all_moments = TRUE)
 
 }

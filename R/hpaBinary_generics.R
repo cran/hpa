@@ -46,12 +46,17 @@ print.summary.hpaBinary <- function (x, ...)
 ###
 #' Plot hpaBinary random errors approximated density
 #' @param x Object of class "hpaBinary"
+#' @param y this parameter currently ignored
 #' @template elipsis_Template
-plot.hpaBinary <- function (x, ...) 
+plot.hpaBinary <- function (x, y = NULL, ...) 
 {
   if (length(list(...)) > 0)
   {
     warnings("Additional arguments passed throught ... are ignored.")   
+  }
+  if (!is.null(y))
+  {
+    warnings("Note that y parameter currently ignored")   
   }
   return(plot_hpaBinary(x))
 }
@@ -72,6 +77,7 @@ AIC.hpaBinary <- function (object, ..., k = 2)
 ###
 #' Calculates log-likelihood for "hpaBinary" object
 #' @description This function calculates log-likelihood for "hpaBinary" object
+#' @usage \method{logLik}{hpaBinary}(object, ...)
 #' @param object Object of class "hpaBinary"
 #' @template elipsis_Template
 logLik.hpaBinary <- function (object, ...)

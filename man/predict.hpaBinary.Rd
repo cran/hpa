@@ -4,8 +4,7 @@
 \alias{predict.hpaBinary}
 \title{Predict method for hpaBinary}
 \usage{
-\method{predict}{hpaBinary}(object, ..., newdata = NULL,
-  is_prob = TRUE)
+\method{predict}{hpaBinary}(object, ..., newdata = NULL, is_prob = TRUE)
 }
 \arguments{
 \item{object}{Object of class "hpaBinary"}

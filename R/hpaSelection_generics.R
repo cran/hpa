@@ -53,17 +53,22 @@ print.summary.hpaSelection <- function (x, ...)
 ###
 #' Plot hpaSelection random errors approximated density
 #' @param x Object of class "hpaSelection"
+#' @param y this parameter currently ignored
 #' @param is_outcome logical; if TRUE then function plots the graph for outcome equation random errors. 
 #' Otherwise plot for selection equation random errors will be plotted.
 #' @template elipsis_Template
 #' @return This function returns the list containing random error's expected value \code{errors_exp}
 #' and variance \code{errors_var} estimates for selection (if \code{is_outcome = TRUE}) or outcome
 #' (if \code{is_outcome = FALSE}) equation.
-plot.hpaSelection <- function (x, ..., is_outcome = TRUE) 
+plot.hpaSelection <- function (x, y = NULL, ..., is_outcome = TRUE) 
 {
   if (length(list(...)) > 0)
   {
     warnings("Additional arguments passed throught ... are ignored.")   
+  }
+  if (!is.null(y))
+  {
+    warnings("Note that y parameter currently ignored")   
   }
   return(plot_hpaSelection(x, is_outcome))
 }
@@ -84,6 +89,7 @@ AIC.hpaSelection <- function (object, ..., k = 2)
 ###
 #' Calculates log-likelihood for "hpaSelection" object
 #' @description This function calculates log-likelihood for "hpaSelection" object
+#' @usage \method{logLik}{hpaSelection}(object, ...)
 #' @param object Object of class "hpaSelection"
 #' @template elipsis_Template
 logLik.hpaSelection <- function (object, ...) 

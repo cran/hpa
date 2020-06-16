@@ -4,10 +4,21 @@
 \alias{hpaBinary}
 \title{Perform semi-nonparametric binary choice model estimation}
 \usage{
-hpaBinary(formula, data, K = 1L, z_mean_fixed = NA_real_,
-  z_sd_fixed = NA_real_, z_constant_fixed = 0,
-  is_z_coef_first_fixed = TRUE, is_x0_probit = TRUE,
-  is_sequence = FALSE, x0 = numeric(0))
+hpaBinary(
+  formula,
+  data,
+  K = 1L,
+  z_mean_fixed = NA_real_,
+  z_sd_fixed = NA_real_,
+  z_constant_fixed = 0,
+  is_z_coef_first_fixed = TRUE,
+  is_x0_probit = TRUE,
+  is_sequence = FALSE,
+  x0 = numeric(0),
+  cov_type = "sandwich",
+  boot_iter = 100L,
+  is_parallel = FALSE
+)
 }
 \arguments{
 \item{formula}{an object of class "formula" (or one that can be coerced to that class):
@@ -38,6 +49,20 @@ return the list of models where i-th list element correspond to model calculated
 
 \item{x0}{numeric vector of optimization routine initial values.
 Note that \code{x0=c(pol_coefficients[-1], mean, sd, coefficients)}.}
+
+\item{cov_type}{string value determinign the type of covariance matrix to be
+returned and used for summary. If \code{cov_type = "hessian"} then negative 
+inverse of hessian matrix will be applied. If \code{cov_type = "gop"} then
+inverse of jacobian outer products will be applied. 
+If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix 
+estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
+with \code{boot_iter} iterations will be applied.}
+
+\item{boot_iter}{the number of bootstrap iterations
+for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
+
+\item{is_parallel}{if TRUE then multiple cores will be 
+used for some calculations.}
 }
 \value{
 This function returns an object of class "hpaBinary".\cr \cr
@@ -51,6 +76,7 @@ An object of class "hpaBinary" is a list containing the following components:
 \item \code{pol_degrees} - the same as \code{K} input parameter.
 \item \code{coefficients} - regression (single index) coefficients estimates.
 \item \code{cov_matrix} - estimated parameters covariance matrix estimate.
+\item \code{marginal_effects} - marginal effects matrix where columns are variables and rows are observations.
 \item \code{results} - numeric matrix representing estimation results.
 \item \code{log-likelihood} - value of Log-Likelihood function.
 \item \code{AIC} - AIC value.
@@ -67,7 +93,7 @@ This function performs semi-nonparametric single index binary choice model estim
 via hermite polynomial densities approximation.
 }
 \details{
-Semi-nonparametric approach has been implemented via densities
+Semi-nonparametric (SNP) approach has been implemented via densities
 hermite polynomial approximation
 
 Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
@@ -92,12 +118,15 @@ provide better initial point for optimization routine. Please, extract
 
 All variables mentioned in \code{formula} should be numeric vectors.
 
-Standard errors and significance levels are derived under parametric assumptions
-i.e. it is assumed that distribution related to hermite polynomial density
-and real distribution are from the same family.
+The function calculates standard errors via sandwich estimator and significance 
+levels are reported taking into account quasi maximum likelihood estimator (QMLE) 
+asymptotic normality. If ones wants to switch from QMLE to semi-nonparametric estimator (SNPE) during
+hypothesis testing then covariance matrix should be reestimated using bootstrap.
 
 This function maximizes log-likelihood function via \code{\link[stats]{optim}}
-setting it's \code{method} argument to "BFGS".
+setting it's \code{method} argument to "BFGS". Please set \code{is_grad} to \code{TRUE}
+in order to sufficiently improve optimization convergence by the cost of greater
+computational burden.
 }
 \examples{
 \donttest{
@@ -136,17 +165,51 @@ hpa_1_correct <- hpa_1_correct_1 + hpa_1_correct_0
 plot(model_hpa_1)
 }
 
+\donttest{
 ##Estimate parameters on data simulated from student distribution
 
 library("mvtnorm")
-set.seed(123456)
+set.seed(123)
 
 #Simulate independent variables from normal distribution
-n <- 1000
+n <- 5000
 X <- rmvnorm(n=n, mean = c(0,0), 
 sigma = matrix(c(1,0.5,0.5,1), ncol=2))
 
-#Simulate random errors
+#Simulate random errors from student distribution
+epsilon <- rt(n, 5) * (3 / sqrt(5))
+
+#Calculate latent and observable variables values
+z_star <- 1 + X[, 1] + X[, 2] + epsilon
+z <- as.numeric((z_star > 0))
+
+#Store the results into dataframe
+h <- as.data.frame(cbind(z,X))
+names(h) <- c("z", "x1", "x2")
+
+#Estimate model parameters
+model <- hpaBinary(formula = z ~ x1 + x2, data=h, K = 4)
+summary(model)
+
+#Get predicted probabibilities of 1 values
+predict(model)
+
+#Plot density function approximation
+plot(model)
+}
+
+\dontshow{
+##Estimate parameters on data simulated from student distribution
+
+library("mvtnorm")
+set.seed(123)
+
+#Simulate independent variables from normal distribution
+n <- 200
+X <- rmvnorm(n=n, mean = c(0,0), 
+sigma = matrix(c(1,0.5,0.5,1), ncol=2))
+
+#Simulate random errors from student distribution
 epsilon <- rt(n, 5) * (3 / sqrt(5))
 
 #Calculate latent and observable variables values
@@ -166,6 +229,7 @@ predict(model)
 
 #Plot density function approximation
 plot(model)
+}
 }
 \references{
 A. Gallant and D. W. Nychka (1987) <doi:10.2307/1913241>

@@ -4,10 +4,17 @@
 \alias{ehpa}
 \title{Expected powered product hermite polynomial approximation}
 \usage{
-ehpa(x = matrix(1, 1), pol_coefficients = numeric(0),
-  pol_degrees = numeric(0), given_ind = logical(0),
-  omit_ind = logical(0), mean = numeric(0), sd = numeric(0),
-  expectation_powers = numeric(0))
+ehpa(
+  x = matrix(1, 1),
+  pol_coefficients = numeric(0),
+  pol_degrees = numeric(0),
+  given_ind = logical(0),
+  omit_ind = logical(0),
+  mean = numeric(0),
+  sd = numeric(0),
+  expectation_powers = numeric(0),
+  is_parallel = FALSE
+)
 }
 \arguments{
 \item{x}{non-negative numeric matrix of quantiles.
@@ -28,6 +35,9 @@ component is omitted. By default it is a logical vector of FALSE values.}
 \item{sd}{positive numeric vector of standard deviations.}
 
 \item{expectation_powers}{integer vector of random vector components powers.}
+
+\item{is_parallel}{if TRUE then multiple cores will be 
+used for some calculations.}
 }
 \value{
 This function returns numeric vector of expected powered product hermite polynomial approximations.

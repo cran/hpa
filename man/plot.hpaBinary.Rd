@@ -4,10 +4,12 @@
 \alias{plot.hpaBinary}
 \title{Plot hpaBinary random errors approximated density}
 \usage{
-\method{plot}{hpaBinary}(x, ...)
+\method{plot}{hpaBinary}(x, y = NULL, ...)
 }
 \arguments{
 \item{x}{Object of class "hpaBinary"}
+
+\item{y}{this parameter currently ignored}
 
 \item{...}{further arguments (currently ignored)}
 }

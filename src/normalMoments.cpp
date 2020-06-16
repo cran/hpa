@@ -1,6 +1,9 @@
 #include <RcppArmadillo.h>
+#include <RcppParallel.h>
+#include "ParallelFunctions.h"
 using namespace Rcpp;
 using namespace RcppArmadillo;
+using namespace RcppParallel;
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
@@ -22,13 +25,13 @@ using namespace RcppArmadillo;
 //' If \code{return_all_moments} is \code{TRUE} then see this argument description above for
 //' output details.
 //' @examples
-//' ##Calculate 5-th order moment of normal random variable which
-//' ##mean equals to 3 and standard deviation is 5.
+//' ## Calculate 5-th order moment of normal random variable which
+//' ## mean equals to 3 and standard deviation is 5.
 //'
-//' #5-th moment
+//' # 5-th moment
 //' normalMoment(k = 5, mean = 3, sd = 5)
 //' 
-//' #(0-5)-th moments
+//' # (0-5)-th moments
 //' normalMoment(k = 5, mean = 3, sd = 5, return_all_moments = TRUE)
 //'
 //' @export
@@ -38,7 +41,7 @@ NumericVector normalMoment(int k = 0,
 						   bool return_all_moments = false, 
 						   bool is_validation = true)
 {
-	//Validation
+	// Validation
 	//------------------------------------------------------------
 	if (is_validation)
 	{
@@ -53,10 +56,10 @@ NumericVector normalMoment(int k = 0,
 	}
 	//------------------------------------------------------------
 
-	//Initialize matrix to store the moments
+	// Initialize matrix to store the moments
 	NumericVector moments(k + 1, 1.0);
 
-	//If order is 0 just return 1
+	// If order is 0 just return 1
 	if (k == 0)
 	{
 		moments[0] = 1;
@@ -65,7 +68,7 @@ NumericVector normalMoment(int k = 0,
 
 	moments[1] = mean;
 
-	//If moment is 1 it's equals to mean
+	// If moment is 1 it's equals to mean
 	if (k == 1)
 	{
 		if (!return_all_moments)
@@ -76,7 +79,7 @@ NumericVector normalMoment(int k = 0,
 		return(moments);
 	}
 
-	//Iteratively calculate other moments
+	// Iteratively calculate other moments
 
 	double sd_squared = pow(sd, 2);
 
@@ -85,7 +88,7 @@ NumericVector normalMoment(int k = 0,
 		moments[i] = (i - 1) * sd_squared * moments[i - 2] + mean * moments[i - 1];
 	}
 
-	//Return depends on return_all_moments value
+	// Return depends on return_all_moments value
 
 	if (!return_all_moments)
 	{
@@ -109,6 +112,7 @@ NumericVector normalMoment(int k = 0,
 //' @template cdf_upper_Template
 //' @template cdf_difference_Template
 //' @template is_validation_Template
+//' @template is_parallel_Template
 //' @param return_all_moments logical; if \code{TRUE}, function returns the matrix of
 //' moments of normaly distributed random variable with mean = \code{mean}
 //' and standard deviation = \code{sd} under lower and upper truncation points
@@ -119,7 +123,7 @@ NumericVector normalMoment(int k = 0,
 //' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd} truncated
 //' at points given by \code{x_lower} and \code{x_upper}. Note that the function is vectorized so you can provide
 //' \code{x_lower} and \code{x_upper} as vectors of equal size. If vectors values for \code{x_lower} and \code{x_upper} are not
-//' provided then their default values will be set to (-9999999999999.1) and (9999999999999.1) correspondingly.
+//' provided then their default values will be set to \code{-(.Machine$double.xmin * 0.99)} and \code{(.Machine$double.xmax * 0.99)} correspondingly.
 //' @template k_integer_Template
 //' @template pdf_cdf_precalculated_Template
 //' @return This function returns vector of k-th order moments for normaly distributed random variable
@@ -128,19 +132,19 @@ NumericVector normalMoment(int k = 0,
 //' If \code{return_all_moments} is \code{TRUE} then see this argument description above for
 //' output details.
 //' @examples
-//' ##Calculate 5-th order moment of three truncated normal random variables (x1,x2,x3) 
-//' ##which mean is 5 and standard deviation is 3. 
-//' ##These random variables truncation points are given as follows:-1<x1<1, 0<x2<2, 1<x3<3.
+//' ## Calculate 5-th order moment of three truncated normal random variables (x1,x2,x3) 
+//' ## which mean is 5 and standard deviation is 3. 
+//' ## These random variables truncation points are given as follows:-1<x1<1, 0<x2<2, 1<x3<3.
 //' k <- 3
 //' x_lower <- c(-1, 0, 1)
 //' x_upper <- c(1, 2 ,3)
 //' mean <- 3
 //' sd <- 5
 //' 
-//' #get the moments
+//' # get the moments
 //' truncatedNormalMoment(k, x_lower, x_upper, mean, sd)
 //'
-//' #get matrix of (0-5)-th moments (columns) for each variable (rows)
+//' # get matrix of (0-5)-th moments (columns) for each variable (rows)
 //' truncatedNormalMoment(k, x_lower, x_upper, mean, sd, return_all_moments = TRUE)
 //'
 //' @export
@@ -155,24 +159,27 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 	NumericVector cdf_upper = NumericVector(0),
 	NumericVector cdf_difference = NumericVector(0),
 	bool return_all_moments = false, 
-	bool is_validation = true) 
+	bool is_validation = true,
+	bool is_parallel = false) 
 {
-	//Assign default truncation values
+	// Assign default truncation values
+	double max_value = 0.99*std::numeric_limits<double>::max();
+  double min_value = -max_value;
 
 	if (x_lower.size() == 0)
 	{
-		x_lower = NumericVector::create(-9999999999999.1);
+		x_lower = NumericVector::create(min_value);
 	}
 
 	if (x_upper.size() == 0)
 	{
-		x_lower = NumericVector::create(9999999999999.1);
+		x_lower = NumericVector::create(max_value);
 	}
 
-	//Get number of observations
+	// Get number of observations
 	int n = x_lower.size();
 
-	//Validation
+	// Validation
 	//------------------------------------------------------------
 	if (is_validation)
 	{
@@ -184,11 +191,11 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 		{
 			stop("parameter sd should be positive integer");
 		}
-		if ((x_upper.size() != n) & (x_upper[0] != 9999999999999.1))
+		if ((x_upper.size() != n) & (x_upper[0] != max_value))
 		{
 			stop("vectors x_lower and x_upper should have the same length");
 		}
-		if ((x_lower.size() != n) & (x_lower[0] != -9999999999999.1))
+		if ((x_lower.size() != n) & (x_lower[0] != min_value))
 		{
 			stop("vectors x_lower and x_upper should have the same length");
 		}
@@ -215,58 +222,53 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 	}
 	//------------------------------------------------------------
 
-	//Initialize matrix to store the moments
+	// Initialize matrix to store the moments
 	NumericMatrix tr_moments(n, k + 1);
 
 	std::fill(tr_moments.begin(), tr_moments.end(), 1);
 
-	//If order is 0 just return 1
+	// If order is 0 just return 1
 	if (k == 0)
 	{
 		return(tr_moments);
 	}
 
-	//PDF calculation (if not provided)
+	// PDF calculation (if not provided)
 	if (pdf_lower.size() == 0)
 	{
-		pdf_lower = dnorm(x_lower, mean, sd);
+	  pdf_lower = dnorm_parallel(x_lower, mean, sd, is_parallel);
 	}
 	if (pdf_upper.size() == 0)
 	{
-		pdf_upper = dnorm(x_upper, mean, sd);
+	  pdf_upper = dnorm_parallel(x_upper, mean, sd, is_parallel);
 	}
 
-	//CDF calculation (if not provided)
+	// CDF calculation (if not provided)
 	if (cdf_difference.size() == 0)
 	{
 		if (cdf_lower.size() == 0)
 		{
-			cdf_lower = pnorm(x_lower, mean, sd);
+		  cdf_lower = pnorm_parallel(x_lower, mean, sd, is_parallel);
 		}
 		if (cdf_upper.size() == 0)
 		{
-			cdf_upper = pnorm(x_upper, mean, sd);
+		  cdf_upper = pnorm_parallel(x_upper, mean, sd, is_parallel);
 		}
 		cdf_difference = cdf_upper - cdf_lower;
 	}
 
 	double sd_squared = pow(sd, 2);
 
-	//The first moment
+	// The first moment
 	tr_moments(_, 1) = (mean - sd_squared * ((pdf_upper - pdf_lower) / cdf_difference));
 
-	if (k == 1)
-	{
-		return(tr_moments);
-	}
-
-	//Set infinity to zero in order to nullify power*pdf
+	// Set infinity to zero in order to nullify power * pdf
 	LogicalVector lower_cond = is_infinite(x_lower);
 	LogicalVector upper_cond = is_infinite(x_upper);
 	x_lower[lower_cond] = 0;
 	x_upper[upper_cond] = 0;
 
-	//Iteratively calculate other moments
+	// Iteratively calculate other moments
 	for (int i = 2; i <= k; i++)
 	{
 		tr_moments(_, i) = (i - 1) * sd_squared * tr_moments(_, i - 2) +
@@ -274,13 +276,13 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 				pow(x_lower, i - 1) * pdf_lower) / cdf_difference);
 	}
 
-	//If return_all_moments is TRUE then return matrix of all moments from 0 to k
+	// If return_all_moments is TRUE then return matrix of all moments from 0 to k
 	if (return_all_moments)
 	{
 		return(tr_moments);
 	}
 
-	//If return_all_moments is FALSE then return k-th moment only
+	// If return_all_moments is FALSE then return k-th moment only
 	NumericMatrix tr_moments_new(n, 1);
 	tr_moments_new(_, 0) = tr_moments(_, k);
 
