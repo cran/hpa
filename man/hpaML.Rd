@@ -14,7 +14,9 @@ hpaML(
   x0 = numeric(0),
   cov_type = "sandwich",
   boot_iter = 100L,
-  is_parallel = FALSE
+  is_parallel = FALSE,
+  opt_type = "optim",
+  opt_control = NULL
 )
 }
 \arguments{
@@ -47,24 +49,41 @@ Note that \code{x0=c(pol_coefficients[-1], mean, sd)}. For
 see \code{\link[hpa]{dhpa}} function.}
 
 \item{cov_type}{string value determinign the type of covariance matrix to be
-returned and used for summary. If \code{cov_type = "hessian"} then negative 
+returned and used for summary. If \code{cov_type = "hessian"} then negative
 inverse of hessian matrix will be applied. If \code{cov_type = "gop"} then
-inverse of jacobian outer products will be applied. 
-If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix 
+inverse of jacobian outer products will be applied.
+If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
-with \code{boot_iter} iterations will be applied.}
+with \code{boot_iter} iterations will be applied.
+If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
+accurate but computationally demanding finite difference hessian
+approximation will be calculated for the inverse hessian and sandwich
+estimators correspondingly.}
 
 \item{boot_iter}{the number of bootstrap iterations
 for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
 
-\item{is_parallel}{if TRUE then multiple cores will be 
-used for some calculations.}
+\item{is_parallel}{if TRUE then multiple cores will be
+used for some calculations. It usually provides speed advantage for
+large enough samples (about more than 1000 observations).}
+
+\item{opt_type}{string value determining the type of the optimization
+routine to be applied. The default is "optim" meaning that BFGS method
+from the \code{\link[stats]{optim}} function will be applied.
+If \code{opt_type = "GA"} then \code{\link[GA]{ga}} function will be
+additionally applied.}
+
+\item{opt_control}{a list containing arguments to be passed to the
+optimization routine depending on \code{opt_type} argument value.
+Please see details to get additional information.}
 }
 \value{
 This function returns an object of class "hpaML".\cr \cr
 An object of class "hpaML" is a list containing the following components:
 \itemize{
-\item \code{optim} - \code{\link[maxLik]{maxLik}} function output.
+\item \code{optim} - \code{\link[stats]{optim}} function output. 
+If \code{opt_type = "GA"} then it is the list containing 
+\code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 \item \code{x1} - numeric vector of distribution parameters estimates.
 \item \code{mean} - density function mean vector estimate.
 \item \code{sd} - density function sd vector estimate.
@@ -107,10 +126,66 @@ levels are reported taking into account quasi maximum likelihood estimator (QMLE
 asymptotic normality. If ones wants to switch from QMLE to semi-nonparametric estimator (SNPE) during
 hypothesis testing then covariance matrix should be reestimated using bootstrap.
 
-This function maximizes log-likelihood function via \code{\link[stats]{optim}}
-setting it's \code{method} argument to "BFGS". Please set \code{is_grad} to \code{TRUE}
-in order to sufficiently improve optimization convergence by the cost of greater
-computational burden.
+This function maximizes (quasi) log-likelihood function 
+via \code{\link[stats]{optim}} function setting it's \code{method} 
+argument to "BFGS". If \code{opt_type = "GA"} then genetic
+algorithm from \code{\link[GA]{ga}} function
+will be additionally (after \code{\link[stats]{optim}} putting it's
+solution (\code{par}) to \code{suggestions} matrix) applied in order to 
+perform global optimization. Note that global optimization takes
+much more time (usually minutes but sometimes hours or even days). 
+The number of iterations and population size of the genetic algorithm
+will grow linearly along with the number of estimated parameters. 
+If it is seems that global maximum has not been found than it
+is possible to continue the search restarting the function setting 
+it's input argument \code{x0} to \code{x1} output value. Note that
+if \code{cov_type = "bootstrap"} then \code{\link[GA]{ga}}
+function will not be used for bootstrap iterations since it
+may be extremely time consuming.
+
+If \code{opt_type = "GA"} then \code{opt_control} should be the
+list containing the values to be passed to \code{\link[GA]{ga}}
+function. It is possible to pass arguments \code{lower}, \code{upper},
+\code{popSize}, \code{pcrossover}, \code{pmutation}, \code{elitism},
+\code{maxiter}, \code{suggestions}, \code{optim}, \code{optimArgs} and
+\code{seed}. Note that it is possible to set \code{population},
+\code{selection}, \code{crossover} and \code{mutation} arguments changing
+\code{\link[GA]{ga}} default parameters via \code{\link[GA]{gaControl}} 
+function. These arguments information reported in \code{\link[GA]{ga}}.
+In order to provide manual values for \code{lower} and \code{upper} bounds
+please follow parameters ordering mentioned above for the
+\code{x0} argument. If these bonds are not provided manually then
+they (except those related to the polynomial coefficients)
+will depend on the estimates obtained
+by local optimization via \code{\link[stats]{optim}} function
+(this estimates will be in the middle
+between \code{lower} and \code{upper}).
+Specifically for each sd parameter \code{lower} (\code{upper}) bound
+is 5 times lower (higher) then this
+parameter \code{\link[stats]{optim}} estimate.
+For each mean and regression coefficient parameter it's lower and upper
+bounds deviate from corresponding \code{\link[stats]{optim}} estimate
+by two absolute value of this estimate.
+Finally, lower and upper bounds for each polynomial
+coefficient are \code{-10} and \code{10} correspondingly (do not depend
+on their \code{\link[stats]{optim}} estimates).
+
+The following arguments are differ from their defaults in
+\code{\link[GA]{ga}}:
+\itemize{
+\item \code{pmutation = 0.2},
+\item \code{optim = TRUE},
+\item \code{optimArgs =
+list("method" = "Nelder-Mead", "poptim" = 0.2, "pressel" = 0.5)},
+\item \code{seed = 8},
+\item \code{elitism = 2 + round(popSize * 0.1)}.}
+
+The arguments \code{popSize} and \code{maxiter} of
+\code{\link[GA]{ga}} function have been set proportional to the number of
+estimated polynomial coefficients
+\itemize{
+\item \code{popSize = 10 + (prod(pol_degrees + 1) - 1) * 2}.
+\item \code{maxiter = 50 * (prod(pol_degrees + 1))}}
 }
 \examples{
 \donttest{

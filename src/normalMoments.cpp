@@ -17,6 +17,7 @@ using namespace RcppParallel;
 //' and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
 //' to the (i-1)-th moment.
 //' @template is_validation_Template
+//' @param is_central logical; if \code{TRUE}, then central moments will be calculated.
 //' @details This function estimates \code{k}-th order moment of
 //' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd}.\cr
 //' @template k_integer_template
@@ -39,7 +40,8 @@ using namespace RcppParallel;
 NumericVector normalMoment(int k = 0, 
 						   double mean = 0, double sd = 1,
 						   bool return_all_moments = false, 
-						   bool is_validation = true)
+						   bool is_validation = true,
+						   bool is_central = false)
 {
 	// Validation
 	//------------------------------------------------------------
@@ -55,6 +57,12 @@ NumericVector normalMoment(int k = 0,
 		}
 	}
 	//------------------------------------------------------------
+	
+	// Check weather central moment should be calculated
+	if(is_central)
+	{
+	  mean = 0;
+	}
 
 	// Initialize matrix to store the moments
 	NumericVector moments(k + 1, 1.0);

@@ -37,8 +37,9 @@ component is omitted. By default it is a logical vector of FALSE values.}
 
 \item{sd}{positive numeric vector of standard deviations.}
 
-\item{is_parallel}{if TRUE then multiple cores will be 
-used for some calculations.}
+\item{is_parallel}{if TRUE then multiple cores will be
+used for some calculations. It usually provides speed advantage for
+large enough samples (about more than 1000 observations).}
 }
 \value{
 This function returns interval distribution function hermite polynomial approximation at point \code{x}.

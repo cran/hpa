@@ -55,8 +55,9 @@ order moment.}
 \item{is_validation}{bool value indicating whether function input arguments should be validated. 
 Set it to FALSE for slight perfomance boost (default value is TRUE).}
 
-\item{is_parallel}{if TRUE then multiple cores will be 
-used for some calculations.}
+\item{is_parallel}{if TRUE then multiple cores will be
+used for some calculations. It usually provides speed advantage for
+large enough samples (about more than 1000 observations).}
 }
 \value{
 This function returns vector of k-th order moments for normaly distributed random variable

@@ -17,7 +17,9 @@ hpaSelection(
   z_sd_fixed = -1,
   cov_type = "sandwich",
   boot_iter = 100L,
-  is_parallel = FALSE
+  is_parallel = FALSE,
+  opt_type = "optim",
+  opt_control = NULL
 )
 }
 \arguments{
@@ -47,24 +49,41 @@ based on leave-one-out cross-validation criteria iterating througt 0 to pol_elem
 \item{z_sd_fixed}{positive value that is fixed sigma parameter for selection equation.}
 
 \item{cov_type}{string value determinign the type of covariance matrix to be
-returned and used for summary. If \code{cov_type = "hessian"} then negative 
+returned and used for summary. If \code{cov_type = "hessian"} then negative
 inverse of hessian matrix will be applied. If \code{cov_type = "gop"} then
-inverse of jacobian outer products will be applied. 
-If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix 
+inverse of jacobian outer products will be applied.
+If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
-with \code{boot_iter} iterations will be applied.}
+with \code{boot_iter} iterations will be applied.
+If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
+accurate but computationally demanding finite difference hessian
+approximation will be calculated for the inverse hessian and sandwich
+estimators correspondingly.}
 
 \item{boot_iter}{the number of bootstrap iterations
 for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
 
-\item{is_parallel}{if TRUE then multiple cores will be 
-used for some calculations.}
+\item{is_parallel}{if TRUE then multiple cores will be
+used for some calculations. It usually provides speed advantage for
+large enough samples (about more than 1000 observations).}
+
+\item{opt_type}{string value determining the type of the optimization
+routine to be applied. The default is "optim" meaning that BFGS method
+from the \code{\link[stats]{optim}} function will be applied.
+If \code{opt_type = "GA"} then \code{\link[GA]{ga}} function will be
+additionally applied.}
+
+\item{opt_control}{a list containing arguments to be passed to the
+optimization routine depending on \code{opt_type} argument value.
+Please see details to get additional information.}
 }
 \value{
 This function returns an object of class "hpaSelection".\cr \cr
 An object of class "hpaSelection" is a list containing the following components:
 \itemize{
-\item \code{optim} - \code{\link[stats]{optim}} function output.
+\item \code{optim} - \code{\link[stats]{optim}} function output. 
+If \code{opt_type = "GA"} then it is the list containing 
+\code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 \item \code{x1} - numeric vector of distribution parameters estimates.
 \item \code{Newey} - list containing information concerning Newey's method estimation results.
 \item \code{z_mean} - estimate of the hermite polynomial mean parameter related to selection equation random error marginal distribution.
@@ -106,7 +125,8 @@ Abovementioned list \code{re_moments} contains the following components:
 \item \code{outcome_exp} - outcome equation random errors expectation estimate.
 \item \code{outcome_var} - outcome equation random errors variance estimate.
 \item \code{errors_covariance} - outcome and selection equation random errors covariance estimate.
-\item \code{rho} - outcome and selection equation random errors correlation estimate.}
+\item \code{rho} - outcome and selection equation random errors correlation estimate.
+\item \code{rho_std} - outcome and selection equation random errors correlation estimator standard error estimate.}
 }
 \description{
 This function performs semi-nonparametric selection model estimation
@@ -149,18 +169,76 @@ Initial values for optimization routine are obtained throught Newey method
 Note that selection equation dependent variables should have exactly two levels (0 and 1) where "0" states for the selection results 
 which leads to unobservable values of dependent variable in outcome equation.
 
-This function maximizes log-likelihood function via \code{\link[stats]{optim}}
-setting it's \code{method} argument to "BFGS". Please set \code{is_grad} to \code{TRUE}
-in order to sufficiently improve optimization convergence by the cost of greater
-computational burden.
+This function maximizes (quasi) log-likelihood function 
+via \code{\link[stats]{optim}} function setting it's \code{method} 
+argument to "BFGS". If \code{opt_type = "GA"} then genetic
+algorithm from \code{\link[GA]{ga}} function
+will be additionally (after \code{\link[stats]{optim}} putting it's
+solution (\code{par}) to \code{suggestions} matrix) applied in order to 
+perform global optimization. Note that global optimization takes
+much more time (usually minutes but sometimes hours or even days). 
+The number of iterations and population size of the genetic algorithm
+will grow linearly along with the number of estimated parameters. 
+If it is seems that global maximum has not been found than it
+is possible to continue the search restarting the function setting 
+it's input argument \code{x0} to \code{x1} output value. Note that
+if \code{cov_type = "bootstrap"} then \code{\link[GA]{ga}}
+function will not be used for bootstrap iterations since it
+may be extremely time consuming.
+
+If \code{opt_type = "GA"} then \code{opt_control} should be the
+list containing the values to be passed to \code{\link[GA]{ga}}
+function. It is possible to pass arguments \code{lower}, \code{upper},
+\code{popSize}, \code{pcrossover}, \code{pmutation}, \code{elitism},
+\code{maxiter}, \code{suggestions}, \code{optim}, \code{optimArgs} and
+\code{seed}. Note that it is possible to set \code{population},
+\code{selection}, \code{crossover} and \code{mutation} arguments changing
+\code{\link[GA]{ga}} default parameters via \code{\link[GA]{gaControl}} 
+function. These arguments information reported in \code{\link[GA]{ga}}.
+In order to provide manual values for \code{lower} and \code{upper} bounds
+please follow parameters ordering mentioned above for the
+\code{x0} argument. If these bonds are not provided manually then
+they (except those related to the polynomial coefficients)
+will depend on the estimates obtained
+by local optimization via \code{\link[stats]{optim}} function
+(this estimates will be in the middle
+between \code{lower} and \code{upper}).
+Specifically for each sd parameter \code{lower} (\code{upper}) bound
+is 5 times lower (higher) then this
+parameter \code{\link[stats]{optim}} estimate.
+For each mean and regression coefficient parameter it's lower and upper
+bounds deviate from corresponding \code{\link[stats]{optim}} estimate
+by two absolute value of this estimate.
+Finally, lower and upper bounds for each polynomial
+coefficient are \code{-10} and \code{10} correspondingly (do not depend
+on their \code{\link[stats]{optim}} estimates).
+
+The following arguments are differ from their defaults in
+\code{\link[GA]{ga}}:
+\itemize{
+\item \code{pmutation = 0.2},
+\item \code{optim = TRUE},
+\item \code{optimArgs =
+list("method" = "Nelder-Mead", "poptim" = 0.2, "pressel" = 0.5)},
+\item \code{seed = 8},
+\item \code{elitism = 2 + round(popSize * 0.1)}.}
+
+Let's denote by \code{n_reg} the number of regressors
+included to the \code{selection} and \code{outcome} formulas.
+The arguments \code{popSize} and \code{maxiter} of
+\code{\link[GA]{ga}} function have been set proportional to the number of
+estimated polynomial coefficients and independent variables:
+\itemize{
+\item \code{popSize = 10 + 5 * (z_K + 1) * (y_K + 1) + 2 * n_reg}
+\item \code{maxiter = 50 * (z_K + 1) * (y_K + 1) + 10 * n_reg}}
 }
 \examples{
 \donttest{
-##Let's estimate wage equation accounting for non-random selection.
-##See the reference to Mroz TA (1987) to get additional details about
-##the data this examples use
+## Let's estimate wage equation accounting for non-random selection.
+## See the reference to Mroz TA (1987) to get additional details about
+## the data this examples use
 
-#Prepare data
+# Prepare data
 library("sampleSelection")
 data("Mroz87")
 h = data.frame("kids" = as.numeric(Mroz87$kids5 + Mroz87$kids618 > 0),
@@ -172,7 +250,7 @@ h = data.frame("kids" = as.numeric(Mroz87$kids5 + Mroz87$kids618 > 0),
 	"wage" = as.numeric(Mroz87$wage),
 	"lfp" = as.numeric(Mroz87$lfp))
 	
-#Estimate model parameters
+# Estimate model parameters
 model <- hpaSelection(selection = lfp ~ educ + age + I(age ^ 2) + 
                                   kids + faminc,
                       outcome = log(wage) ~ exper + I(exper ^ 2) + 
@@ -181,39 +259,39 @@ model <- hpaSelection(selection = lfp ~ educ + age + I(age ^ 2) +
                                   pol_elements = 3, is_Newey_loocv = TRUE)
 summary(model)
 
-#Plot outcome equation random errorrs density
-plot(model,is_outcome = TRUE)
-#Plot selection equation random errorrs density
-plot(model,is_outcome = FALSE)
+# Plot outcome equation random errorrs density
+plot(model, is_outcome = TRUE)
+# Plot selection equation random errorrs density
+plot(model, is_outcome = FALSE)
 }
 
-##Estimate semi-nonparametric sample selection model
-##parameters on simulated data given chi-squared random errors
+## Estimate semi-nonparametric sample selection model
+## parameters on simulated data given chi-squared random errors
 
 \donttest{
 set.seed(100)
 library("mvtnorm")
 
-#Sample size
+# Sample size
 
 n <- 1000
 
-#Simulate independent variables
+# Simulate independent variables
 X_rho <- 0.5
 X_sigma <- matrix(c(1,X_rho,X_rho,X_rho,1,X_rho,X_rho,X_rho,1), ncol=3)
 X <- rmvnorm(n=n, mean = c(0,0,0), 
              sigma = X_sigma)
 
-#Simulate random errors
+# Simulate random errors
 epsilon <- matrix(0, n, 2)
 epsilon_z_y <- rchisq(n, 5)
 epsilon[, 1] <- (rchisq(n, 5) + epsilon_z_y) * (sqrt(3/20)) - 3.8736
 epsilon[, 2] <- (rchisq(n, 5) + epsilon_z_y) * (sqrt(3/20)) - 3.8736
-#Simulate selection equation
+# Simulate selection equation
 z_star <- 1 + 1 * X[,1] + 1 * X[,2] + epsilon[,1]
 z <- as.numeric((z_star > 0))
 
-#Simulate outcome equation
+# Simulate outcome equation
 y_star <- 1 + 1 * X[,1] + 1 * X[,3] + epsilon[,2]
 z <- as.numeric((z_star > 0))
 y <- y_star
@@ -221,27 +299,27 @@ y[z==0] <- NA
 h <- as.data.frame(cbind(z, y, X))
 names(h) <- c("z", "y", "x1", "x2", "x3")
 
-#Estimate parameters
+# Estimate parameters
 model <- hpaSelection(selection = z ~ x1 + x2, 
                       outcome = y ~ x1 + x3,
                       data = h, z_K = 1, y_K = 3)
 summary(model)
 
-#Get conditional predictions for outcome equation
+# Get conditional predictions for outcome equation
 model_pred_c <- predict(model,is_cond = TRUE)
-#Conditional predictions y|z=1
+# Conditional predictions y|z=1
 model_pred_c$y_1
-#Conditional predictions y|z=0
+# Conditional predictions y|z=0
 model_pred_c$y_0
 
-#Get unconditional predictions for outcome equation
+# Get unconditional predictions for outcome equation
 model_pred_u <- predict(model,is_cond = FALSE)
 model_pred_u$y
 
-#Get conditional predictions for selection equation
-#Note that for z=0 these predictions are NA
+# Get conditional predictions for selection equation
+# Note that for z=0 these predictions are NA
 predict(model, is_cond = TRUE, is_outcome = FALSE)
-#Get unconditional predictions for selection equation
+# Get unconditional predictions for selection equation
 predict(model, is_cond = FALSE, is_outcome = FALSE)
 }
 
@@ -249,26 +327,26 @@ predict(model, is_cond = FALSE, is_outcome = FALSE)
 set.seed(100)
 library("mvtnorm")
 
-#Sample size
+# Sample size
 
 n <- 100
 
-#Simulate independent variables
+# Simulate independent variables
 X_rho <- 0.5
 X_sigma <- matrix(c(1,X_rho,X_rho,X_rho,1,X_rho,X_rho,X_rho,1), ncol=3)
 X <- rmvnorm(n=n, mean = c(0,0,0), 
              sigma = X_sigma)
 
-#Simulate random errors
+# Simulate random errors
 epsilon <- matrix(0, n, 2)
 epsilon_z_y <- rchisq(n, 5)
 epsilon[, 1] <- (rchisq(n, 5) + epsilon_z_y) * (sqrt(3/20)) - 3.8736
 epsilon[, 2] <- (rchisq(n, 5) + epsilon_z_y) * (sqrt(3/20)) - 3.8736
-#Simulate selection equation
+# Simulate selection equation
 z_star <- 1 + 1 * X[,1] + 1 * X[,2] + epsilon[,1]
 z <- as.numeric((z_star > 0))
 
-#Simulate outcome equation
+# Simulate outcome equation
 y_star <- 1 + 1 * X[,1] + 1 * X[,3] + epsilon[,2]
 z <- as.numeric((z_star > 0))
 y <- y_star
@@ -276,28 +354,31 @@ y[z==0] <- NA
 h <- as.data.frame(cbind(z, y, X))
 names(h) <- c("z", "y", "x1", "x2", "x3")
 
-#Estimate parameters
+# Estimate parameters
 model <- hpaSelection(selection = z ~ x1 + x2, 
                       outcome = y ~ x1 + x3,
                       data = h, z_K = 1, y_K = 0)
 summary(model)
 
-#Get conditional predictions for outcome equation
+# Get conditional predictions for outcome equation
 model_pred_c <- predict(model,is_cond = TRUE)
-#Conditional predictions y|z=1
+# Conditional predictions y|z=1
 model_pred_c$y_1
-#Conditional predictions y|z=0
+# Conditional predictions y|z=0
 model_pred_c$y_0
 
-#Get unconditional predictions for outcome equation
+# Get unconditional predictions for outcome equation
 model_pred_u <- predict(model,is_cond = FALSE)
 model_pred_u$y
 
-#Get conditional predictions for selection equation
-#Note that for z=0 these predictions are NA
+# Get conditional predictions for selection equation
+# Note that for z=0 these predictions are NA
 predict(model, is_cond = TRUE, is_outcome = FALSE)
-#Get unconditional predictions for selection equation
+# Get unconditional predictions for selection equation
 predict(model, is_cond = FALSE, is_outcome = FALSE)
+
+# Plot outcome equation random errorrs density
+plot(model)
 }
 }
 \references{

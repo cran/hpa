@@ -41,6 +41,8 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' @template cov_type_Template
 #' @template boot_iter_Template
 #' @template is_parallel_Template
+#' @template opt_type_Template
+#' @template opt_control_Template
 #' @param is_x0_probit logical; if \code{TRUE} (default) then initial points for optimization routine will be
 #' obtained by probit model estimated via \link[stats]{glm} function.
 #' @template is_sequence_Template
@@ -53,10 +55,14 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' @template is_numeric_Template
 #' @template parametric_paradigm_Template
 #' @template optim_details_Template
+#' @template opt_control_details_Template
+#' @template opt_control_details_hpaBinary_Template
 #' @return This function returns an object of class "hpaBinary".\cr \cr
 #' An object of class "hpaBinary" is a list containing the following components:
 #' \itemize{
-#' \item \code{optim} - \code{\link[stats]{optim}} function output.
+#' \item \code{optim} - \code{\link[stats]{optim}} function output. 
+#' If \code{opt_type = "GA"} then it is the list containing 
+#' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 #' \item \code{x1} - numeric vector of distribution parameters estimates.
 #' \item \code{mean} - mean (mu) parameter of density function estimate.
 #' \item \code{sd} - sd (sigma) parameter of density function estimate.
@@ -79,8 +85,8 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' \link[hpa]{AIC.hpaBinary}, \link[hpa]{logLik.hpaBinary}
 #' @template hpaBinary_examples_Template
 #' @export	
-hpaBinary <- function(formula, data, K = 1L, z_mean_fixed = NA_real_, z_sd_fixed = NA_real_, z_constant_fixed = 0, is_z_coef_first_fixed = TRUE, is_x0_probit = TRUE, is_sequence = FALSE, x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE) {
-    .Call(`_hpa_hpaBinary`, formula, data, K, z_mean_fixed, z_sd_fixed, z_constant_fixed, is_z_coef_first_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel)
+hpaBinary <- function(formula, data, K = 1L, z_mean_fixed = NA_real_, z_sd_fixed = NA_real_, z_constant_fixed = 0, is_z_coef_first_fixed = TRUE, is_x0_probit = TRUE, is_sequence = FALSE, x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL) {
+    .Call(`_hpa_hpaBinary`, formula, data, K, z_mean_fixed, z_sd_fixed, z_constant_fixed, is_z_coef_first_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control)
 }
 
 #' Predict method for hpaBinary
@@ -146,15 +152,21 @@ logLik_hpaBinary <- function(object) {
 #' @template cov_type_Template
 #' @template boot_iter_Template
 #' @template is_parallel_Template
+#' @template opt_type_Template
+#' @template opt_control_Template
 #' @template hpa_likelihood_details_Template
 #' @template GN_details_Template
 #' @template first_coef_Template
 #' @template parametric_paradigm_Template
 #' @template optim_details_Template
+#' @template opt_control_details_Template
+#' @template opt_control_details_hpaML_Template
 #' @return This function returns an object of class "hpaML".\cr \cr
 #' An object of class "hpaML" is a list containing the following components:
 #' \itemize{
-#' \item \code{optim} - \code{\link[maxLik]{maxLik}} function output.
+#' \item \code{optim} - \code{\link[stats]{optim}} function output. 
+#' If \code{opt_type = "GA"} then it is the list containing 
+#' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 #' \item \code{x1} - numeric vector of distribution parameters estimates.
 #' \item \code{mean} - density function mean vector estimate.
 #' \item \code{sd} - density function sd vector estimate.
@@ -173,8 +185,8 @@ logLik_hpaBinary <- function(object) {
 #' @seealso \link[hpa]{summary.hpaML}, \link[hpa]{predict.hpaML}, \link[hpa]{AIC.hpaML}, \link[hpa]{logLik.hpaML}
 #' @template hpaML_examples_Template
 #' @export
-hpaML <- function(x, pol_degrees = numeric(0), tr_left = numeric(0), tr_right = numeric(0), given_ind = logical(0), omit_ind = logical(0), x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE) {
-    .Call(`_hpa_hpaML`, x, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel)
+hpaML <- function(x, pol_degrees = numeric(0), tr_left = numeric(0), tr_right = numeric(0), given_ind = logical(0), omit_ind = logical(0), x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL) {
+    .Call(`_hpa_hpaML`, x, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control)
 }
 
 #' Predict method for hpaML
@@ -439,6 +451,8 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' @template cov_type_Template
 #' @template boot_iter_Template
 #' @template is_parallel_Template
+#' @template opt_type_Template
+#' @template opt_control_Template
 #' @template hpa_likelihood_details_Template
 #' @template GN_details_Template
 #' @template first_coef_Template
@@ -452,10 +466,14 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' which leads to unobservable values of dependent variable in outcome equation.
 #' @template Mroz_reference_Template
 #' @template optim_details_Template
+#' @template opt_control_details_Template
+#' @template opt_control_details_hpaSelection_Template
 #' @return This function returns an object of class "hpaSelection".\cr \cr
 #' An object of class "hpaSelection" is a list containing the following components:
 #' \itemize{
-#' \item \code{optim} - \code{\link[stats]{optim}} function output.
+#' \item \code{optim} - \code{\link[stats]{optim}} function output. 
+#' If \code{opt_type = "GA"} then it is the list containing 
+#' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 #' \item \code{x1} - numeric vector of distribution parameters estimates.
 #' \item \code{Newey} - list containing information concerning Newey's method estimation results.
 #' \item \code{z_mean} - estimate of the hermite polynomial mean parameter related to selection equation random error marginal distribution.
@@ -497,12 +515,13 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' \item \code{outcome_exp} - outcome equation random errors expectation estimate.
 #' \item \code{outcome_var} - outcome equation random errors variance estimate.
 #' \item \code{errors_covariance} - outcome and selection equation random errors covariance estimate.
-#' \item \code{rho} - outcome and selection equation random errors correlation estimate.}
+#' \item \code{rho} - outcome and selection equation random errors correlation estimate.
+#' \item \code{rho_std} - outcome and selection equation random errors correlation estimator standard error estimate.}
 #' @seealso \link[hpa]{summary.hpaSelection}, \link[hpa]{predict.hpaSelection}, \link[hpa]{plot.hpaSelection}, \link[hpa]{AIC.hpaSelection}, \link[hpa]{logLik.hpaSelection}
 #' @template hpaSelection_examples_Template
 #' @export	
-hpaSelection <- function(selection, outcome, data, z_K = 1L, y_K = 1L, pol_elements = 3L, is_Newey = FALSE, x0 = numeric(0), is_Newey_loocv = FALSE, z_sd_fixed = -1, cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE) {
-    .Call(`_hpa_hpaSelection`, selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, z_sd_fixed, cov_type, boot_iter, is_parallel)
+hpaSelection <- function(selection, outcome, data, z_K = 1L, y_K = 1L, pol_elements = 3L, is_Newey = FALSE, x0 = numeric(0), is_Newey_loocv = FALSE, z_sd_fixed = -1, cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL) {
+    .Call(`_hpa_hpaSelection`, selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, z_sd_fixed, cov_type, boot_iter, is_parallel, opt_type, opt_control)
 }
 
 #' Predict outcome and selection equation values from hpaSelection model
@@ -576,6 +595,7 @@ logLik_hpaSelection <- function(object) {
 #' and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
 #' to the (i-1)-th moment.
 #' @template is_validation_Template
+#' @param is_central logical; if \code{TRUE}, then central moments will be calculated.
 #' @details This function estimates \code{k}-th order moment of
 #' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd}.\cr
 #' @template k_integer_template
@@ -594,8 +614,8 @@ logLik_hpaSelection <- function(object) {
 #' normalMoment(k = 5, mean = 3, sd = 5, return_all_moments = TRUE)
 #'
 #' @export
-normalMoment <- function(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE, is_validation = TRUE) {
-    .Call(`_hpa_normalMoment`, k, mean, sd, return_all_moments, is_validation)
+normalMoment <- function(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE, is_validation = TRUE, is_central = FALSE) {
+    .Call(`_hpa_normalMoment`, k, mean, sd, return_all_moments, is_validation, is_central)
 }
 
 #' Calculate k-th order moment of truncated normal distribution

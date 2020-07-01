@@ -38,8 +38,9 @@ by the first rows of these matrices.}
 
 \item{expectation_powers}{integer vector of random vector components powers.}
 
-\item{is_parallel}{if TRUE then multiple cores will be 
-used for some calculations.}
+\item{is_parallel}{if TRUE then multiple cores will be
+used for some calculations. It usually provides speed advantage for
+large enough samples (about more than 1000 observations).}
 }
 \value{
 This function returns numeric vector of expected powered product hermite polynomial approximations for truncated distribution.

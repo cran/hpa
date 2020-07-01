@@ -17,89 +17,19 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	double z_sd_fixed,
 	bool is_parallel);
 
-Rcpp::List hpaSelectionLnLOptim_List(Rcpp::NumericVector x0,
-	Rcpp::List ind_List,
-	arma::vec y_1,
-	arma::vec y_0,
-	arma::vec z_1,
-	arma::vec z_0,
-	arma::mat y_d_1,
-	arma::mat y_d_0,
-	arma::mat z_d_1,
-	arma::mat z_d_0,
-	Rcpp::NumericVector pol_degrees,
-	double z_sd,
-	bool is_parallel);
+Rcpp::List hpaSelectionLnLOptim_List(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
 
-double hpaSelectionLnLOptim(Rcpp::NumericVector x0,
-	Rcpp::List ind_List,
-	arma::vec y_1,
-	arma::vec y_0,
-	arma::vec z_1,
-	arma::vec z_0,
-	arma::mat y_d_1,
-	arma::mat y_d_0,
-	arma::mat z_d_1,
-	arma::mat z_d_0,
-	Rcpp::NumericVector pol_degrees,
-	double z_sd,
-	bool is_parallel);
+double hpaSelectionLnLOptim(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
 
-Rcpp::NumericVector hpaSelectionLnLOptim_ind(Rcpp::NumericVector x0,
-	Rcpp::List ind_List,
-	arma::vec y_1,
-	arma::vec y_0,
-	arma::vec z_1,
-	arma::vec z_0,
-	arma::mat y_d_1,
-	arma::mat y_d_0,
-	arma::mat z_d_1,
-	arma::mat z_d_0,
-	Rcpp::NumericVector pol_degrees,
-	double z_sd,
-	bool is_parallel);
+Rcpp::NumericVector hpaSelectionLnLOptim_ind(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
 
-List hpaSelectionLnLOptim_grad_List(Rcpp::NumericVector x0,
-	Rcpp::List ind_List,
-	arma::vec y_1,
-	arma::vec y_0,
-	arma::vec z_1,
-	arma::vec z_0,
-	arma::mat y_d_1,
-	arma::mat y_d_0,
-	arma::mat z_d_1,
-	arma::mat z_d_0,
-	Rcpp::NumericVector pol_degrees,
-	double z_sd,
-	bool is_parallel);
+List hpaSelectionLnLOptim_grad_List(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
 
-NumericVector hpaSelectionLnLOptim_grad(Rcpp::NumericVector x0,
-	Rcpp::List ind_List,
-	arma::vec y_1,
-	arma::vec y_0,
-	arma::vec z_1,
-	arma::vec z_0,
-	arma::mat y_d_1,
-	arma::mat y_d_0,
-	arma::mat z_d_1,
-	arma::mat z_d_0,
-	Rcpp::NumericVector pol_degrees,
-	double z_sd,
-	bool is_parallel);
+NumericVector hpaSelectionLnLOptim_grad(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
 
-NumericMatrix hpaSelectionLnLOptim_grad_ind(Rcpp::NumericVector x0,
-	Rcpp::List ind_List,
-	arma::vec y_1,
-	arma::vec y_0,
-	arma::vec z_1,
-	arma::vec z_0,
-	arma::mat y_d_1,
-	arma::mat y_d_0,
-	arma::mat z_d_1,
-	arma::mat z_d_0,
-	Rcpp::NumericVector pol_degrees,
-	double z_sd,
-	bool is_parallel);
+NumericMatrix hpaSelectionLnLOptim_grad_ind(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+
+NumericMatrix hpaSelectionLnLOptim_hessian(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
 
 Rcpp::List predict_hpaSelection(Rcpp::List object, 
 	Rcpp::DataFrame newdata, 

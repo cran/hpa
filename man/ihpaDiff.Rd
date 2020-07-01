@@ -43,8 +43,9 @@ Currently \code{type="pol_coefficients"} is the only available option (default)
 meaning that the gradient will contain partial derivatives respect to polynomial coefficients
 listed in the same order as \code{pol_coefficients}.}
 
-\item{is_parallel}{if TRUE then multiple cores will be 
-used for some calculations.}
+\item{is_parallel}{if TRUE then multiple cores will be
+used for some calculations. It usually provides speed advantage for
+large enough samples (about more than 1000 observations).}
 }
 \value{
 This function returns gradient of interval distribution function hermite polynomial 

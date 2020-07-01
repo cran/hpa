@@ -6,17 +6,44 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace RcppParallel;
 
-// calculate square
-double sqr(double x)
+// Initialize some binary functions
+
+  // calculate square
+double sqr_parallel(double x)
 {
   return(x * x);
 }
 
-// calculate standard normal cdf
+  // calculate standard normal cdf
 double normalCDF(double x)
 {
   return std::erfc(-x / std::sqrt(2)) / 2;
 }
+
+// calling ::pow and ::exp directly causes error for
+// some systems probably because of confusion between
+// Rcpp and std implementations so let's provide wrapper
+// functions in order to avoid errors
+
+  // wrapper function to calculate pow
+double pow_parallel(double x, int y)
+{
+  return std::pow(x, y);
+}
+
+  // wrapper function to calculate exp
+double exp_parallel(double x)
+{
+  return std::exp(x);
+}
+
+  // wrapper function to calculate sqrt
+double sqrt_parallel(double x)
+{
+  return std::sqrt(x);
+}
+
+// Parallel functions
 
 // Parallel pow of vectors (struct)
 struct ParallelVectorPowStruct : public Worker
@@ -47,7 +74,7 @@ struct ParallelVectorPowStruct : public Worker
                      input.begin() + end, 
                      input_powers.begin(),
                      output.begin() + begin, 
-                     ::pow);
+                     ::pow_parallel);
     }
     
     if (pow_type == 1)
@@ -55,7 +82,7 @@ struct ParallelVectorPowStruct : public Worker
       std::transform(input.begin() + begin, 
                      input.begin() + end,
                      output.begin() + begin, 
-                     sqr);
+                     ::sqr_parallel);
     }
     
     if (pow_type == 2)
@@ -64,7 +91,7 @@ struct ParallelVectorPowStruct : public Worker
       std::transform(input.begin() + begin, 
                      input.begin() + end,
                      output.begin() + begin, 
-                     ::sqrt);
+                     ::sqrt_parallel);
     }
   }
 };
@@ -81,7 +108,6 @@ NumericVector ParallelVectorPow(NumericVector x, double value = 1)
   
   if (value == 2)
   {
-    //pow_type = 1;
     return (x * x);
   }
   
@@ -131,7 +157,7 @@ struct ParallelVectorExpStruct : public Worker
       std::transform(input.begin() + begin, 
                      input.begin() + end,
                      output.begin() + begin, 
-                     ::exp);
+                     ::exp_parallel);
   }
 };
 

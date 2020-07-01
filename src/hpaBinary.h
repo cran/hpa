@@ -18,103 +18,23 @@ Rcpp::List hpaBinary(Rcpp::Formula formula,
 	Rcpp::NumericVector x0,
 	Rcpp::String cov_type,
 	int boot_iter,
-	bool is_parallel);
+	bool is_parallel,
+	String opt_type,
+	Rcpp::List opt_control);
 
-List hpaBinaryLnLOptim_List(Rcpp::NumericVector x0,
-	      Rcpp::List is_List,
-	      arma::vec z_1,
-	      arma::vec z_0,
-	      arma::mat z_d_1,
-	      arma::mat z_d_0,
-	      int K,
-	      double z_mean_fixed,
-	      double z_sd_fixed,
-	      double z_constant_fixed0,
-	      Rcpp::NumericVector pol_coefficients_ind,
-	      int z_mean_ind,
-	      int z_sd_ind,
-	      Rcpp::NumericVector z_coef_ind,
-	      bool is_parallel);
+List hpaBinaryLnLOptim_List(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
 
-double hpaBinaryLnLOptim(Rcpp::NumericVector x0,
-	      Rcpp::List is_List,
-	      arma::vec z_1,
-	      arma::vec z_0,
-	      arma::mat z_d_1,
-	      arma::mat z_d_0,
-	      int K,
-	      double z_mean_fixed,
-	      double z_sd_fixed,
-	      double z_constant_fixed0,
-	      Rcpp::NumericVector pol_coefficients_ind,
-	      int z_mean_ind,
-	      int z_sd_ind,
-	      Rcpp::NumericVector z_coef_ind,
-	      bool is_parallel);
+double hpaBinaryLnLOptim(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
 
-NumericVector hpaBinaryLnLOptim_ind(Rcpp::NumericVector x0,
-	      Rcpp::List is_List,
-	      arma::vec z_1,
-	      arma::vec z_0,
-	      arma::mat z_d_1,
-	      arma::mat z_d_0,
-	      int K,
-	      double z_mean_fixed,
-	      double z_sd_fixed,
-	      double z_constant_fixed0,
-	      Rcpp::NumericVector pol_coefficients_ind,
-	      int z_mean_ind,
-	      int z_sd_ind,
-	      Rcpp::NumericVector z_coef_ind,
-	      bool is_parallel);
+NumericVector hpaBinaryLnLOptim_ind(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
 
-Rcpp::List hpaBinaryLnLOptim_grad_List(Rcpp::NumericVector x0,
-	      Rcpp::List is_List,
-	      arma::vec z_1,
-	      arma::vec z_0,
-	      arma::mat z_d_1,
-	      arma::mat z_d_0,
-	      int K,
-	      double z_mean_fixed,
-	      double z_sd_fixed,
-	      double z_constant_fixed0,
-	      Rcpp::NumericVector pol_coefficients_ind,
-	      int z_mean_ind,
-	      int z_sd_ind,
-	      Rcpp::NumericVector z_coef_ind,
-	      bool is_parallel);
+Rcpp::List hpaBinaryLnLOptim_grad_List(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
 
-Rcpp::NumericVector hpaBinaryLnLOptim_grad(Rcpp::NumericVector x0,
-	      Rcpp::List is_List,
-	      arma::vec z_1,
-	      arma::vec z_0,
-	      arma::mat z_d_1,
-	      arma::mat z_d_0,
-	      int K,
-	      double z_mean_fixed,
-	      double z_sd_fixed,
-	      double z_constant_fixed0,
-	      Rcpp::NumericVector pol_coefficients_ind,
-	      int z_mean_ind,
-	      int z_sd_ind,
-	      Rcpp::NumericVector z_coef_ind,
-	      bool is_parallel);
+Rcpp::NumericVector hpaBinaryLnLOptim_grad(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
 
-Rcpp::NumericMatrix hpaBinaryLnLOptim_grad_ind(Rcpp::NumericVector x0,
-	      Rcpp::List is_List,
-	      arma::vec z_1,
-	      arma::vec z_0,
-	      arma::mat z_d_1,
-	      arma::mat z_d_0,
-	      int K,
-	      double z_mean_fixed,
-	      double z_sd_fixed,
-	      double z_constant_fixed0,
-	      Rcpp::NumericVector pol_coefficients_ind,
-	      int z_mean_ind,
-	      int z_sd_ind,
-	      Rcpp::NumericVector z_coef_ind,
-	      bool is_parallel);
+Rcpp::NumericMatrix hpaBinaryLnLOptim_grad_ind(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
+
+Rcpp::NumericMatrix hpaBinaryLnLOptim_hessian(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
 
 Rcpp::NumericVector predict_hpaBinary(Rcpp::List object, 
 	Rcpp::DataFrame newdata, 

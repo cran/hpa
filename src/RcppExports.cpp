@@ -35,8 +35,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // hpaBinary
-List hpaBinary(Rcpp::Formula formula, DataFrame data, int K, double z_mean_fixed, double z_sd_fixed, double z_constant_fixed, bool is_z_coef_first_fixed, bool is_x0_probit, bool is_sequence, NumericVector x0, String cov_type, int boot_iter, bool is_parallel);
-RcppExport SEXP _hpa_hpaBinary(SEXP formulaSEXP, SEXP dataSEXP, SEXP KSEXP, SEXP z_mean_fixedSEXP, SEXP z_sd_fixedSEXP, SEXP z_constant_fixedSEXP, SEXP is_z_coef_first_fixedSEXP, SEXP is_x0_probitSEXP, SEXP is_sequenceSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP) {
+List hpaBinary(Rcpp::Formula formula, DataFrame data, int K, double z_mean_fixed, double z_sd_fixed, double z_constant_fixed, bool is_z_coef_first_fixed, bool is_x0_probit, bool is_sequence, NumericVector x0, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control);
+RcppExport SEXP _hpa_hpaBinary(SEXP formulaSEXP, SEXP dataSEXP, SEXP KSEXP, SEXP z_mean_fixedSEXP, SEXP z_sd_fixedSEXP, SEXP z_constant_fixedSEXP, SEXP is_z_coef_first_fixedSEXP, SEXP is_x0_probitSEXP, SEXP is_sequenceSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -53,7 +53,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type cov_type(cov_typeSEXP);
     Rcpp::traits::input_parameter< int >::type boot_iter(boot_iterSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(hpaBinary(formula, data, K, z_mean_fixed, z_sd_fixed, z_constant_fixed, is_z_coef_first_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel));
+    Rcpp::traits::input_parameter< String >::type opt_type(opt_typeSEXP);
+    Rcpp::traits::input_parameter< List >::type opt_control(opt_controlSEXP);
+    rcpp_result_gen = Rcpp::wrap(hpaBinary(formula, data, K, z_mean_fixed, z_sd_fixed, z_constant_fixed, is_z_coef_first_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -125,8 +127,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // hpaML
-List hpaML(NumericMatrix x, NumericVector pol_degrees, NumericVector tr_left, NumericVector tr_right, LogicalVector given_ind, LogicalVector omit_ind, NumericVector x0, String cov_type, int boot_iter, bool is_parallel);
-RcppExport SEXP _hpa_hpaML(SEXP xSEXP, SEXP pol_degreesSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP) {
+List hpaML(NumericMatrix x, NumericVector pol_degrees, NumericVector tr_left, NumericVector tr_right, LogicalVector given_ind, LogicalVector omit_ind, NumericVector x0, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control);
+RcppExport SEXP _hpa_hpaML(SEXP xSEXP, SEXP pol_degreesSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -140,7 +142,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type cov_type(cov_typeSEXP);
     Rcpp::traits::input_parameter< int >::type boot_iter(boot_iterSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(hpaML(x, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel));
+    Rcpp::traits::input_parameter< String >::type opt_type(opt_typeSEXP);
+    Rcpp::traits::input_parameter< List >::type opt_control(opt_controlSEXP);
+    rcpp_result_gen = Rcpp::wrap(hpaML(x, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -384,8 +388,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // hpaSelection
-Rcpp::List hpaSelection(Rcpp::Formula selection, Rcpp::Formula outcome, DataFrame data, int z_K, int y_K, int pol_elements, bool is_Newey, NumericVector x0, bool is_Newey_loocv, double z_sd_fixed, String cov_type, int boot_iter, bool is_parallel);
-RcppExport SEXP _hpa_hpaSelection(SEXP selectionSEXP, SEXP outcomeSEXP, SEXP dataSEXP, SEXP z_KSEXP, SEXP y_KSEXP, SEXP pol_elementsSEXP, SEXP is_NeweySEXP, SEXP x0SEXP, SEXP is_Newey_loocvSEXP, SEXP z_sd_fixedSEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP) {
+Rcpp::List hpaSelection(Rcpp::Formula selection, Rcpp::Formula outcome, DataFrame data, int z_K, int y_K, int pol_elements, bool is_Newey, NumericVector x0, bool is_Newey_loocv, double z_sd_fixed, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control);
+RcppExport SEXP _hpa_hpaSelection(SEXP selectionSEXP, SEXP outcomeSEXP, SEXP dataSEXP, SEXP z_KSEXP, SEXP y_KSEXP, SEXP pol_elementsSEXP, SEXP is_NeweySEXP, SEXP x0SEXP, SEXP is_Newey_loocvSEXP, SEXP z_sd_fixedSEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -402,7 +406,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type cov_type(cov_typeSEXP);
     Rcpp::traits::input_parameter< int >::type boot_iter(boot_iterSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(hpaSelection(selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, z_sd_fixed, cov_type, boot_iter, is_parallel));
+    Rcpp::traits::input_parameter< String >::type opt_type(opt_typeSEXP);
+    Rcpp::traits::input_parameter< List >::type opt_control(opt_controlSEXP);
+    rcpp_result_gen = Rcpp::wrap(hpaSelection(selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, z_sd_fixed, cov_type, boot_iter, is_parallel, opt_type, opt_control));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -478,8 +484,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // normalMoment
-NumericVector normalMoment(int k, double mean, double sd, bool return_all_moments, bool is_validation);
-RcppExport SEXP _hpa_normalMoment(SEXP kSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP return_all_momentsSEXP, SEXP is_validationSEXP) {
+NumericVector normalMoment(int k, double mean, double sd, bool return_all_moments, bool is_validation, bool is_central);
+RcppExport SEXP _hpa_normalMoment(SEXP kSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP return_all_momentsSEXP, SEXP is_validationSEXP, SEXP is_centralSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -488,7 +494,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type return_all_moments(return_all_momentsSEXP);
     Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
-    rcpp_result_gen = Rcpp::wrap(normalMoment(k, mean, sd, return_all_moments, is_validation));
+    Rcpp::traits::input_parameter< bool >::type is_central(is_centralSEXP);
+    rcpp_result_gen = Rcpp::wrap(normalMoment(k, mean, sd, return_all_moments, is_validation, is_central));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -542,14 +549,14 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_hpa_dnorm_parallel", (DL_FUNC) &_hpa_dnorm_parallel, 4},
     {"_hpa_pnorm_parallel", (DL_FUNC) &_hpa_pnorm_parallel, 4},
-    {"_hpa_hpaBinary", (DL_FUNC) &_hpa_hpaBinary, 13},
+    {"_hpa_hpaBinary", (DL_FUNC) &_hpa_hpaBinary, 15},
     {"_hpa_predict_hpaBinary", (DL_FUNC) &_hpa_predict_hpaBinary, 3},
     {"_hpa_summary_hpaBinary", (DL_FUNC) &_hpa_summary_hpaBinary, 1},
     {"_hpa_print_summary_hpaBinary", (DL_FUNC) &_hpa_print_summary_hpaBinary, 1},
     {"_hpa_plot_hpaBinary", (DL_FUNC) &_hpa_plot_hpaBinary, 1},
     {"_hpa_AIC_hpaBinary", (DL_FUNC) &_hpa_AIC_hpaBinary, 2},
     {"_hpa_logLik_hpaBinary", (DL_FUNC) &_hpa_logLik_hpaBinary, 1},
-    {"_hpa_hpaML", (DL_FUNC) &_hpa_hpaML, 10},
+    {"_hpa_hpaML", (DL_FUNC) &_hpa_hpaML, 12},
     {"_hpa_predict_hpaML", (DL_FUNC) &_hpa_predict_hpaML, 2},
     {"_hpa_summary_hpaML", (DL_FUNC) &_hpa_summary_hpaML, 1},
     {"_hpa_print_summary_hpaML", (DL_FUNC) &_hpa_print_summary_hpaML, 1},
@@ -565,14 +572,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hpa_itrhpa", (DL_FUNC) &_hpa_itrhpa, 11},
     {"_hpa_dhpaDiff", (DL_FUNC) &_hpa_dhpaDiff, 9},
     {"_hpa_ihpaDiff", (DL_FUNC) &_hpa_ihpaDiff, 10},
-    {"_hpa_hpaSelection", (DL_FUNC) &_hpa_hpaSelection, 13},
+    {"_hpa_hpaSelection", (DL_FUNC) &_hpa_hpaSelection, 15},
     {"_hpa_predict_hpaSelection", (DL_FUNC) &_hpa_predict_hpaSelection, 5},
     {"_hpa_summary_hpaSelection", (DL_FUNC) &_hpa_summary_hpaSelection, 1},
     {"_hpa_print_summary_hpaSelection", (DL_FUNC) &_hpa_print_summary_hpaSelection, 1},
     {"_hpa_plot_hpaSelection", (DL_FUNC) &_hpa_plot_hpaSelection, 2},
     {"_hpa_AIC_hpaSelection", (DL_FUNC) &_hpa_AIC_hpaSelection, 2},
     {"_hpa_logLik_hpaSelection", (DL_FUNC) &_hpa_logLik_hpaSelection, 1},
-    {"_hpa_normalMoment", (DL_FUNC) &_hpa_normalMoment, 5},
+    {"_hpa_normalMoment", (DL_FUNC) &_hpa_normalMoment, 6},
     {"_hpa_truncatedNormalMoment", (DL_FUNC) &_hpa_truncatedNormalMoment, 13},
     {"_hpa_polynomialIndex", (DL_FUNC) &_hpa_polynomialIndex, 1},
     {"_hpa_printPolynomial", (DL_FUNC) &_hpa_printPolynomial, 2},

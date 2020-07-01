@@ -9,7 +9,8 @@ normalMoment(
   mean = 0,
   sd = 1,
   return_all_moments = FALSE,
-  is_validation = TRUE
+  is_validation = TRUE,
+  is_central = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ to the (i-1)-th moment.}
 
 \item{is_validation}{bool value indicating whether function input arguments should be validated. 
 Set it to FALSE for slight perfomance boost (default value is TRUE).}
+
+\item{is_central}{logical; if \code{TRUE}, then central moments will be calculated.}
 }
 \value{
 This function returns \code{k}-th order moment of

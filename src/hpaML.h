@@ -11,84 +11,28 @@ Rcpp::List hpaML(Rcpp::NumericMatrix x,
 	Rcpp::NumericVector tr_right,
 	Rcpp::LogicalVector given_ind,
 	Rcpp::LogicalVector omit_ind,
-	NumericVector x0,
-	String cov_type,
+	Rcpp::NumericVector x0,
+	Rcpp::String cov_type,
 	int bootstrap,
-	bool is_parallel);
+	bool is_parallel,
+	Rcpp::String opt_type,
+	Rcpp::List opt_control);
 
-List hpaLnLOptim_List(Rcpp::NumericVector x0,
-	Rcpp::NumericMatrix x_data,
-	Rcpp::NumericVector pol_coefficients_ind,
-	Rcpp::NumericVector pol_degrees,
-	Rcpp::LogicalVector given_ind,
-	Rcpp::LogicalVector omit_ind,
-	Rcpp::NumericVector mean_ind,
-	Rcpp::NumericVector sd_ind,
-	Rcpp::NumericMatrix tr_left,
-	Rcpp::NumericMatrix tr_right,
-	bool is_parallel);
+List hpaLnLOptim_List(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
 
-double hpaLnLOptim(Rcpp::NumericVector x0,
-	Rcpp::NumericMatrix x_data,
-	Rcpp::NumericVector pol_coefficients_ind,
-	Rcpp::NumericVector pol_degrees,
-	Rcpp::LogicalVector given_ind,
-	Rcpp::LogicalVector omit_ind,
-	Rcpp::NumericVector mean_ind,
-	Rcpp::NumericVector sd_ind,
-	Rcpp::NumericMatrix tr_left,
-	Rcpp::NumericMatrix tr_right,
-	bool is_parallel);
+double hpaLnLOptim(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
 
-NumericVector hpaLnLOptim_ind(Rcpp::NumericVector x0,
-	Rcpp::NumericMatrix x_data,
-	Rcpp::NumericVector pol_coefficients_ind,
-	Rcpp::NumericVector pol_degrees,
-	Rcpp::LogicalVector given_ind,
-	Rcpp::LogicalVector omit_ind,
-	Rcpp::NumericVector mean_ind,
-	Rcpp::NumericVector sd_ind,
-	Rcpp::NumericMatrix tr_left,
-	Rcpp::NumericMatrix tr_right,
-	bool is_parallel);
+NumericVector hpaLnLOptim_ind(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
 
-List hpaLnLOptim_grad_List(Rcpp::NumericVector x0,
-	Rcpp::NumericMatrix x_data,
-	Rcpp::NumericVector pol_coefficients_ind,
-	Rcpp::NumericVector pol_degrees,
-	Rcpp::LogicalVector given_ind,
-	Rcpp::LogicalVector omit_ind,
-	Rcpp::NumericVector mean_ind,
-	Rcpp::NumericVector sd_ind,
-	Rcpp::NumericMatrix tr_left,
-	Rcpp::NumericMatrix tr_right,
-	bool is_parallel);
+List hpaLnLOptim_grad_List(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
 
-NumericVector hpaLnLOptim_grad(Rcpp::NumericVector x0,
-	Rcpp::NumericMatrix x_data,
-	Rcpp::NumericVector pol_coefficients_ind,
-	Rcpp::NumericVector pol_degrees,
-	Rcpp::LogicalVector given_ind,
-	Rcpp::LogicalVector omit_ind,
-	Rcpp::NumericVector mean_ind,
-	Rcpp::NumericVector sd_ind,
-	Rcpp::NumericMatrix tr_left,
-	Rcpp::NumericMatrix tr_right,
-	bool is_parallel);
+NumericVector hpaLnLOptim_grad(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
 
-NumericMatrix hpaLnLOptim_grad_ind(Rcpp::NumericVector x0,
-	Rcpp::NumericMatrix x_data,
-	Rcpp::NumericVector pol_coefficients_ind,
-	Rcpp::NumericVector pol_degrees,
-	Rcpp::LogicalVector given_ind,
-	Rcpp::LogicalVector omit_ind,
-	Rcpp::NumericVector mean_ind,
-	Rcpp::NumericVector sd_ind,
-	Rcpp::NumericMatrix tr_left,
-	Rcpp::NumericMatrix tr_right,
-	bool is_parallel);
+NumericMatrix hpaLnLOptim_grad_ind(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
 
-Rcpp::NumericVector predict_hpaML(List object,
+NumericMatrix hpaLnLOptim_hessian(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
+
+Rcpp::NumericVector predict_hpaML(Rcpp::List object,
 	Rcpp::NumericMatrix newdata);
 
 Rcpp::NumericVector mecdf(NumericMatrix x);

@@ -11,21 +11,6 @@ using namespace RcppParallel;
 
 // Hermite polynomial density,
 // cumulative distribution function and moments approximations.
-// @description This function estimates hermite polynomial density,
-// cumulative distribution function and moments approximations.
-// @template x_lower_Template
-// @template x_upper_Template
-// @template pol_coefficients_Template
-// @template pol_degrees_Template
-// @template type_Template
-// @template given_ind_Template
-// @template omit_ind_Template
-// @template mean_Template
-// @template sd_Template
-// @template expectation_powers_Template
-// @details
-// If you already have some precalculated values please specify them using 
-// \code{pdf_lower}, \code{pdf_upper}, \code{cdf_lower}, \code{cdf_upper} and \code{cdf_difference} arguments.
 List hpaMain(
 	NumericMatrix x_lower = NumericMatrix(1,1),
 	NumericMatrix x_upper = NumericMatrix(1,1),
@@ -41,7 +26,6 @@ List hpaMain(
 	bool is_parallel = false,
 	bool is_cdf = false)
 {
-
 	// Get number of observations
 	int n = x_upper.nrow();
 
@@ -61,6 +45,7 @@ List hpaMain(
 	{
 		given_ind = LogicalVector(pol_degrees_n);
 	}
+	
 	if (omit_ind.size() == 0)
 	{
 		omit_ind = LogicalVector(pol_degrees_n);
@@ -108,8 +93,6 @@ List hpaMain(
 		// Initialize densities
 
   		// Upper densities
-  		if (pdf_upper(0, 0) == 0)
-  		{
   			pdf_upper = NumericMatrix(n, pol_degrees_n);
   			for (int i = 0; i < pol_degrees_n; i++)
   			{
@@ -118,8 +101,7 @@ List hpaMain(
   				  pdf_upper(_, i) = dnorm_parallel(x_upper(_, i), mean[i], sd[i], is_parallel);
   				}
   			}
-  		}
-  
+
   		// Lower densities
   		if ((type == "interval") | (type == "expectation truncated"))
   		{
@@ -146,7 +128,7 @@ List hpaMain(
   		}
 
 		// Initialize cumulative distribution functions (cdfs)
-		
+
   		// Upper cdf
   		if (type != "pdf")
   		{
@@ -162,27 +144,27 @@ List hpaMain(
   			}
   		}
 
-  			// Lower cdf
-  			if (((type == "interval") | (type == "expectation truncated")))
-  			{
-  				cdf_lower = NumericMatrix(n, pol_degrees_n);
-  				for (int i = 0; i < pol_degrees_n; i++)
-  				{
-  					if (d_cond[i])
-  					{
-  					  cdf_lower(_, i) = pnorm_parallel(x_lower(_, i), mean[i], sd[i], is_parallel);
-  					}
-  				}
-  			}
-
-  			// Calculate cdf_difference
+  		// Lower cdf
+  		if (((type == "interval") | (type == "expectation truncated")))
+  		{
+  			cdf_lower = NumericMatrix(n, pol_degrees_n);
   			for (int i = 0; i < pol_degrees_n; i++)
   			{
   				if (d_cond[i])
   				{
-  					cdf_difference(_, i) = (cdf_upper(_, i) - cdf_lower(_, i));
+  					cdf_lower(_, i) = pnorm_parallel(x_lower(_, i), mean[i], sd[i], is_parallel);
   				}
   			}
+  		}
+
+  		// Calculate cdf_difference
+  		for (int i = 0; i < pol_degrees_n; i++)
+  		{
+  			if (d_cond[i])
+  			{
+  				cdf_difference(_, i) = (cdf_upper(_, i) - cdf_lower(_, i));
+  			}
+  		}
 
   		// Estimate cdf_difference product
   		if (type != "pdf")
@@ -211,7 +193,7 @@ List hpaMain(
 			max_degree = 2 * pol_degrees[i] + expectation_powers[i];
 			moments[i] = normalMoment(max_degree,
 									  mean[i], sd[i], 
-									  true, false);
+									  true, false, false);
 		}
 	}
 
@@ -225,7 +207,6 @@ List hpaMain(
 			if (d_cond[i])
 			{
 				max_degree = 2 * pol_degrees[i] + expectation_powers[i];
-				// Note that arguments order matters!
 				tr_moments[i] = truncatedNormalMoment(max_degree,
 					x_lower(_, i), x_upper(_, i),
 					mean[i], sd[i],
@@ -236,7 +217,7 @@ List hpaMain(
 		}
 	}
 
-	// Calculate x powers
+	// Calculate x powers (x ^ polynomial_degree)
 	LogicalVector x_cond(pol_degrees_n);
 
 	if (type == "pdf")
@@ -273,11 +254,10 @@ List hpaMain(
 	// Calculate main expression
 
 	// Initialize values to store temporal results
-
-	NumericVector value_pgn(n);
+	NumericVector value_pgn(n); // nominator
 	std::fill(value_pgn.begin(), value_pgn.end(), 0);
 
-	NumericVector psi(n);
+	NumericVector psi(n); // denominator
 	std::fill(psi.begin(), psi.end(), 0);
 
 	NumericVector value_sum_element(n);
@@ -285,7 +265,6 @@ List hpaMain(
 	double polynomial_sum = 0;
 	
 	// Initialize values to store gradient information if need
-	
 	NumericMatrix pc_grad = NumericMatrix(n, pol_coefficients_n);
 	NumericMatrix pc_grad_value = NumericMatrix(n, pol_coefficients_n);
 	NumericMatrix pc_grad_psi = NumericMatrix(n, pol_coefficients_n);
@@ -298,7 +277,6 @@ List hpaMain(
 	}
 
 	// Perform main calculations
-
 	for (int i = 0; i < pol_coefficients_n; i++)
 	{
 		for (int j = i; j < pol_coefficients_n; j++)
@@ -369,7 +347,6 @@ List hpaMain(
 	}
 
 	// Return gradient specific values if need
-
 	if (grad_type == "pol_coefficients")
 	{
 	  NumericVector psi_2 = psi * psi;
@@ -398,7 +375,6 @@ List hpaMain(
 	}
 
 	// Return the result depending on the type of calculations
-
 	if ((type == "expectation") | (type == "expectation truncated"))
 	{
 		return(List::create(Named("values") = value_pgn / psi));
@@ -447,7 +423,7 @@ NumericVector dhpa(
     "pdf",                          // type
     given_ind, omit_ind,
     mean, sd,
-    NumericVector(0),"NO", 
+    NumericVector(0), "NO", 
     is_parallel);
 		                   
 		NumericVector return_value = return_List["values"];
@@ -480,7 +456,6 @@ NumericVector phpa(
 	NumericVector sd = NumericVector(0),
 	bool is_parallel = false) 
 {
-  
   List return_List = hpaMain(
     NumericMatrix(1, 1),                     // x_lower
     x,                                       // x_upper
@@ -488,7 +463,7 @@ NumericVector phpa(
     "cdf",                                   // type
     given_ind, omit_ind,
     mean, sd,
-    NumericVector(0),"NO", 
+    NumericVector(0), "NO", 
     is_parallel, true);
   
   NumericVector return_value = return_List["values"];
@@ -524,7 +499,6 @@ NumericVector ihpa(
 	NumericVector sd = NumericVector(0),
 	bool is_parallel = false) 
 {
-
   List return_List = hpaMain(
     x_lower,                                 // x_lower
     x_upper,                                 // x_upper
@@ -567,7 +541,6 @@ NumericVector ehpa(NumericMatrix x = NumericMatrix(1, 1), //for given
 	NumericVector expectation_powers = NumericVector(0),
 	bool is_parallel = false) 
 {
-  
   List return_List = hpaMain(
     NumericMatrix(1, 1),                     // x_lower
     x,                                       // x_upper
@@ -610,7 +583,6 @@ NumericVector etrhpa(
 	NumericVector expectation_powers = NumericVector(0),
 	bool is_parallel = false) 
 {
-
   List return_List = hpaMain(
     tr_left,                                 // x_lower
     tr_right,                                // x_upper
@@ -656,7 +628,6 @@ NumericVector dtrhpa(
 	NumericVector sd = NumericVector(0),
 	bool is_parallel = false)
 {
-
 	// Calculate the nominator
 	NumericVector density_main = dhpa(
 		x,
@@ -666,7 +637,7 @@ NumericVector dtrhpa(
 		is_parallel);
 
 	// Calculate the denonominator
-	NumericVector density_tr = ihpa( 
+	NumericVector cdf_tr = ihpa( 
 		tr_left, tr_right,
 		pol_coefficients, pol_degrees,
 		given_ind, omit_ind, 
@@ -675,10 +646,10 @@ NumericVector dtrhpa(
 
 	if ((tr_left.nrow() == 1) | (tr_right.nrow() == 1))
 	{
-		return(density_main / density_tr[0]);
+		return(density_main / cdf_tr[0]);
 	} 
 
-	return(density_main / density_tr);
+	return(density_main / cdf_tr);
 }
 
 //' Truncated interval distribution function hermite polynomial approximation for truncated distribution
@@ -713,7 +684,6 @@ NumericVector itrhpa(
 	NumericVector sd = NumericVector(0),
 	bool is_parallel = false)
 {
-
 	// Calculate the nominator
 	NumericVector interval_main = ihpa(
 		x_lower, x_upper,
@@ -771,7 +741,6 @@ NumericMatrix dhpaDiff(
     String type = "pol_coefficients",
     bool is_parallel = false)
 {
-  
   List return_List;
   
   if (type == "pol_coefficients")
@@ -828,7 +797,6 @@ NumericMatrix ihpaDiff(
     String type = "pol_coefficients",
     bool is_parallel = false)
 {
-  
   List return_List;
   
   if (type == "pol_coefficients")

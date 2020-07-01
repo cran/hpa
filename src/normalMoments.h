@@ -7,7 +7,8 @@ using namespace RcppArmadillo;
 
 
 Rcpp::NumericVector normalMoment(int k, double mean , double sd, 
-								 bool return_all_moments, bool is_validation);
+								 bool return_all_moments, bool is_validation,
+								 bool is_central);
 
 Rcpp::NumericMatrix truncatedNormalMoment(int,
 	Rcpp::NumericVector lower,

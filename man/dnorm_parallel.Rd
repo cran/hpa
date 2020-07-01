@@ -13,21 +13,12 @@ dnorm_parallel(x, mean = 0, sd = 1, is_parallel = FALSE)
 
 \item{sd}{double positive value.}
 
-\item{is_parallel}{if TRUE then multiple cores will be 
-used for some calculations.}
+\item{is_parallel}{if TRUE then multiple cores will be
+used for some calculations. It usually provides speed advantage for
+large enough samples (about more than 1000 observations).}
 }
 \description{
 Calculate in parallel for each value from vector \code{x} 
 density function of normal distribution with 
 mean equal to \code{mean} and standard deviation equal to \code{sd}.
-}
-\examples{
-## Consider normal distribution with mean 3 and standard deviation 5.
-## Calculate it's density function at points 2 and 3.
-
-# Create vector of points
-my_points <- c(2, 3)
-
-# Calculate pdf at these points
-dnorm_parallel(my_points, 3, 5)
 }
