@@ -22,7 +22,8 @@ List hpaMain(
 	NumericMatrix cdf_upper,
 	NumericMatrix cdf_difference,
 	String grad_type,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 NumericVector dhpa(
 	NumericMatrix x,
@@ -32,7 +33,8 @@ NumericVector dhpa(
 	LogicalVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 NumericVector phpa(
 	NumericMatrix x,
@@ -42,7 +44,8 @@ NumericVector phpa(
 	LogicalVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 NumericVector ihpa(
 	NumericMatrix x_lower,
@@ -53,7 +56,8 @@ NumericVector ihpa(
 	LogicalVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 NumericVector ehpa(NumericMatrix x,
 	NumericVector pol_coefficients,
@@ -87,7 +91,8 @@ NumericVector dtrhpa(
 	LogicalVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 NumericVector itrhpa(
 	NumericMatrix x_lower,
@@ -100,7 +105,8 @@ NumericVector itrhpa(
 	LogicalVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 NumericMatrix dhpaDiff(
 	NumericMatrix x,
@@ -111,7 +117,8 @@ NumericMatrix dhpaDiff(
 	NumericVector mean,
 	NumericVector sd,
 	String type,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 NumericMatrix ihpaDiff(
 	NumericMatrix x_lower,
@@ -123,6 +130,7 @@ NumericMatrix ihpaDiff(
 	NumericVector mean,
 	NumericVector sd,
 	String type,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_log);
 
 #endif

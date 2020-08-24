@@ -24,7 +24,8 @@ List hpaMain(
 	NumericVector expectation_powers = NumericVector(0),
 	String grad_type = "NO",
 	bool is_parallel = false,
-	bool is_cdf = false)
+	bool is_cdf = false,
+  bool is_log = false)
 {
 	// Get number of observations
 	int n = x_upper.nrow();
@@ -73,7 +74,7 @@ List hpaMain(
 
 	// Initialize indexes for observable unconditioned components
 	LogicalVector d_cond = ((!given_ind) & (!omit_ind));
-	
+
 	// Define vectors related to normal distribution
 	
 	  // pdf associated values
@@ -85,8 +86,43 @@ List hpaMain(
 	NumericMatrix cdf_upper = NumericMatrix(n, pol_degrees_n);
 	NumericMatrix cdf_lower = NumericMatrix(n, pol_degrees_n);
 	NumericMatrix cdf_difference = NumericMatrix(n, pol_degrees_n);
+	NumericMatrix pdf_difference;
 	NumericVector cdf_difference_product = NumericVector(n);
 	std::fill(cdf_difference_product.begin(), cdf_difference_product.end(), 1);
+	
+	// control for zero moments during numeric differentiation if need
+	if((grad_type == "mean") | (grad_type == "sd") | (grad_type == "all"))
+	{
+	  mean[mean == 0] = std::numeric_limits<double>::epsilon();
+	}
+	
+	// control for zero x_lower during numeric differentiation if need
+	if((grad_type == "x_lower") | (grad_type == "all"))
+	{
+	  for(int i = 0; i < pol_degrees_n; i++)
+	  {
+	    NumericVector x_i_tmp = x_lower(_, i);
+	    x_i_tmp[x_i_tmp == 0] = std::numeric_limits<double>::epsilon();
+	    x_lower(_, i) = x_i_tmp;
+	  }
+	}
+	
+	// control for zero x_upper during numeric differentiation if need
+	// and substitute x for x_upper
+	if(grad_type == "x")
+	{
+	  grad_type = "x_upper";
+	}
+	
+	if((grad_type == "x_upper") | (grad_type == "all"))
+	{
+	  for(int i = 0; i < pol_degrees_n; i++)
+	  {
+	    NumericVector x_i_tmp = x_upper(_, i);
+	    x_i_tmp[x_i_tmp == 0] = std::numeric_limits<double>::epsilon();
+	    x_upper(_, i) = x_i_tmp;
+	  }
+	}
 
 	if (type != "expectation")
 	{
@@ -157,12 +193,23 @@ List hpaMain(
   			}
   		}
 
-  		// Calculate cdf_difference
+  		// Calculate cdf_difference and pdf_difference if need
+  		// for gradient calculations
+  		if((grad_type == "mean") | (grad_type == "x_lower") |
+         (grad_type == "x_upper") | (grad_type == "all"))
+  		{
+  		  pdf_difference = NumericMatrix(n, pol_degrees_n);
+  		}
   		for (int i = 0; i < pol_degrees_n; i++)
   		{
   			if (d_cond[i])
   			{
-  				cdf_difference(_, i) = (cdf_upper(_, i) - cdf_lower(_, i));
+  				cdf_difference(_, i) = cdf_upper(_, i) - cdf_lower(_, i);
+  			  if((grad_type == "mean") | (grad_type == "x_lower") |
+             (grad_type == "x_upper") | (grad_type == "all"))
+  			  {
+  			    pdf_difference(_, i) = pdf_upper(_, i) - pdf_lower(_, i);
+  			  }
   			}
   		}
 
@@ -183,7 +230,10 @@ List hpaMain(
 	NumericMatrix polynomial_index = polynomialIndex(pol_degrees);
 
 	// Calculate moments
-	List moments(pol_degrees_n);
+	List moments(pol_degrees_n);            // for function value
+	List moments_diff_mean(pol_degrees_n);  // for derivative w.r.t mean
+	List moments_diff_sd(pol_degrees_n);    // for derivative w.r.t sd
+	
 	int max_degree;
 
 	for (int i = 0; i < pol_degrees_n; i++)
@@ -192,13 +242,32 @@ List hpaMain(
 		{
 			max_degree = 2 * pol_degrees[i] + expectation_powers[i];
 			moments[i] = normalMoment(max_degree,
-									  mean[i], sd[i], 
-									  true, false, false);
+									              mean[i], sd[i], 
+									              true, false, 
+									              false, "NO");
+			if((grad_type == "mean") | (grad_type == "all"))
+			{
+			  moments_diff_mean[i] = normalMoment(max_degree,
+                                            mean[i], sd[i], 
+                                            true, false, 
+                                            false, "mean");
+			}
+			if((grad_type == "sd") | (grad_type == "all"))
+			{
+			  moments_diff_sd[i] = normalMoment(max_degree,
+                                          mean[i], sd[i], 
+                                          true, false, 
+                                          false, "sd");
+			}
 		}
 	}
 
-	// Calcule truncated moments
-	List tr_moments(pol_degrees_n);
+	// Calculate truncated moments
+	List tr_moments(pol_degrees_n);                 // for function value
+	List tr_moments_diff_mean(pol_degrees_n);       // for derivative w.r.t mean
+	List tr_moments_diff_sd(pol_degrees_n);         // for derivative w.r.t sd
+	List tr_moments_diff_x_upper(pol_degrees_n);    // for derivative w.r.t x_upper
+	List tr_moments_diff_x_lower(pol_degrees_n);    // for derivative w.r.t x_lower
 
 	if ((type != "pdf") & (type != "expectation"))
 	{
@@ -212,10 +281,48 @@ List hpaMain(
 					mean[i], sd[i],
 					pdf_lower(_, i), cdf_lower(_, i),
 					pdf_upper(_, i), cdf_upper(_, i),
-					cdf_difference(_, i), true, false, is_parallel);
+					cdf_difference(_, i), true, false, is_parallel, "NO");
+				if((grad_type == "mean") | (grad_type == "all"))
+				{
+				  tr_moments_diff_mean[i] = truncatedNormalMoment(max_degree,
+            x_lower(_, i), x_upper(_, i),
+            mean[i], sd[i],
+            pdf_lower(_, i), cdf_lower(_, i),
+            pdf_upper(_, i), cdf_upper(_, i),
+            cdf_difference(_, i), true, false, is_parallel, "mean");
+				}
+				if((grad_type == "sd") | (grad_type == "all"))
+				{
+				  tr_moments_diff_sd[i] = truncatedNormalMoment(max_degree,
+            x_lower(_, i), x_upper(_, i),
+            mean[i], sd[i],
+            pdf_lower(_, i), cdf_lower(_, i),
+            pdf_upper(_, i), cdf_upper(_, i),
+            cdf_difference(_, i), true, false, is_parallel, "sd");
+				}
+				if((grad_type == "x_upper") | (grad_type == "all"))
+				{
+				  tr_moments_diff_x_upper[i] = truncatedNormalMoment(max_degree,
+            x_lower(_, i), x_upper(_, i),
+            mean[i], sd[i],
+            pdf_lower(_, i), cdf_lower(_, i),
+            pdf_upper(_, i), cdf_upper(_, i),
+            cdf_difference(_, i), true, false, is_parallel, "x_upper");
+				}
+				if(((grad_type == "x_lower") | (grad_type == "all")) & (type == "interval"))
+				{
+				  tr_moments_diff_x_lower[i] = truncatedNormalMoment(max_degree,
+            x_lower(_, i), x_upper(_, i),
+            mean[i], sd[i],
+            pdf_lower(_, i), cdf_lower(_, i),
+            pdf_upper(_, i), cdf_upper(_, i),
+            cdf_difference(_, i), true, false, is_parallel, "x_lower");
+				}
 			}
 		}
 	}
+
+	// Calculate truncated moments derivatives if need
 
 	// Calculate x powers (x ^ polynomial_degree)
 	LogicalVector x_cond(pol_degrees_n);
@@ -254,26 +361,68 @@ List hpaMain(
 	// Calculate main expression
 
 	// Initialize values to store temporal results
-	NumericVector value_pgn(n); // nominator
+	NumericVector value_pgn(n);                          // nominator
 	std::fill(value_pgn.begin(), value_pgn.end(), 0);
 
-	NumericVector psi(n); // denominator
+	NumericVector psi(n);                                // denominator
 	std::fill(psi.begin(), psi.end(), 0);
 
 	NumericVector value_sum_element(n);
 	NumericVector psi_sum_element(n);
-	double polynomial_sum = 0;
+	int polynomial_sum = 0;
 	
 	// Initialize values to store gradient information if need
-	NumericMatrix pc_grad = NumericMatrix(n, pol_coefficients_n);
-	NumericMatrix pc_grad_value = NumericMatrix(n, pol_coefficients_n);
-	NumericMatrix pc_grad_psi = NumericMatrix(n, pol_coefficients_n);
+	  // for polynomial coefficients
+	NumericMatrix pc_grad;
+	NumericMatrix pc_grad_value;
+	NumericMatrix pc_grad_psi;
+	  // for mean
+	NumericMatrix mean_grad;
+	NumericMatrix mean_grad_value;
+	NumericMatrix mean_grad_psi;
+	  // for sd
+	NumericMatrix sd_grad;
+	NumericMatrix sd_grad_value;
+	NumericMatrix sd_grad_psi;
+	  // for x_upper
+	NumericMatrix x_upper_grad;
+	NumericMatrix x_upper_grad_value;
+	NumericMatrix x_upper_grad_psi;
+	  // for x_lower
+	NumericMatrix x_lower_grad;
+	NumericMatrix x_lower_grad_value;
+	NumericMatrix x_lower_grad_psi;
 	
-	if(grad_type == "pol_coefficients")
+	  // preallocate memory to store gradient specific information if need
+	if((grad_type == "pol_coefficients") | (grad_type == "all"))
 	{
 	  pc_grad = NumericMatrix(n, pol_coefficients_n);
 	  pc_grad_value = NumericMatrix(n, pol_coefficients_n);
 	  pc_grad_psi = NumericMatrix(n, pol_coefficients_n);
+	}
+	if((grad_type == "mean") | (grad_type == "all"))
+	{
+	  mean_grad = NumericMatrix(n, pol_degrees_n);
+	  mean_grad_value = NumericMatrix(n, pol_degrees_n);
+	  mean_grad_psi = NumericMatrix(n, pol_degrees_n);
+	}
+	if((grad_type == "sd") | (grad_type == "all"))
+	{
+	  sd_grad = NumericMatrix(n, pol_degrees_n);
+	  sd_grad_value = NumericMatrix(n, pol_degrees_n);
+	  sd_grad_psi = NumericMatrix(n, pol_degrees_n);
+	}
+	if((grad_type == "x_upper") | (grad_type == "all"))
+	{
+	  x_upper_grad = NumericMatrix(n, pol_degrees_n);
+	  x_upper_grad_value = NumericMatrix(n, pol_degrees_n);
+	  x_upper_grad_psi = NumericMatrix(n, pol_degrees_n);
+	}
+	if(((grad_type == "x_lower") | (grad_type == "all")) & (type == "interval"))
+	{
+	  x_lower_grad = NumericMatrix(n, pol_degrees_n);
+	  x_lower_grad_value = NumericMatrix(n, pol_degrees_n);
+	  x_lower_grad_psi = NumericMatrix(n, pol_degrees_n);
 	}
 
 	// Perform main calculations
@@ -281,23 +430,25 @@ List hpaMain(
 	{
 		for (int j = i; j < pol_coefficients_n; j++)
 		{
-		  
-		  double pol_coefficients_prod = pol_coefficients[i] * pol_coefficients[j];
+		  double pol_coefficients_prod = pol_coefficients[i] * 
+		                                 pol_coefficients[j];
 		  
 			// Initialize temporal value
 			std::fill(value_sum_element.begin(), value_sum_element.end(), 1);
 			std::fill(psi_sum_element.begin(), psi_sum_element.end(), 1);
 
-			// Main calculations
+			// Main calculations for each element of sum
 			for (int r = 0; r < pol_degrees_n; r++)
 			{
-				polynomial_sum = polynomial_index(r, i) + polynomial_index(r, j);
+				polynomial_sum = polynomial_index(r, i) + 
+				                 polynomial_index(r, j);
 				if (!omit_ind[r])
 				{
 					if ((type == "pdf") | (given_ind[r]))
 					{
 						NumericMatrix x_pow_r = x_pow[r];
-						value_sum_element = value_sum_element * x_pow_r(_, polynomial_sum);
+						value_sum_element = value_sum_element * 
+						                    x_pow_r(_, polynomial_sum);
 					} else {
 						if (type != "expectation")
 						{
@@ -323,71 +474,383 @@ List hpaMain(
 					if (type != "expectation truncated")
 					{
 						NumericVector moments_r = moments[r];
-						psi_sum_element = psi_sum_element * moments_r[polynomial_sum];
+						psi_sum_element = psi_sum_element * 
+						                  moments_r[polynomial_sum];
 					} else {
 						NumericMatrix tr_moments_r = tr_moments[r];
-						psi_sum_element = psi_sum_element * tr_moments_r(_, polynomial_sum);
+						psi_sum_element = psi_sum_element * 
+						                  tr_moments_r(_, polynomial_sum);
 					}
 				}
 			}
 			// Each iteration perform results storage
 			int mult_for_unequal_i_j = (1 + (i != j));
-			value_pgn = value_pgn + mult_for_unequal_i_j * value_sum_element * pol_coefficients_prod;
-			psi = psi + mult_for_unequal_i_j * psi_sum_element * pol_coefficients_prod;
 			
-			// gradient specific storage if need
-			if(grad_type == "pol_coefficients")
+			NumericVector value_sum_element_adj = mult_for_unequal_i_j * 
+			                                      value_sum_element * pol_coefficients_prod;
+			value_pgn = value_pgn + value_sum_element_adj;
+			
+			NumericVector psi_sum_element_adj = mult_for_unequal_i_j * 
+			                                    psi_sum_element * pol_coefficients_prod;
+			psi = psi + psi_sum_element_adj;
+
+			// gradient specific storage respect to
+			
+			  // mean
+			if((grad_type == "mean") | (grad_type == "all"))
 			{
-			  pc_grad_value(_, i) = pc_grad_value(_, i) + mult_for_unequal_i_j * value_sum_element * pol_coefficients[j];
-			  pc_grad_value(_, j) = pc_grad_value(_, j) + mult_for_unequal_i_j * value_sum_element * pol_coefficients[i];
-			  pc_grad_psi(_, i) = pc_grad_psi(_, i) + mult_for_unequal_i_j * psi_sum_element * pol_coefficients[j];
-			  pc_grad_psi(_, j) = pc_grad_psi(_, j) + mult_for_unequal_i_j * psi_sum_element * pol_coefficients[i];
+			  for (int r = 0; r < pol_degrees_n; r++)
+			  {
+			    if(!given_ind[r])
+			    {
+  			    polynomial_sum = polynomial_index(r, i) + 
+  			                     polynomial_index(r, j);
+  			    NumericVector moments_r = moments[r];
+  			    NumericVector moments_r_diff_mean = moments_diff_mean[r];
+  			    double moments_ratio = moments_r_diff_mean[polynomial_sum] /
+  			                           moments_r[polynomial_sum];
+    			  mean_grad_psi(_, r) = mean_grad_psi(_, r) + 
+    			                        psi_sum_element_adj * moments_ratio;
+  			    if(omit_ind[r])
+  			    {
+  			      mean_grad_value(_, r) = mean_grad_value(_, r) + 
+  			                              value_sum_element_adj * moments_ratio;
+  			    }
+  			    if((type == "interval") & d_cond[r])
+  			    {
+  			      NumericMatrix tr_moments_r = tr_moments[r];
+  			      NumericMatrix tr_moments_diff_mean_r = tr_moments_diff_mean[r];
+  			      NumericVector tr_moments_ratio = tr_moments_diff_mean_r(_, polynomial_sum) /
+  			                                       tr_moments_r(_, polynomial_sum);
+  			      mean_grad_value(_, r) = mean_grad_value(_, r) +
+  			                              value_sum_element_adj * tr_moments_ratio;
+  			    }
+			    }
+			  }
+			}
+
+			  // sd
+			if((grad_type == "sd") | (grad_type == "all"))
+			{
+			  for (int r = 0; r < pol_degrees_n; r++)
+			  {
+			    if(!given_ind[r])
+			    {
+			      polynomial_sum = polynomial_index(r, i) + 
+			                       polynomial_index(r, j);
+			      NumericVector moments_r = moments[r];
+			      NumericVector moments_r_diff_sd = moments_diff_sd[r];
+			      double moments_ratio = moments_r_diff_sd[polynomial_sum] /
+			                             moments_r[polynomial_sum];
+			      sd_grad_psi(_, r) = sd_grad_psi(_, r) + 
+			                          psi_sum_element_adj * moments_ratio;
+			      if(omit_ind[r])
+			      {
+			        sd_grad_value(_, r) = sd_grad_value(_, r) + 
+			                              value_sum_element_adj * moments_ratio;
+			      }
+			      if((type == "interval") & d_cond[r])
+			      {
+			        NumericMatrix tr_moments_r = tr_moments[r];
+			        NumericMatrix tr_moments_diff_sd_r = tr_moments_diff_sd[r];
+			        NumericVector tr_moments_ratio = tr_moments_diff_sd_r(_, polynomial_sum) /
+			                                         tr_moments_r(_, polynomial_sum);
+			        sd_grad_value(_, r) = sd_grad_value(_, r) +
+			                              value_sum_element_adj * tr_moments_ratio;
+			      }
+			    }
+			  }
+			}
+			
+			  // x_upper
+			if((grad_type == "x_upper") | (grad_type == "all"))
+			{
+			  for (int r = 0; r < pol_degrees_n; r++)
+			  {
+			    polynomial_sum = polynomial_index(r, i) + 
+              			       polynomial_index(r, j);
+			    
+			    if(given_ind[r])
+			    {
+			      x_upper_grad_psi(_, r) = x_upper_grad_psi(_, r) + 
+			                               psi_sum_element_adj * polynomial_sum /
+			                               x_upper(_, r);
+			      x_upper_grad_value(_, r) = x_upper_grad_value(_, r) + 
+                        			         value_sum_element_adj * polynomial_sum /
+                        			         x_upper(_, r);
+			    }
+			    if(d_cond[r])
+			    {
+			      if(type == "interval")
+			      {
+			        NumericMatrix tr_moments_r = tr_moments[r];
+			        NumericMatrix tr_moments_diff_x_upper_r = tr_moments_diff_x_upper[r];
+			        NumericVector tr_moments_ratio = tr_moments_diff_x_upper_r(_, polynomial_sum) /
+                              			           tr_moments_r(_, polynomial_sum);
+			        x_upper_grad_value(_, r) = x_upper_grad_value(_, r) +
+                        			           value_sum_element_adj * tr_moments_ratio;
+			      } else {
+			        x_upper_grad_value(_, r) = x_upper_grad_value(_, r) + 
+                          			         value_sum_element_adj * polynomial_sum /
+                          			         x_upper(_, r);
+			      }
+			    }
+			  }
+			}
+			
+			// x_lower
+			if(((grad_type == "x_lower") | (grad_type == "all")) & (type == ("interval")))
+			{
+			  for (int r = 0; r < pol_degrees_n; r++)
+			  {
+			    polynomial_sum = polynomial_index(r, i) + 
+              			       polynomial_index(r, j);
+			    
+			    if(d_cond[r] & (type == "interval"))
+			    {
+			      NumericMatrix tr_moments_r = tr_moments[r];
+			      NumericMatrix tr_moments_diff_x_lower_r = tr_moments_diff_x_lower[r];
+			      NumericVector tr_moments_ratio = tr_moments_diff_x_lower_r(_, polynomial_sum) /
+                                			       tr_moments_r(_, polynomial_sum);
+			      x_lower_grad_value(_, r) = x_lower_grad_value(_, r) +
+                      			           value_sum_element_adj * tr_moments_ratio;
+			    }
+			  }
+			}
+			
+			// polynomial coefficients
+			if((grad_type == "pol_coefficients") | (grad_type == "all"))
+			{
+			  pc_grad_value(_, i) = pc_grad_value(_, i) + mult_for_unequal_i_j * 
+			                        value_sum_element * pol_coefficients[j];
+			  pc_grad_value(_, j) = pc_grad_value(_, j) + mult_for_unequal_i_j * 
+			                        value_sum_element * pol_coefficients[i];
+			  pc_grad_psi(_, i) = pc_grad_psi(_, i) + mult_for_unequal_i_j * 
+			                      psi_sum_element * pol_coefficients[j];
+			  pc_grad_psi(_, j) = pc_grad_psi(_, j) + mult_for_unequal_i_j * 
+			                      psi_sum_element * pol_coefficients[i];
 			}
 		}
 	}
+	
+	// Return the probabilities depending on the type of calculations
+	
+	NumericVector return_value;
+	
+	if(!is_log | (grad_type == "NO"))
+	{
+  	if ((type == "expectation") | (type == "expectation truncated"))
+  	{
+  	  return_value = value_pgn / psi;
+  	}
+  	
+  	if (type != "pdf")
+  	{
+  	  return_value = value_pgn * cdf_difference_product / psi;
+  	} else {
+  	  return_value = value_pgn * pdf_product / psi;
+  	}
+  	// Take the logarithm if need
+  	if(is_log)
+  	{
+  	  return_value = log(return_value);
+  	}
+	}
 
 	// Return gradient specific values if need
-	if (grad_type == "pol_coefficients")
+
+	  // for polynomial coefficients
+	if ((grad_type == "pol_coefficients") | (grad_type == "all"))
 	{
-	  NumericVector psi_2 = psi * psi;
-	  
-	    if(type == "pdf")
+	  for (int i = 0; i < pol_coefficients_n; i++)
+	  {
+	    pc_grad(_, i) = pc_grad_value(_, i) / value_pgn -
+              	      pc_grad_psi(_, i) / psi;
+	    
+	    if(!is_log)
 	    {
-	      NumericVector value_2 = value_pgn * pdf_product;
-	      for (int i = 0; i < pol_coefficients_n; i++)
+	      pc_grad(_, i) = pc_grad(_, i) * return_value;
+	    }
+	  }
+	  
+	  if(grad_type != "all")
+	  {
+    	return(List::create(Named("pc_grad") = pc_grad));
+	  }
+	}
+	
+	  // for mean
+	if ((grad_type == "mean") | (grad_type == "all"))
+	{
+	  for (int r = 0; r < pol_degrees_n; r++)
+	  {
+	    if(omit_ind[r] | (d_cond[r] & (type == "interval")))
+	    {
+	      mean_grad(_, r) = mean_grad(_, r) + 
+	                        mean_grad_value(_, r) / value_pgn;
+	    } 
+	    
+	    if(!omit_ind[r] & !given_ind[r])
+	    {
+	      if(type == "pdf")
 	      {
-	        pc_grad(_, i) = ((pc_grad_value(_, i) * pdf_product) / psi) -
-	          (pc_grad_psi(_, i) * value_2 / psi_2);
+  	      mean_grad(_, r) = mean_grad(_, r) +
+  	                        (x_upper(_, r) - mean[r]) / 
+  	                        (sd[r] * sd[r]);
+	      } else {
+	        mean_grad(_, r) = mean_grad(_, r) -
+	                          pdf_difference(_, r) / cdf_difference(_, r);
 	      }
-	      return(List::create(Named("grads") = pc_grad));
 	    }
 	    
-	    if(type == "interval")
+	    if(!given_ind[r])
 	    {
-	      NumericVector value_2 = value_pgn * cdf_difference_product;
-	      for (int i = 0; i < pol_coefficients_n; i++)
-	      {
-	        pc_grad(_, i) = ((pc_grad_value(_, i) * cdf_difference_product) / psi) -
-	          (pc_grad_psi(_, i) * value_2 / psi_2);
-	      }
-	      return(List::create(Named("grads") = pc_grad));
+	      mean_grad(_, r) = mean_grad(_, r) - 
+	                        mean_grad_psi(_, r) / psi;
 	    }
+	    
+	    if(!is_log)
+	    {
+  	    mean_grad(_, r) = mean_grad(_, r) * return_value;
+	    }
+	  }
+	  
+	  if(grad_type != "all")
+	  {
+  	  return(List::create(Named("mean_grad") = mean_grad));
+	  }
 	}
-
-	// Return the result depending on the type of calculations
-	if ((type == "expectation") | (type == "expectation truncated"))
+	
+	  // for sd
+	if ((grad_type == "sd") | (grad_type == "all"))
 	{
-		return(List::create(Named("values") = value_pgn / psi));
+	  for (int r = 0; r < pol_degrees_n; r++)
+	  {
+	    if(omit_ind[r] | (d_cond[r] & (type == "interval")))
+	    {
+	      sd_grad(_, r) = sd_grad(_, r) + 
+	                      sd_grad_value(_, r) / value_pgn;
+	    } 
+	    
+	    if(!omit_ind[r] & !given_ind[r])
+	    {
+	      if(type == "pdf")
+	      {
+	        sd_grad(_, r) = sd_grad(_, r) + 
+	                        (pow((x_upper(_, r) - mean[r]) / (sd[r] * sd[r]), 2) - 
+	                        1 / (sd[r] * sd[r])) * sd[r];
+	      } else {
+	        // Deal with infinite values
+	        NumericVector x_upper_r = x_upper(_, r) * 1;
+	        NumericVector x_lower_r = x_lower(_, r) * 1;
+	        x_upper_r[is_infinite(x_upper_r)] = 0;
+	        x_lower_r[is_infinite(x_lower_r)] = 0;
+	        sd_grad(_, r) = sd_grad(_, r) - 
+                	        (pdf_upper(_, r) * 
+                	        (x_upper_r - mean[r]) / sd[r] -
+                	         pdf_lower(_, r) * 
+                	        (x_lower_r - mean[r]) / sd[r]) /
+                	        cdf_difference(_, r);
+	      }
+	    }
+	    
+	    if(!given_ind[r])
+	    {
+	      sd_grad(_, r) = sd_grad(_, r) - 
+                	      sd_grad_psi(_, r) / psi;
+	    }
+	    
+	    if(!is_log)
+	    {
+  	    sd_grad(_, r) = sd_grad(_, r) * return_value;
+	    }
+	  }
+	  
+	  if(grad_type != "all")
+	  {
+	    return(List::create(Named("sd_grad") = sd_grad));
+	  }
 	}
-
-	if (type != "pdf")
+	
+	  // for x_upper
+	if ((grad_type == "x_upper") | (grad_type == "all"))
 	{
-	  return(List::create(Named("values") = (value_pgn * cdf_difference_product) / psi));
-	} else {
-	  return(List::create(Named("values") = (value_pgn * pdf_product) / psi));
+	  for (int r = 0; r < pol_degrees_n; r++)
+	  {
+	    if(!omit_ind[r])
+	    {
+	      x_upper_grad(_, r) = x_upper_grad(_, r) + 
+                    	       x_upper_grad_value(_, r) / value_pgn;
+	    }
+	    
+	    if(d_cond[r])
+	    {
+	      if(type == "pdf")
+	      {
+	        x_upper_grad(_, r) = x_upper_grad(_, r) -
+                  	          (x_upper(_, r) - mean[r]) / 
+                  	          (sd[r] * sd[r]);
+	      } else {
+	        x_upper_grad(_, r) = x_upper_grad(_, r) +
+                	             pdf_upper(_, r) / cdf_difference(_, r);
+	      }
+	    }
+	    
+	    if(given_ind[r])
+	    {
+	      x_upper_grad(_, r) = x_upper_grad(_, r) - 
+                  	         x_upper_grad_psi(_, r) / psi;
+	    }
+	    
+	    if(!is_log)
+	    {
+  	    x_upper_grad(_, r) = x_upper_grad(_, r) * return_value;
+	    }
+	  }
+	  
+	  if(grad_type != "all")
+	  {
+	    return(List::create(Named("x_upper_grad") = x_upper_grad));
+	  }
 	}
-
-	return(List::create(Named("values") = NumericVector(0)));
+	
+  	// for x_lower
+	if (((grad_type == "x_lower") | (grad_type == "all")) & (type == ("interval")))
+	{
+	  for (int r = 0; r < pol_degrees_n; r++)
+	  {
+	    if(d_cond[r] & (type == "interval"))
+	    {
+	      x_lower_grad(_, r) = x_lower_grad(_, r) + 
+	                           x_lower_grad_value(_, r) / value_pgn;
+	      x_lower_grad(_, r) = x_lower_grad(_, r) -
+	                           pdf_lower(_, r) / cdf_difference(_, r);
+	      if(!is_log)
+	      {
+  	      x_lower_grad(_, r) = x_lower_grad(_, r) * 
+                    	         cdf_difference_product * value_pgn / psi;
+	      }
+	    }
+	  }
+	  
+	  if(grad_type != "all")
+	  {
+	    return(List::create(Named("x_lower_grad") = x_lower_grad));
+	  }
+	}
+	
+	if(grad_type == "all")
+	{
+	  List return_List = List::create(Named("pc_grad") = pc_grad,
+            	                      Named("mean_grad") = mean_grad,
+                                    Named("sd_grad") = sd_grad,
+                                    Named("x_lower_grad") = x_lower_grad,
+                                    Named("x_upper_grad") = x_upper_grad);
+	  
+	  return(return_List);
+	}
+	
+	return(List::create(Named("values") = return_value));
 }
 
 //' Density function hermite polynomial approximation
@@ -400,6 +863,7 @@ List hpaMain(
 //' @template mean_Template
 //' @template sd_Template
 //' @template is_parallel_Template
+//' @template is_log_Template
 //' @template GN_details_Template
 //' @template dhpa_examples_Template
 //' @return This function returns density function hermite polynomial approximation at point \code{x}.
@@ -413,7 +877,8 @@ NumericVector dhpa(
 	LogicalVector omit_ind = LogicalVector(0),
 	NumericVector mean = NumericVector(0),
 	NumericVector sd = NumericVector(0),
-	bool is_parallel = false)
+	bool is_parallel = false,
+	bool is_log = false)
 {
 
   List return_List = hpaMain(
@@ -424,7 +889,8 @@ NumericVector dhpa(
     given_ind, omit_ind,
     mean, sd,
     NumericVector(0), "NO", 
-    is_parallel);
+    is_parallel,
+    false, is_log);
 		                   
 		NumericVector return_value = return_List["values"];
 		                   
@@ -441,6 +907,7 @@ NumericVector dhpa(
 //' @template mean_Template
 //' @template sd_Template
 //' @template is_parallel_Template
+//' @template is_log_Template
 //' @template GN_details_Template
 //' @return This function returns cumulative distribution function hermite polynomial approximation at point \code{x}.
 //' @template phpa_examples_Template
@@ -454,7 +921,8 @@ NumericVector phpa(
 	LogicalVector omit_ind = LogicalVector(0),
 	NumericVector mean = NumericVector(0),
 	NumericVector sd = NumericVector(0),
-	bool is_parallel = false) 
+	bool is_parallel = false,
+	bool is_log = false) 
 {
   List return_List = hpaMain(
     NumericMatrix(1, 1),                     // x_lower
@@ -464,7 +932,8 @@ NumericVector phpa(
     given_ind, omit_ind,
     mean, sd,
     NumericVector(0), "NO", 
-    is_parallel, true);
+    is_parallel,
+    true, is_log);
   
   NumericVector return_value = return_List["values"];
   
@@ -482,6 +951,7 @@ NumericVector phpa(
 //' @template mean_Template
 //' @template sd_Template
 //' @template is_parallel_Template
+//' @template is_log_Template
 //' @template interval_cdf_Template
 //' @template GN_details_Template
 //' @return This function returns interval distribution function hermite polynomial approximation at point \code{x}.
@@ -497,7 +967,8 @@ NumericVector ihpa(
 	LogicalVector omit_ind = LogicalVector(0),
 	NumericVector mean = NumericVector(0),
 	NumericVector sd = NumericVector(0),
-	bool is_parallel = false) 
+	bool is_parallel = false,
+	bool is_log = false) 
 {
   List return_List = hpaMain(
     x_lower,                                 // x_lower
@@ -507,7 +978,8 @@ NumericVector ihpa(
     given_ind, omit_ind,
     mean, sd,
     NumericVector(0),"NO", 
-    is_parallel);
+    is_parallel,
+    false, is_log);
   
   NumericVector return_value = return_List["values"];
   
@@ -611,6 +1083,7 @@ NumericVector etrhpa(
 //' @template mean_Template
 //' @template sd_Template
 //' @template is_parallel_Template
+//' @template is_log_Template
 //' @template GN_details_Template
 //' @template dtrhpa_examples_Template
 //' @return This function returns density function hermite polynomial approximation at point \code{x} for truncated distribution.
@@ -626,15 +1099,59 @@ NumericVector dtrhpa(
 	LogicalVector omit_ind = LogicalVector(0),
 	NumericVector mean = NumericVector(0),
 	NumericVector sd = NumericVector(0),
-	bool is_parallel = false)
-{
+	bool is_parallel = false,
+	bool is_log = false)
+{  
+  int n = x.nrow();
+  int m = x.ncol();
+  
+  NumericMatrix x_adj = x;
+  
+  // Insure that all values are between
+  // lower and upper truncation points
+  if ((tr_left.nrow() == 1) | (tr_right.nrow() == 1))
+  {
+    for(int i = 0; i < m; i++)
+    {
+      double tr_left_value = tr_left[i];
+      double tr_right_value = tr_right[i];
+      for(int j = 0; j < n; j++)
+      {
+        if((x_adj(j, i) < tr_left_value))
+        {
+          x_adj(j, i) = tr_left_value;
+        }
+        if(x_adj(j, i) > tr_right_value)
+        {
+          x_adj(j, i) = tr_right_value;
+        }
+      }
+    }
+  } else {
+    for(int i = 0; i < m; i++)
+    {
+      for(int j = 0; j < n; j++)
+      {
+        if((x_adj(j, i) < tr_left(j, i)))
+        {
+          x_adj(j, i) = tr_left(j, i);
+        }
+        if(x_adj(j, i) > tr_right(j, i))
+        {
+          x_adj(j, i) = tr_right(j, i);
+        }
+      }
+    }
+  }
+
 	// Calculate the nominator
 	NumericVector density_main = dhpa(
-		x,
+		x_adj,
 		pol_coefficients, pol_degrees,
 		given_ind, omit_ind,
 		mean, sd,
-		is_parallel);
+		is_parallel,
+		is_log);
 
 	// Calculate the denonominator
 	NumericVector cdf_tr = ihpa( 
@@ -642,14 +1159,31 @@ NumericVector dtrhpa(
 		pol_coefficients, pol_degrees,
 		given_ind, omit_ind, 
 		mean, sd, 
-	  is_parallel);
+	  is_parallel,
+	  is_log);
+	
+	NumericVector return_value;
 
 	if ((tr_left.nrow() == 1) | (tr_right.nrow() == 1))
 	{
-		return(density_main / cdf_tr[0]);
+	  if(is_log)
+	  {
+	    return_value = density_main - cdf_tr[0];
+	  } else {
+	    return_value = density_main / cdf_tr[0];
+	  }
+	  
+	  return(return_value);
 	} 
 
-	return(density_main / cdf_tr);
+	if(is_log)
+	{
+	  return_value = density_main - cdf_tr;
+	} else {
+	  return_value = density_main / cdf_tr;
+	}
+	
+	return(return_value);
 }
 
 //' Truncated interval distribution function hermite polynomial approximation for truncated distribution
@@ -665,6 +1199,7 @@ NumericVector dtrhpa(
 //' @template mean_Template
 //' @template sd_Template
 //' @template is_parallel_Template
+//' @template is_log_Template
 //' @template itrhpa_examples_Template
 //' @template interval_cdf_Template
 //' @template GN_details_Template
@@ -682,15 +1217,60 @@ NumericVector itrhpa(
 	LogicalVector omit_ind = LogicalVector(0),
 	NumericVector mean = NumericVector(0),
 	NumericVector sd = NumericVector(0),
-	bool is_parallel = false)
+	bool is_parallel = false,
+	bool is_log = false)
 {
+  int n = x_upper.nrow();
+  int m = x_upper.ncol();
+  
+  NumericMatrix x_lower_adj = clone(x_lower);
+  NumericMatrix x_upper_adj = clone(x_upper);
+  
+  // Insure that all values are between 
+  // lower and upper truncation points
+  if ((tr_left.nrow() == 1) | (tr_right.nrow() == 1))
+  {
+    for(int i = 0; i < m; i++)
+    {
+      double tr_left_value = tr_left[i];
+      double tr_right_value = tr_right[i];
+      for(int j = 0; j < n; j++)
+      {
+        if((x_lower_adj(j, i) < tr_left_value))
+        {
+          x_lower_adj(j, i) = tr_left_value;
+        }
+        if(x_upper_adj(j, i) > tr_right_value)
+        {
+          x_upper_adj(j, i) = tr_right_value;
+        }
+      }
+    }
+  } else {
+    for(int i = 0; i < m; i++)
+    {
+      for(int j = 0; j < n; j++)
+      {
+        if((x_lower_adj(j, i) < tr_left(j, i)))
+        {
+          x_lower_adj(j, i) = tr_left(j, i);
+        }
+        if(x_upper_adj(j, i) > tr_right(j, i))
+        {
+          x_upper_adj(j, i) = tr_right(j, i);
+        }
+      }
+    }
+  }
+  
 	// Calculate the nominator
 	NumericVector interval_main = ihpa(
-		x_lower, x_upper,
+		x_lower_adj, x_upper_adj,
 		pol_coefficients, pol_degrees,
 		given_ind, omit_ind,
 		mean, sd,
-    is_parallel);
+    is_parallel,
+    is_log);
 
 	// Calculate the denominator
 	NumericVector interval_tr = ihpa(
@@ -698,14 +1278,30 @@ NumericVector itrhpa(
 		pol_coefficients, pol_degrees,
 		given_ind, omit_ind,
 		mean, sd,
-		is_parallel);
+		is_parallel,
+		is_log);
 
-	if ((tr_left.nrow() == 1) | (tr_right.nrow()))
+	NumericVector return_value;
+	
+	if ((tr_left.nrow() == 1) | (tr_right.nrow() == 1))
 	{
-		return(interval_main / interval_tr[0]);
+	  if(is_log)
+	  {
+	    return_value = interval_main - interval_tr[0];
+	  } else {
+	    return_value = interval_main / interval_tr[0];
+	  }
+		return(return_value);
 	}
-
-	return(interval_main / interval_tr);
+	
+	if(is_log)
+	{
+	  return_value = interval_main - interval_tr;
+	} else {
+	  return_value = interval_main / interval_tr;
+	}
+	
+	return(return_value);
 }
 
 //' Calculate gradient of density function hermite polynomial approximation
@@ -720,6 +1316,7 @@ NumericVector itrhpa(
 //' @template sd_Template
 //' @template type_diff_Template
 //' @template is_parallel_Template
+//' @template is_log_Template
 //' @template GN_details_Template
 //' @template dhpaDiff_examples_Template
 //' @return This function returns gradient of density function hermite polynomial 
@@ -739,11 +1336,29 @@ NumericMatrix dhpaDiff(
     NumericVector mean = NumericVector(0),
     NumericVector sd = NumericVector(0),
     String type = "pol_coefficients",
-    bool is_parallel = false)
+    bool is_parallel = false,
+    bool is_log = false)
 {
   List return_List;
   
-  if (type == "pol_coefficients")
+  NumericMatrix pc_grad;
+  NumericMatrix mean_grad;
+  NumericMatrix sd_grad;
+  NumericMatrix x_upper_grad;
+  NumericMatrix all_grad;
+  
+  StringVector pc_names;
+  StringVector mean_names;
+  StringVector sd_names;
+  StringVector x_upper_names;
+  StringVector all_names;
+  
+  int pol_degrees_n = pol_degrees.size();
+  int pol_coefficients_n = pol_coefficients.size();
+
+  if ((type == "pol_coefficients") | (type == "mean") |
+      (type == "sd") | (type == "x") |
+      (type == "all"))
   {
   return_List = hpaMain(
     NumericMatrix(1, 1),            // x_lower
@@ -754,16 +1369,141 @@ NumericMatrix dhpaDiff(
     mean, sd,
     NumericVector(0),
     type,                           // grad type
-    is_parallel);                          
+    is_parallel,
+    false, is_log);                          
+  } else {
+    stop("Argument type should be 'pol_coefficients', 'mean', 'sd', 'x' or 'all'");
+  }
+
+  // Prepare output and assign the names
+  
+    // to polynomial coefficients
+  if((type == "pol_coefficients") | (type == "all"))
+  {
+    NumericMatrix pol_ind = polynomialIndex(pol_degrees);
+    
+    pc_names = StringVector(pol_coefficients_n);
+    
+    for (int i = 0; i < pol_coefficients_n; i++)
+    {
+      pc_names[i] = "a";
+      for (int j = 0; j < pol_degrees_n; j++)
+      {
+        int my_int = pol_ind(j, i);
+        pc_names[i] = as<std::string>(pc_names[i]) + 
+                      "_" + std::to_string(my_int);
+      }
+    }
+    
+    NumericMatrix tmp_grad = return_List["pc_grad"];
+    pc_grad = tmp_grad;
+    colnames(pc_grad) = pc_names;
+    if(type != "all")
+    {
+      return(pc_grad);
+    }
   }
   
-  NumericMatrix return_value = return_List["grads"];
+    // to mean
+  if((type == "mean") | (type == "all"))
+  {
+    mean_names = StringVector(pol_degrees_n);
+    
+    for (int i = 0; i < pol_degrees_n; i++)
+    {
+      mean_names[i] = "mean_" + std::to_string(i + 1);
+    }
+    
+    NumericMatrix tmp_grad = return_List["mean_grad"];
+    mean_grad = tmp_grad;
+    colnames(mean_grad) = mean_names;
+    if(type != "all")
+    {
+      return(mean_grad);
+    }
+  }
   
-  return(return_value);
+    // to sd
+  if((type == "sd") | (type == "all"))
+  {
+    sd_names = StringVector(pol_degrees_n);
+    
+    for (int i = 0; i < pol_degrees_n; i++)
+    {
+      sd_names[i] = "sd_" + std::to_string(i + 1);
+    }
+    
+    NumericMatrix tmp_grad = return_List["sd_grad"];
+    sd_grad = tmp_grad;
+    colnames(sd_grad) = sd_names;
+    if(type != "all")
+    {
+      return(sd_grad);
+    }
+  }
+  
+    // to x
+  if((type == "x") | (type == "all"))
+  {
+    x_upper_names = StringVector(pol_degrees_n);
+    
+    for (int i = 0; i < pol_degrees_n; i++)
+    {
+      x_upper_names[i] = "x_" + std::to_string(i + 1);
+    }
+    
+    NumericMatrix tmp_grad = return_List["x_upper_grad"];
+    x_upper_grad = tmp_grad;
+    colnames(x_upper_grad) = x_upper_names;
+    if(type != "all")
+    {
+      return(x_upper_grad);
+    }
+  }
+  
+  if(type == "all")
+  {
+    int n = pc_grad.nrow();
+    int all_grad_n = pol_coefficients_n + 3 * pol_degrees_n;
+    
+    all_names = StringVector(all_grad_n);
+    all_grad = NumericMatrix(n, all_grad_n);
+
+    for(int i = 0; i < pol_coefficients_n; i++)
+    {
+      all_grad(_, i) = pc_grad(_, i);
+      all_names[i] = pc_names[i];
+    }
+
+    for(int i = pol_coefficients_n; 
+        i < pol_coefficients_n + pol_degrees_n; i++)
+    {
+      all_grad(_, i) = mean_grad(_, i - pol_coefficients_n);
+      all_names[i] = mean_names[i - pol_coefficients_n];
+    }
+
+    for(int i = pol_coefficients_n + pol_degrees_n; 
+        i < pol_coefficients_n + 2 * pol_degrees_n; i++)
+    {
+      all_grad(_, i) = sd_grad(_, i - pol_coefficients_n - pol_degrees_n);
+      all_names[i] = sd_names[i - pol_coefficients_n - pol_degrees_n];
+    }
+
+    for(int i = pol_coefficients_n + 2 * pol_degrees_n; 
+        i < pol_coefficients_n + 3 * pol_degrees_n; i++)
+    {
+      all_grad(_, i) = x_upper_grad(_, i - pol_coefficients_n - 2 * pol_degrees_n);
+      all_names[i] = x_upper_names[i - pol_coefficients_n - 2 * pol_degrees_n];
+    }
+    
+    colnames(all_grad) = all_names;
+  }
+  
+  return(all_grad);
 }
 
 //' Calculate gradient of interval distribution function hermite polynomial approximation
-//' @description This function calculates interval distribution function hermite polynomial approximation.
+//' @description This function calculates gradient of interval distribution function hermite polynomial approximation.
 //' @template x_lower_Template
 //' @template x_upper_Template
 //' @template pol_coefficients_Template
@@ -774,6 +1514,7 @@ NumericMatrix dhpaDiff(
 //' @template sd_Template
 //' @template type_diff_Template
 //' @template is_parallel_Template
+//' @template is_log_Template
 //' @template interval_cdf_Template
 //' @template GN_details_Template
 //' @return This function returns gradient of interval distribution function hermite polynomial 
@@ -795,11 +1536,31 @@ NumericMatrix ihpaDiff(
     NumericVector mean = NumericVector(0),
     NumericVector sd = NumericVector(0),
     String type = "pol_coefficients",
-    bool is_parallel = false)
+    bool is_parallel = false,
+    bool is_log = false)
 {
   List return_List;
   
-  if (type == "pol_coefficients")
+  NumericMatrix pc_grad;
+  NumericMatrix mean_grad;
+  NumericMatrix sd_grad;
+  NumericMatrix x_lower_grad;
+  NumericMatrix x_upper_grad;
+  NumericMatrix all_grad;
+  
+  StringVector pc_names;
+  StringVector mean_names;
+  StringVector sd_names;
+  StringVector x_lower_names;
+  StringVector x_upper_names;
+  StringVector all_names;
+  
+  int pol_degrees_n = pol_degrees.size();
+  int pol_coefficients_n = pol_coefficients.size();
+  
+  if ((type == "pol_coefficients") | (type == "mean") |
+      (type == "sd") | (type == "x_lower") | (type == "x_upper") |
+      (type == "all"))
   {
     return_List = hpaMain(
       x_lower,                        // x_lower
@@ -810,10 +1571,161 @@ NumericMatrix ihpaDiff(
       mean, sd,
       NumericVector(0),
       type,                           // grad type
-      is_parallel);                          
+      is_parallel,
+      false, is_log);                          
+  } else {
+    stop("Argument type should be 'pol_coefficients', 'mean', 'sd', 'x_lower', 'x_upper' or 'all'");
   }
   
-  NumericMatrix return_value = return_List["grads"];
+  // Prepare output and assign the names
   
-  return(return_value);
+    // to polynomial coefficients
+  if((type == "pol_coefficients") | (type == "all"))
+  {
+    NumericMatrix pol_ind = polynomialIndex(pol_degrees);
+    
+    pc_names = StringVector(pol_coefficients_n);
+    
+    for (int i = 0; i < pol_coefficients_n; i++)
+    {
+      pc_names[i] = "a";
+      for (int j = 0; j < pol_degrees_n; j++)
+      {
+        int my_int = pol_ind(j, i);
+        pc_names[i] = as<std::string>(pc_names[i]) + 
+          "_" + std::to_string(my_int);
+      }
+    }
+    
+    NumericMatrix tmp_grad = return_List["pc_grad"];
+    pc_grad = tmp_grad;
+    colnames(pc_grad) = pc_names;
+    if(type != "all")
+    {
+      return(pc_grad);
+    }
+  }
+  
+    // to mean
+  if((type == "mean") | (type == "all"))
+  {
+    mean_names = StringVector(pol_degrees_n);
+    
+    for (int i = 0; i < pol_degrees_n; i++)
+    {
+      mean_names[i] = "mean_" + std::to_string(i + 1);
+    }
+    
+    NumericMatrix tmp_grad = return_List["mean_grad"];
+    mean_grad = tmp_grad;
+    colnames(mean_grad) = mean_names;
+    if(type != "all")
+    {
+      return(mean_grad);
+    }
+  }
+  
+    // to sd
+  if((type == "sd") | (type == "all"))
+  {
+    sd_names = StringVector(pol_degrees_n);
+    
+    for (int i = 0; i < pol_degrees_n; i++)
+    {
+      sd_names[i] = "sd_" + std::to_string(i + 1);
+    }
+    
+    NumericMatrix tmp_grad = return_List["sd_grad"];
+    sd_grad = tmp_grad;
+    colnames(sd_grad) = sd_names;
+    if(type != "all")
+    {
+      return(sd_grad);
+    }
+  }
+  
+    // to x_lower
+  if((type == "x_lower") | (type == "all"))
+  {
+    x_lower_names = StringVector(pol_degrees_n);
+    
+    for (int i = 0; i < pol_degrees_n; i++)
+    {
+      x_lower_names[i] = "x_lower_" + std::to_string(i + 1);
+    }
+    
+    NumericMatrix tmp_grad = return_List["x_lower_grad"];
+    x_lower_grad = tmp_grad;
+    colnames(x_lower_grad) = x_lower_names;
+    if(type != "all")
+    {
+      return(x_lower_grad);
+    }
+  }
+  
+    // to x_upper
+  if((type == "x_upper") | (type == "all"))
+  {
+    x_upper_names = StringVector(pol_degrees_n);
+    
+    for (int i = 0; i < pol_degrees_n; i++)
+    {
+      x_upper_names[i] = "x_upper_" + std::to_string(i + 1);
+    }
+    
+    NumericMatrix tmp_grad = return_List["x_upper_grad"];
+    x_upper_grad = tmp_grad;
+    colnames(x_upper_grad) = x_upper_names;
+    if(type != "all")
+    {
+      return(x_upper_grad);
+    }
+  }
+  
+  if(type == "all")
+  {
+    int n = pc_grad.nrow();
+    int all_grad_n = pol_coefficients_n + 4 * pol_degrees_n;
+    
+    all_names = StringVector(all_grad_n);
+    all_grad = NumericMatrix(n, all_grad_n);
+
+    for(int i = 0; i < pol_coefficients_n; i++)
+    {
+      all_grad(_, i) = pc_grad(_, i);
+      all_names[i] = pc_names[i];
+    }
+
+    for(int i = pol_coefficients_n; 
+        i < pol_coefficients_n + pol_degrees_n; i++)
+    {
+      all_grad(_, i) = mean_grad(_, i - pol_coefficients_n);
+      all_names[i] = mean_names[i - pol_coefficients_n];
+    }
+
+    for(int i = pol_coefficients_n + pol_degrees_n; 
+        i < pol_coefficients_n + 2 * pol_degrees_n; i++)
+    {
+      all_grad(_, i) = sd_grad(_, i - pol_coefficients_n - pol_degrees_n);
+      all_names[i] = sd_names[i - pol_coefficients_n - pol_degrees_n];
+    }
+
+    for(int i = pol_coefficients_n + 2 * pol_degrees_n; 
+        i < pol_coefficients_n + 3 * pol_degrees_n; i++)
+    {
+      all_grad(_, i) = x_lower_grad(_, i - pol_coefficients_n - 2 * pol_degrees_n);
+      all_names[i] = x_lower_names[i - pol_coefficients_n - 2 * pol_degrees_n];
+    }
+
+    for(int i = pol_coefficients_n + 3 * pol_degrees_n; 
+        i < pol_coefficients_n + 4 * pol_degrees_n; i++)
+    {
+      all_grad(_, i) = x_upper_grad(_, i - pol_coefficients_n - 3 * pol_degrees_n);
+      all_names[i] = x_upper_names[i - pol_coefficients_n - 3 * pol_degrees_n];
+    }
+
+    colnames(all_grad) = all_names;
+  }
+  
+  return(all_grad);
 }

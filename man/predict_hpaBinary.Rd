@@ -9,9 +9,10 @@ predict_hpaBinary(object, newdata = NULL, is_prob = TRUE)
 \arguments{
 \item{object}{Object of class "hpaBinary"}
 
-\item{newdata}{An optional data frame (for \link[hpa]{hpaBinary} and \link[hpa]{hpaSelection}) 
-or numeric matrix (for \link[hpa]{hpaML}) in which to look for variables 
-with which to predict. If omitted, the original dataframe (matrix) used.}
+\item{newdata}{An optional data frame (for \link[hpa]{hpaBinary} and
+\link[hpa]{hpaSelection}) or numeric matrix (for \link[hpa]{hpaML})
+in which to look for variables with which to predict. If omitted,
+the original dataframe (matrix) used.}
 
 \item{is_prob}{logical; if TRUE (default) then function returns predicted probabilities. Otherwise latent variable
 (single index) estimates will be returned.}

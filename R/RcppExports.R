@@ -9,6 +9,7 @@
 #' @param mean double value.
 #' @param sd double positive value.
 #' @template is_parallel_Template
+#' @template dnorm_parallel_examples_Template
 #' @export
 dnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
     .Call(`_hpa_dnorm_parallel`, x, mean, sd, is_parallel)
@@ -28,7 +29,8 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 }
 
 #' Perform semi-nonparametric binary choice model estimation
-#' @description This function performs semi-nonparametric single index binary choice model estimation
+#' @description This function performs semi-nonparametric single 
+#' index binary choice model estimation
 #' via hermite polynomial densities approximation.
 #' @template formula_Template
 #' @template data_Template
@@ -43,13 +45,15 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' @template is_parallel_Template
 #' @template opt_type_Template
 #' @template opt_control_Template
-#' @param is_x0_probit logical; if \code{TRUE} (default) then initial points for optimization routine will be
+#' @param is_x0_probit logical; if \code{TRUE} (default) then initial
+#' points for optimization routine will be
 #' obtained by probit model estimated via \link[stats]{glm} function.
 #' @template is_sequence_Template
 #' @template hpa_likelihood_details_Template
 #' @template GN_details_Template
 #' @template first_coef_Template
-#' @details Note that if \code{is_z_coef_first_fixed} value is TRUE then the coefficient for the first
+#' @details Note that if \code{is_z_coef_first_fixed} value is TRUE
+#' then the coefficient for the first
 #' independent variable in \code{formula} will be fixed to 1.
 #' @template sd_adjust_Template
 #' @template is_numeric_Template
@@ -58,7 +62,8 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' @template opt_control_details_Template
 #' @template opt_control_details_hpaBinary_Template
 #' @return This function returns an object of class "hpaBinary".\cr \cr
-#' An object of class "hpaBinary" is a list containing the following components:
+#' An object of class "hpaBinary" is a list containing the 
+#' following components:
 #' \itemize{
 #' \item \code{optim} - \code{\link[stats]{optim}} function output. 
 #' If \code{opt_type = "GA"} then it is the list containing 
@@ -68,21 +73,27 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' \item \code{sd} - sd (sigma) parameter of density function estimate.
 #' \item \code{pol_coefficients} - polynomial coefficients estimates.
 #' \item \code{pol_degrees} - the same as \code{K} input parameter.
-#' \item \code{coefficients} - regression (single index) coefficients estimates.
-#' \item \code{cov_matrix} - estimated parameters covariance matrix estimate.
-#' \item \code{marginal_effects} - marginal effects matrix where columns are variables and rows are observations.
+#' \item \code{coefficients} - regression (single index) 
+#' coefficients estimates.
+#' \item \code{cov_mat} - covariance matrix estimate.
+#' \item \code{marginal_effects} - marginal effects matrix where columns are
+#' variables and rows are observations.
 #' \item \code{results} - numeric matrix representing estimation results.
 #' \item \code{log-likelihood} - value of Log-Likelihood function.
 #' \item \code{AIC} - AIC value.
 #' \item \code{errors_exp} - random error expectation estimate.
 #' \item \code{errors_var} - random error variance estimate.
-#' \item \code{dataframe} - dataframe containing variables mentioned in \code{formula} without \code{NA} values.
-#' \item \code{model_Lists} - lists containing information about fixed parameters and parameters indexes in \code{x1}.
+#' \item \code{dataframe} - dataframe containing variables mentioned in 
+#' \code{formula} without \code{NA} values.
+#' \item \code{model_Lists} - lists containing information about 
+#' fixed parameters and parameters indexes in \code{x1}.
 #' \item \code{n_obs} - number of observations.
 #' \item \code{z_latent} - latent variable (signle index) estimates.
-#' \item \code{z_prob} - probabilities of positive outcome (i.e. 1) estimates.}
-#' @seealso \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, \link[hpa]{plot.hpaBinary},
-#' \link[hpa]{AIC.hpaBinary}, \link[hpa]{logLik.hpaBinary}
+#' \item \code{z_prob} - probabilities of positive 
+#' outcome (i.e. 1) estimates.}
+#' @seealso \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, 
+#' \link[hpa]{plot.hpaBinary}, \link[hpa]{AIC.hpaBinary}, 
+#' \link[hpa]{logLik.hpaBinary}
 #' @template hpaBinary_examples_Template
 #' @export	
 hpaBinary <- function(formula, data, K = 1L, z_mean_fixed = NA_real_, z_sd_fixed = NA_real_, z_constant_fixed = 0, is_z_coef_first_fixed = TRUE, is_x0_probit = TRUE, is_sequence = FALSE, x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL) {
@@ -175,7 +186,7 @@ logLik_hpaBinary <- function(object) {
 #' \item \code{tr_right} - the same as \code{tr_right} input parameter.
 #' \item \code{omit_ind }- the same as \code{omit_ind} input parameter.
 #' \item \code{given_ind} - the same as \code{given_ind} input parameter.
-#' \item \code{cov_matrix} - estimated parameters covariance matrix estimate.
+#' \item \code{cov_mat} - covariance matrix estimate.
 #' \item \code{results} - numeric matrix representing estimation results.
 #' \item \code{log-likelihood} - value of Log-Likelihood function.
 #' \item \code{AIC} - AIC value.
@@ -253,12 +264,13 @@ mecdf <- function(x) {
 #' @template mean_Template
 #' @template sd_Template
 #' @template is_parallel_Template
+#' @template is_log_Template
 #' @template GN_details_Template
 #' @template dhpa_examples_Template
 #' @return This function returns density function hermite polynomial approximation at point \code{x}.
 #' @export
-dhpa <- function(x = matrix(1,1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE) {
-    .Call(`_hpa_dhpa`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel)
+dhpa <- function(x = matrix(1,1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, is_log = FALSE) {
+    .Call(`_hpa_dhpa`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log)
 }
 
 #' Distribution function hermite polynomial approximation
@@ -271,12 +283,13 @@ dhpa <- function(x = matrix(1,1), pol_coefficients = numeric(0), pol_degrees = n
 #' @template mean_Template
 #' @template sd_Template
 #' @template is_parallel_Template
+#' @template is_log_Template
 #' @template GN_details_Template
 #' @return This function returns cumulative distribution function hermite polynomial approximation at point \code{x}.
 #' @template phpa_examples_Template
 #' @export
-phpa <- function(x = matrix(1,1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE) {
-    .Call(`_hpa_phpa`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel)
+phpa <- function(x = matrix(1,1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, is_log = FALSE) {
+    .Call(`_hpa_phpa`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log)
 }
 
 #' Interval distribution function hermite polynomial approximation
@@ -290,13 +303,14 @@ phpa <- function(x = matrix(1,1), pol_coefficients = numeric(0), pol_degrees = n
 #' @template mean_Template
 #' @template sd_Template
 #' @template is_parallel_Template
+#' @template is_log_Template
 #' @template interval_cdf_Template
 #' @template GN_details_Template
 #' @return This function returns interval distribution function hermite polynomial approximation at point \code{x}.
 #' @template ihpa_examples_Template
 #' @export
-ihpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE) {
-    .Call(`_hpa_ihpa`, x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel)
+ihpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, is_log = FALSE) {
+    .Call(`_hpa_ihpa`, x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log)
 }
 
 #' Expected powered product hermite polynomial approximation
@@ -350,12 +364,13 @@ etrhpa <- function(tr_left = matrix(1, 1), tr_right = matrix(1, 1), pol_coeffici
 #' @template mean_Template
 #' @template sd_Template
 #' @template is_parallel_Template
+#' @template is_log_Template
 #' @template GN_details_Template
 #' @template dtrhpa_examples_Template
 #' @return This function returns density function hermite polynomial approximation at point \code{x} for truncated distribution.
 #' @export
-dtrhpa <- function(x = matrix(1, 1), tr_left = matrix(), tr_right = matrix(), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE) {
-    .Call(`_hpa_dtrhpa`, x, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel)
+dtrhpa <- function(x = matrix(1, 1), tr_left = matrix(), tr_right = matrix(), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, is_log = FALSE) {
+    .Call(`_hpa_dtrhpa`, x, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log)
 }
 
 #' Truncated interval distribution function hermite polynomial approximation for truncated distribution
@@ -371,13 +386,14 @@ dtrhpa <- function(x = matrix(1, 1), tr_left = matrix(), tr_right = matrix(), po
 #' @template mean_Template
 #' @template sd_Template
 #' @template is_parallel_Template
+#' @template is_log_Template
 #' @template itrhpa_examples_Template
 #' @template interval_cdf_Template
 #' @template GN_details_Template
 #' @return This function returns interval distribution function (idf) hermite polynomial approximation at point \code{x} for truncated distribution.
 #' @export
-itrhpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), tr_left = matrix(1, 1), tr_right = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE) {
-    .Call(`_hpa_itrhpa`, x_lower, x_upper, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel)
+itrhpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), tr_left = matrix(1, 1), tr_right = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, is_log = FALSE) {
+    .Call(`_hpa_itrhpa`, x_lower, x_upper, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log)
 }
 
 #' Calculate gradient of density function hermite polynomial approximation
@@ -392,6 +408,7 @@ itrhpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), tr_left = mat
 #' @template sd_Template
 #' @template type_diff_Template
 #' @template is_parallel_Template
+#' @template is_log_Template
 #' @template GN_details_Template
 #' @template dhpaDiff_examples_Template
 #' @return This function returns gradient of density function hermite polynomial 
@@ -401,12 +418,12 @@ itrhpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), tr_left = mat
 #' If \code{x} has more then one row then the output will be jacobian matrix where 
 #' rows are gradients.
 #' @export
-dhpaDiff <- function(x = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE) {
-    .Call(`_hpa_dhpaDiff`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel)
+dhpaDiff <- function(x = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE, is_log = FALSE) {
+    .Call(`_hpa_dhpaDiff`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel, is_log)
 }
 
 #' Calculate gradient of interval distribution function hermite polynomial approximation
-#' @description This function calculates interval distribution function hermite polynomial approximation.
+#' @description This function calculates gradient of interval distribution function hermite polynomial approximation.
 #' @template x_lower_Template
 #' @template x_upper_Template
 #' @template pol_coefficients_Template
@@ -417,6 +434,7 @@ dhpaDiff <- function(x = matrix(1, 1), pol_coefficients = numeric(0), pol_degree
 #' @template sd_Template
 #' @template type_diff_Template
 #' @template is_parallel_Template
+#' @template is_log_Template
 #' @template interval_cdf_Template
 #' @template GN_details_Template
 #' @return This function returns gradient of interval distribution function hermite polynomial 
@@ -427,17 +445,19 @@ dhpaDiff <- function(x = matrix(1, 1), pol_coefficients = numeric(0), pol_degree
 #' rows are gradients.
 #' @template ihpaDiff_examples_Template
 #' @export
-ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE) {
-    .Call(`_hpa_ihpaDiff`, x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel)
+ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE, is_log = FALSE) {
+    .Call(`_hpa_ihpaDiff`, x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel, is_log)
 }
 
 #' Perform semi-nonparametric selection model estimation
 #' @description This function performs semi-nonparametric selection model estimation
 #' via hermite polynomial densities approximation.
 #' @param selection an object of class "formula" (or one that can be coerced to that class): 
-#' a symbolic description of the selection equation form.
+#' a symbolic description of the selection equation form. All variables in \code{selection}
+#' should be numeric vectors of the same length.
 #' @param outcome an object of class "formula" (or one that can be coerced to that class): 
-#' a symbolic description of the outcome equation form.
+#' a symbolic description of the outcome equation form. All variables in \code{outcome}
+#' should be numeric vectors of the same length.
 #' @template data_Template
 #' @template z_K_Template
 #' @template y_K_Template
@@ -447,7 +467,6 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' @param is_Newey_loocv logical; if TRUE then number of conditional expectation approximating terms for Newey's method will be selected
 #' based on leave-one-out cross-validation criteria iterating througt 0 to pol_elements number of these terms.
 #' @template x0_selection_Template
-#' @param z_sd_fixed positive value that is fixed sigma parameter for selection equation.
 #' @template cov_type_Template
 #' @template boot_iter_Template
 #' @template is_parallel_Template
@@ -458,7 +477,6 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' @template first_coef_Template
 #' @details Note that coefficient for the first
 #' independent variable in \code{selection} will be fixed to 1.
-#' @template sd_adjust_Template
 #' @template is_numeric_selection_Template
 #' @template parametric_paradigm_Template
 #' @template Newey_details_Template
@@ -478,16 +496,15 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' \item \code{Newey} - list containing information concerning Newey's method estimation results.
 #' \item \code{z_mean} - estimate of the hermite polynomial mean parameter related to selection equation random error marginal distribution.
 #' \item \code{y_mean} - estimate of the hermite polynomial mean parameter related to outcome equation random error marginal distribution.
-#' \item \code{z_sd} - adjusted value of sd parameter related to selection equation random error marginal distribution.
+#' \item \code{z_sd} - estimate of sd parameter related to selection equation random error marginal distribution.
 #' \item \code{y_sd} - estimate of the hermite polynomial sd parameter related to outcome equation random error marginal distribution.
 #' \item \code{pol_coefficients} - polynomial coefficients estimates.
 #' \item \code{pol_degrees} - numeric vector which first element is \code{z_K} and the second is \code{y_K}.
 #' \item \code{z_coef} - selection equation regression coefficients estimates.
 #' \item \code{y_coef} - outcome equation regression coefficients estimates.
-#' \item \code{cov_matrix} - estimated parameters covariance matrix estimate.
+#' \item \code{cov_mat} - covariance matrix estimate.
 #' \item \code{results} - numeric matrix representing estimation results.
 #' \item \code{log-likelihood} - value of Log-Likelihood function.
-#' \item \code{AIC} - AIC value.
 #' \item \code{re_moments} - list which contains information about random errors expectations, variances and correlation.
 #' \item \code{data_List} - list containing model variables and their partiotion according to outcome and selection equations.
 #' \item \code{n_obs} - number of observations.
@@ -520,8 +537,8 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' @seealso \link[hpa]{summary.hpaSelection}, \link[hpa]{predict.hpaSelection}, \link[hpa]{plot.hpaSelection}, \link[hpa]{AIC.hpaSelection}, \link[hpa]{logLik.hpaSelection}
 #' @template hpaSelection_examples_Template
 #' @export	
-hpaSelection <- function(selection, outcome, data, z_K = 1L, y_K = 1L, pol_elements = 3L, is_Newey = FALSE, x0 = numeric(0), is_Newey_loocv = FALSE, z_sd_fixed = -1, cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL) {
-    .Call(`_hpa_hpaSelection`, selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, z_sd_fixed, cov_type, boot_iter, is_parallel, opt_type, opt_control)
+hpaSelection <- function(selection, outcome, data, z_K = 1L, y_K = 1L, pol_elements = 3L, is_Newey = FALSE, x0 = numeric(0), is_Newey_loocv = FALSE, cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL) {
+    .Call(`_hpa_hpaSelection`, selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, cov_type, boot_iter, is_parallel, opt_type, opt_control)
 }
 
 #' Predict outcome and selection equation values from hpaSelection model
@@ -586,19 +603,20 @@ logLik_hpaSelection <- function(object) {
 }
 
 #' Calculate k-th order moment of normal distribution
-#' @description This function iteratively calculates k-th order moment of normal distribution.
+#' @description This function recursively calculates k-th order moment of normal distribution.
 #' @param k non-negative integer moment order.
 #' @param mean numeric expected value.
 #' @param sd positive numeric standard deviation.
 #' @param return_all_moments logical; if \code{TRUE}, function returns (k+1)-dimensional numeric
-#' vector of moments of normaly distributed random variable with mean = \code{mean}
+#' vector of moments of normally distributed random variable with mean = \code{mean}
 #' and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
 #' to the (i-1)-th moment.
 #' @template is_validation_Template
 #' @param is_central logical; if \code{TRUE}, then central moments will be calculated.
 #' @details This function estimates \code{k}-th order moment of
 #' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd}.\cr
-#' @template k_integer_template
+#' @template k_integer_Template
+#' @template diff_type_Template
 #' @return This function returns \code{k}-th order moment of
 #' normal distribution which mean equals to \code{mean} and standard deviation is \code{sd}.
 #' If \code{return_all_moments} is \code{TRUE} then see this argument description above for
@@ -612,17 +630,23 @@ logLik_hpaSelection <- function(object) {
 #' 
 #' # (0-5)-th moments
 #' normalMoment(k = 5, mean = 3, sd = 5, return_all_moments = TRUE)
+#' 
+#' # 5-th moment derivative respect to mean
+#' normalMoment(k = 5, mean = 3, sd = 5, diff_type = "mean")
+#' 
+#' # 5-th moment derivative respect to sd
+#' normalMoment(k = 5, mean = 3, sd = 5, diff_type = "sd")
 #'
 #' @export
-normalMoment <- function(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE, is_validation = TRUE, is_central = FALSE) {
-    .Call(`_hpa_normalMoment`, k, mean, sd, return_all_moments, is_validation, is_central)
+normalMoment <- function(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE, is_validation = TRUE, is_central = FALSE, diff_type = "NO") {
+    .Call(`_hpa_normalMoment`, k, mean, sd, return_all_moments, is_validation, is_central, diff_type)
 }
 
 #' Calculate k-th order moment of truncated normal distribution
-#' @description This function iteratively calculates k-th order moment of truncated normal distribution.
+#' @description This function recursively calculates k-th order moment of truncated normal distribution.
 #' @param k non-negative integer moment order.
-#' @param x_lower numeric vector of lower trancation points.
-#' @param x_upper numeric vector of upper trancation points.
+#' @param x_lower numeric vector of lower truncation points.
+#' @param x_upper numeric vector of upper truncation points.
 #' @param mean numeric expected value.
 #' @param sd positive numeric standard deviation.
 #' @template pdf_lower_Template
@@ -632,6 +656,7 @@ normalMoment <- function(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE, i
 #' @template cdf_difference_Template
 #' @template is_validation_Template
 #' @template is_parallel_Template
+#' @template diff_type_Template
 #' @param return_all_moments logical; if \code{TRUE}, function returns the matrix of
 #' moments of normaly distributed random variable with mean = \code{mean}
 #' and standard deviation = \code{sd} under lower and upper truncation points
@@ -655,8 +680,8 @@ normalMoment <- function(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE, i
 #' ## which mean is 5 and standard deviation is 3. 
 #' ## These random variables truncation points are given as follows:-1<x1<1, 0<x2<2, 1<x3<3.
 #' k <- 3
-#' x_lower <- c(-1, 0, 1)
-#' x_upper <- c(1, 2 ,3)
+#' x_lower <- c(-1, 0, 1, -Inf, -Inf)
+#' x_upper <- c(1, 2 , 3, 2, Inf)
 #' mean <- 3
 #' sd <- 5
 #' 
@@ -666,9 +691,15 @@ normalMoment <- function(k = 0L, mean = 0, sd = 1, return_all_moments = FALSE, i
 #' # get matrix of (0-5)-th moments (columns) for each variable (rows)
 #' truncatedNormalMoment(k, x_lower, x_upper, mean, sd, return_all_moments = TRUE)
 #'
+#' # get the moments derivatives respect to mean
+#' truncatedNormalMoment(k, x_lower, x_upper, mean, sd, diff_type = "mean")
+#' 
+#' # get the moments derivatives respect to standard deviation
+#' truncatedNormalMoment(k, x_lower, x_upper, mean, sd, diff_type = "sd")
+#' 
 #' @export
-truncatedNormalMoment <- function(k = 1L, x_lower = numeric(0), x_upper = numeric(0), mean = 0, sd = 1, pdf_lower = numeric(0), cdf_lower = numeric(0), pdf_upper = numeric(0), cdf_upper = numeric(0), cdf_difference = numeric(0), return_all_moments = FALSE, is_validation = TRUE, is_parallel = FALSE) {
-    .Call(`_hpa_truncatedNormalMoment`, k, x_lower, x_upper, mean, sd, pdf_lower, cdf_lower, pdf_upper, cdf_upper, cdf_difference, return_all_moments, is_validation, is_parallel)
+truncatedNormalMoment <- function(k = 1L, x_lower = numeric(0), x_upper = numeric(0), mean = 0, sd = 1, pdf_lower = numeric(0), cdf_lower = numeric(0), pdf_upper = numeric(0), cdf_upper = numeric(0), cdf_difference = numeric(0), return_all_moments = FALSE, is_validation = TRUE, is_parallel = FALSE, diff_type = "NO") {
+    .Call(`_hpa_truncatedNormalMoment`, k, x_lower, x_upper, mean, sd, pdf_lower, cdf_lower, pdf_upper, cdf_upper, cdf_difference, return_all_moments, is_validation, is_parallel, diff_type)
 }
 
 #' Returns matrix of polynomial indexes

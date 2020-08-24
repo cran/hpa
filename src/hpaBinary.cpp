@@ -12,7 +12,8 @@ using namespace RcppParallel;
 // [[Rcpp::depends(RcppArmadillo)]]
 
 //' Perform semi-nonparametric binary choice model estimation
-//' @description This function performs semi-nonparametric single index binary choice model estimation
+//' @description This function performs semi-nonparametric single 
+//' index binary choice model estimation
 //' via hermite polynomial densities approximation.
 //' @template formula_Template
 //' @template data_Template
@@ -27,13 +28,15 @@ using namespace RcppParallel;
 //' @template is_parallel_Template
 //' @template opt_type_Template
 //' @template opt_control_Template
-//' @param is_x0_probit logical; if \code{TRUE} (default) then initial points for optimization routine will be
+//' @param is_x0_probit logical; if \code{TRUE} (default) then initial
+//' points for optimization routine will be
 //' obtained by probit model estimated via \link[stats]{glm} function.
 //' @template is_sequence_Template
 //' @template hpa_likelihood_details_Template
 //' @template GN_details_Template
 //' @template first_coef_Template
-//' @details Note that if \code{is_z_coef_first_fixed} value is TRUE then the coefficient for the first
+//' @details Note that if \code{is_z_coef_first_fixed} value is TRUE
+//' then the coefficient for the first
 //' independent variable in \code{formula} will be fixed to 1.
 //' @template sd_adjust_Template
 //' @template is_numeric_Template
@@ -42,7 +45,8 @@ using namespace RcppParallel;
 //' @template opt_control_details_Template
 //' @template opt_control_details_hpaBinary_Template
 //' @return This function returns an object of class "hpaBinary".\cr \cr
-//' An object of class "hpaBinary" is a list containing the following components:
+//' An object of class "hpaBinary" is a list containing the 
+//' following components:
 //' \itemize{
 //' \item \code{optim} - \code{\link[stats]{optim}} function output. 
 //' If \code{opt_type = "GA"} then it is the list containing 
@@ -52,21 +56,27 @@ using namespace RcppParallel;
 //' \item \code{sd} - sd (sigma) parameter of density function estimate.
 //' \item \code{pol_coefficients} - polynomial coefficients estimates.
 //' \item \code{pol_degrees} - the same as \code{K} input parameter.
-//' \item \code{coefficients} - regression (single index) coefficients estimates.
-//' \item \code{cov_matrix} - estimated parameters covariance matrix estimate.
-//' \item \code{marginal_effects} - marginal effects matrix where columns are variables and rows are observations.
+//' \item \code{coefficients} - regression (single index) 
+//' coefficients estimates.
+//' \item \code{cov_mat} - covariance matrix estimate.
+//' \item \code{marginal_effects} - marginal effects matrix where columns are
+//' variables and rows are observations.
 //' \item \code{results} - numeric matrix representing estimation results.
 //' \item \code{log-likelihood} - value of Log-Likelihood function.
 //' \item \code{AIC} - AIC value.
 //' \item \code{errors_exp} - random error expectation estimate.
 //' \item \code{errors_var} - random error variance estimate.
-//' \item \code{dataframe} - dataframe containing variables mentioned in \code{formula} without \code{NA} values.
-//' \item \code{model_Lists} - lists containing information about fixed parameters and parameters indexes in \code{x1}.
+//' \item \code{dataframe} - dataframe containing variables mentioned in 
+//' \code{formula} without \code{NA} values.
+//' \item \code{model_Lists} - lists containing information about 
+//' fixed parameters and parameters indexes in \code{x1}.
 //' \item \code{n_obs} - number of observations.
 //' \item \code{z_latent} - latent variable (signle index) estimates.
-//' \item \code{z_prob} - probabilities of positive outcome (i.e. 1) estimates.}
-//' @seealso \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, \link[hpa]{plot.hpaBinary},
-//' \link[hpa]{AIC.hpaBinary}, \link[hpa]{logLik.hpaBinary}
+//' \item \code{z_prob} - probabilities of positive 
+//' outcome (i.e. 1) estimates.}
+//' @seealso \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, 
+//' \link[hpa]{plot.hpaBinary}, \link[hpa]{AIC.hpaBinary}, 
+//' \link[hpa]{logLik.hpaBinary}
 //' @template hpaBinary_examples_Template
 //' @export	
 // [[Rcpp::export]]
@@ -86,6 +96,28 @@ List hpaBinary(Rcpp::Formula formula,
 	String opt_type = "optim",
 	List opt_control = R_NilValue) 
 {
+  // Validation
+  
+    // Check covariance matrix type
+  if((cov_type != "sandwich") & (cov_type != "sandwichFD") &
+     (cov_type != "bootstrap") & (cov_type != "gop") & 
+     (cov_type != "hessian") & (cov_type != "hessianFD"))
+  {
+    stop("Incorrect cov_type argument value.");
+  }
+  
+    // Check opt_type
+    if((opt_type != "optim") & (opt_type != "GA"))
+    {
+      stop("Incorrect opt_type argument value.");
+    }
+    
+    // Warning concerning large number of bootstrap iterations
+    if(boot_iter > 1000)
+    {
+      warning("Since boot_iter is large estimation may take lot's of time.");
+    }
+
 	// Load additional environments
 	
 	  // stats environment
@@ -104,6 +136,7 @@ List hpaBinary(Rcpp::Formula formula,
 	Rcpp::Function c_R = base_env["c"];
 	Rcpp::Function diag_R = base_env["diag"];
 	Rcpp::Function requireNamespace_R = base_env["requireNamespace"];
+	Rcpp::Function cat_R = base_env["cat"];
 	
 	  // GA environment
 	Rcpp::Function ga_R = stats_env["optim"];
@@ -145,15 +178,15 @@ List hpaBinary(Rcpp::Formula formula,
 	z_df = na_omit_R(z_df);
 	int z_df_n = z_df.size();
 
-		// Extract binary dependend variable
-	NumericVector z = z_df[0]; // it is reference
+		// Extract binary dependent variable
+	NumericVector z = z_df[0];
 	
 	  // Get observations number
 	int n_obs = z.size();
 
-		// Extract independend variables (regressors)
+		// Extract independent variables (regressors)
 	NumericMatrix z_d(n_obs, (z_df_n - 1) + !is_z_constant_fixed); // -1 because of dependent variable
-	int z_d_col = z_d.ncol();                                      // number of independend variables (regressors)
+	int z_d_col = z_d.ncol();                                      // number of independent variables (regressors)
 
 	    // The constant located in last column of regressors matrix
 	if (!is_z_constant_fixed)
@@ -185,6 +218,7 @@ List hpaBinary(Rcpp::Formula formula,
 		{
 			x0[i] = x1[i - 1];
 		}
+		
 		// for other K
 		for (int i = 1; i <= K; i++)
 		{
@@ -318,7 +352,7 @@ List hpaBinary(Rcpp::Formula formula,
 		  // Adjust all coefficients
 		  glm_coef = glm_coef / coef_adjust;
 		  
-			// Adjust sd to first coefficient value
+			// Adjust sd to the first coefficient value
 			if (is_z_sd_fixed)
 			{
 				z_sd_fixed /= coef_adjust;
@@ -345,11 +379,11 @@ List hpaBinary(Rcpp::Formula formula,
 		}
 		for (int i = 0; i < (n_coef - !is_z_constant_fixed); i++)
 		{
-			x0[z_coef_ind[i]] = glm_coef[i + 1 + is_z_coef_first_fixed]; // + 1 to omitt constant assigned previously
+			x0[z_coef_ind[i]] = glm_coef[i + 1 + is_z_coef_first_fixed]; // + 1 to omit constant assigned previously
 		}
 	}
 
-	// Create list for some variables because unfortunatelly optim function has limitation for the
+	// Create list for some variables because unfortunately optim function has limitation for the
 	// parameters number (parameters itself not estimated)
 	
 	    // Collect some values to lists since there are limited number of objects could be
@@ -387,8 +421,8 @@ List hpaBinary(Rcpp::Formula formula,
 	List PGN_control = List::create(
 	     Named("maxit") = 10000000, 
        Named("fnscale") = -1.0,
-       Named("abstol") = std::sqrt(std::numeric_limits<double>::epsilon()),
-       Named("reltol") = std::sqrt(std::numeric_limits<double>::epsilon()));
+       Named("abstol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01,
+       Named("reltol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01);
 	
 	    // Perform the optimization
 	List optim_results = optim(
@@ -417,14 +451,15 @@ List hpaBinary(Rcpp::Formula formula,
 	{
 	  //suggest initial solution based on local optimization
 	  NumericMatrix ga_suggestions;
+
 	  if(opt_control.containsElementNamed("suggestions"))
 	  {
 	    ga_suggestions = Rcpp::as<Rcpp::NumericMatrix>(opt_control["suggestions"]);
 	  } else {
-	    ga_suggestions= NumericMatrix(1, x1_n);
+	    ga_suggestions = NumericMatrix(1, x1_n);
 	    ga_suggestions(0,_) = x1;
 	  }
-	  
+
 	  // set lower and upper bounds for parameters space
 	  if(opt_control.containsElementNamed("lower") & 
        opt_control.containsElementNamed("upper"))
@@ -432,7 +467,6 @@ List hpaBinary(Rcpp::Formula formula,
 	    ga_lower = opt_control["lower"];
 	    ga_upper = opt_control["upper"];
 	  } else {
-  	  
   	  // bounds for the mean parameter
   	  
   	  double x1_mean;
@@ -546,6 +580,15 @@ List hpaBinary(Rcpp::Formula formula,
 	  } else {
 	    ga_seed = 8;
 	  }
+	  
+	     // set monitor parameter
+	  bool ga_monitor;
+	  if(opt_control.containsElementNamed("monitor"))
+	  {
+	    ga_monitor = opt_control["monitor"];
+	  } else {
+	    ga_monitor = true;
+	  }
 
 	    // apply genetic algorithm for global optimization
 	  ga_List = List::create(Named("GA") = ga_R(
@@ -562,8 +605,16 @@ List hpaBinary(Rcpp::Formula formula,
 	    Rcpp::_["optimArgs"] = ga_optimArgs,
 	    Rcpp::_["suggestions"] = ga_suggestions,
 	    Rcpp::_["seed"] = ga_seed,
-	    Rcpp::_["hpaBinary_args"] = hpaBinary_args));
+	    Rcpp::_["hpaBinary_args"] = hpaBinary_args,
+	    Rcpp::_["monitor"] = ga_monitor));
+
+	  // add \n in order to ensure that the prompt is at the next line
+	  if(ga_monitor)
+	  {
+	    cat_R("\n");
+	  }
 	  
+  	  // get ga function summary object
 	  ga_summary = ga_summary_R(ga_List["GA"]);
 	  x1 = ga_summary["solution"];
 	  
@@ -577,7 +628,7 @@ List hpaBinary(Rcpp::Formula formula,
 	    Rcpp::_["method"] = "BFGS",
 	    Rcpp::_["hessian"] = true,
 	    Rcpp::_["hpaBinary_args"] = hpaBinary_args);
-	  
+
 	  // Reset optimal point
 	  x1 = optim_results["par"];
 	}
@@ -617,27 +668,23 @@ List hpaBinary(Rcpp::Formula formula,
 
 	// Get covariance matrix estimate of "cov_type" type
 	NumericMatrix cov_mat;
-	
 	arma::mat H_part;
-	
 	arma::mat J_part;
 	
 	// Estimate jacobian for the inner part
 	if ((cov_type == "gop") | (cov_type == "sandwich") | (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_jacobian = hpaBinaryLnLOptim_grad_ind(x1, hpaBinary_args);
-	  
 	  J_part = as<arma::mat>(my_jacobian);
 	}
-	
+
 	  // Estimate hessian
 	if ((cov_type == "hessian") | (cov_type == "sandwich"))
 	{
 	  NumericMatrix my_hessian = optim_results["hessian"];
-	  
 	  H_part = as<arma::mat>(my_hessian).i();
 	}
-	
+
 	if ((cov_type == "hessianFD") | (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_hessian = optim_results["hessian"];
@@ -652,25 +699,25 @@ List hpaBinary(Rcpp::Formula formula,
 	  
 	  H_part = as<arma::mat>(my_hessian).i();
 	}
-	
+
 	  // Sandwich estimate
 	if ((cov_type == "sandwich") | (cov_type == "sandwichFD"))
 	{
 	  cov_mat = wrap(H_part * (J_part.t() * J_part) * H_part);
 	}
-	
+
 	  // Inverse hessian estimate
 	if ((cov_type == "hessian") | (cov_type == "hessianFD"))
 	{
 	  cov_mat = wrap(-H_part);
 	}
-	
+
 	  // Gradient outer product estimate
 	if (cov_type == "gop")
 	{
 	  cov_mat = wrap((J_part.t() * J_part).i());
 	}
-	
+
 	// Apply bootstrap
 	
 	// store parameters for each iteration
@@ -876,16 +923,16 @@ List hpaBinary(Rcpp::Formula formula,
                               		LogicalVector::create(0), 
                               		LogicalVector::create(0),
                               		z_mean, z_sd,
-                              		is_parallel);
+                              		is_parallel, false);
 	
 	// Estimate marginal effects
-	NumericVector z_den = dhpa(z_latent, pol_coefficients,
+	NumericVector z_den = dhpa(-1.0 * z_latent, pol_coefficients,
                              NumericVector::create(K),
                              LogicalVector::create(0), 
                              LogicalVector::create(0),
                              z_mean, z_sd,
-                             is_parallel);
-	
+                             is_parallel, false);
+
 	int n_coef_total = z_coef.size();
 	
 	NumericMatrix marginal_effects = NumericMatrix(z_latent.nrow(), n_coef_total);
@@ -935,8 +982,7 @@ List hpaBinary(Rcpp::Formula formula,
 		Named("marginal_effects") = marginal_effects);
 
 	return_result.attr("class") = "hpaBinary";
-
-		// estimate probabilities 
+	
 	return(return_result);
 }
 
@@ -947,8 +993,6 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
   List is_List = Rcpp::as<Rcpp::List>(hpaBinary_args["is_List"]);
   List ind_List = Rcpp::as<Rcpp::List>(hpaBinary_args["ind_List"]);
   List fixed_List = Rcpp::as<Rcpp::List>(hpaBinary_args["fixed_List"]);
-  arma::vec z_1 = hpaBinary_args["z_1"];
-  arma::vec z_0 = hpaBinary_args["z_0"];
   arma::mat z_d_1 = hpaBinary_args["z_d_1"];
   arma::mat z_d_0 = hpaBinary_args["z_d_0"];
   double K = hpaBinary_args["K"];
@@ -1028,25 +1072,25 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
   		z_h_1 = z_h_1 + z_constant_fixed;
 	    z_h_0 = z_h_0 + z_constant_fixed;
   	}
+	  
+	// get number of 1 observations
+	int n_obs_1 = z_h_1.nrow();
 
 	// Likelihood calculation
-	NumericVector lnL_z_1;
-	NumericVector lnL_z_0;
+	NumericMatrix inf_vec = NumericMatrix(n_obs_1, 1);
+	std::fill(inf_vec.begin(), inf_vec.end(), R_PosInf);
 	
-	NumericVector phpa_z_1 = phpa(-1.0 * z_h_1,
+	NumericVector lnL_z_1 = ihpa(-1.0 * z_h_1, inf_vec,
                                pol_coefficients, pol_degrees,
                                LogicalVector{false}, LogicalVector{false},
                                z_mean, z_sd, 
-                               is_parallel);
+                               is_parallel, true);
 	
-	NumericVector phpa_z_0 = phpa(-1.0 * z_h_0,
+	NumericVector lnL_z_0 = phpa(-1.0 * z_h_0,
                                pol_coefficients, pol_degrees,
                                LogicalVector{false}, LogicalVector{false},
                                z_mean, z_sd, 
-                               is_parallel);
-
-  lnL_z_1 = log(1 - phpa_z_1);
-  lnL_z_0 = log(phpa_z_0);
+                               is_parallel, true);
 
 	// Initialize list to store calculation results
 	double aggregate_0 = 0.0;
@@ -1073,14 +1117,11 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 double hpaBinaryLnLOptim(NumericVector x0, List hpaBinary_args) 
 {
   List return_List = hpaBinaryLnLOptim_List(x0, hpaBinary_args);
-  
+
   double aggregate_0 = return_List["aggregate_0"];
   double aggregate_1 = return_List["aggregate_1"];
   
-  double return_aggregate = 0.0;
-  
-  return_aggregate += aggregate_0;
-  return_aggregate += aggregate_1;
+  double return_aggregate = aggregate_0 + aggregate_1;
 
   if(any(is_na(NumericVector::create(return_aggregate))))
   {
@@ -1088,7 +1129,7 @@ double hpaBinaryLnLOptim(NumericVector x0, List hpaBinary_args)
   }
   return(return_aggregate);
 }
- 
+
 // Perform semi-nonparametric log-likelihood function estimation for binary choice model
 NumericVector hpaBinaryLnLOptim_ind(NumericVector x0, List hpaBinary_args) 
 { 
@@ -1208,166 +1249,89 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   int n_obs_0 = z_h_0.nrow();
   int n_obs = n_obs_0 + n_obs_1;
   
-  // cdf calculation
-  NumericVector cdf_z_1;
-  NumericVector cdf_z_0;
-
-  cdf_z_1 = 1 - phpa(-1.0 * z_h_1,
-                     pol_coefficients, pol_degrees,
-                     LogicalVector{false}, LogicalVector{false},
-                     z_mean, z_sd,
-                     is_parallel);
-
-  cdf_z_0 = phpa(-1.0 * z_h_0,
-                 pol_coefficients, pol_degrees,
-                 LogicalVector{false}, LogicalVector{false},
-                 z_mean, z_sd,
-                 is_parallel);
-  
-  // pdf calculation
-  NumericVector pdf_z_1;
-  NumericVector pdf_z_0;
-
-  pdf_z_1 = dhpa(-1.0 * z_h_1,
-                 pol_coefficients, pol_degrees,
-                 LogicalVector{false}, LogicalVector{false},
-                 z_mean, z_sd,
-                 is_parallel);
-
-  pdf_z_0 = dhpa(-1.0 * z_h_0,
-                 pol_coefficients, pol_degrees,
-                 LogicalVector{false}, LogicalVector{false},
-                 z_mean, z_sd,
-                 is_parallel);
-  
   // Initialize vector to store gradient values
   NumericMatrix my_grad = NumericMatrix(n_obs_0 + n_obs_1, n_param);
   
   // Analytical part of gradient
-  
+
     // for polynomial coefficients
   int pol_coefficients_n = pol_coefficients.size();
   
-  NumericMatrix pol_coefficients_grad_1;
-  NumericMatrix pol_coefficients_grad_0;
+  // lower tail negative infinity matrix
+  NumericMatrix neg_inf_vec_0 = NumericMatrix(n_obs_0, 1);
+  std::fill(neg_inf_vec_0.begin(), neg_inf_vec_0.end(), R_NegInf);
   
-  // gradient for ones values respect to polynomial coefficients
-
-      // lower tail negative infinity matrix
-    NumericMatrix x_lower_1 = NumericMatrix(n_obs_1, 1);
-    std::fill(x_lower_1.begin(), x_lower_1.end(), R_NegInf);
-      
-      //gradient calculations
-    pol_coefficients_grad_1 = ihpaDiff(x_lower_1, -1.0 * z_h_1,
-                                       pol_coefficients, pol_degrees,
-                                       LogicalVector{false}, LogicalVector{false},
-                                       z_mean, z_sd,
-                                       "pol_coefficients",
-                                       is_parallel);
+  NumericMatrix inf_vec_1 = NumericMatrix(n_obs_1, 1);
+  std::fill(inf_vec_1.begin(), inf_vec_1.end(), R_PosInf);
   
-  // gradient for zero values respect to polynomial coefficients
+  // Calculate gradient
 
-      // lower tail negative infinity matrix
-    NumericMatrix x_lower_0 = NumericMatrix(n_obs_0, 1);
-    std::fill(x_lower_0.begin(), x_lower_0.end(), R_NegInf);
-    
-      //gradient calculations
-    pol_coefficients_grad_0 = ihpaDiff(x_lower_0, -1.0 * z_h_0,
-                                       pol_coefficients, pol_degrees,
-                                       LogicalVector{false}, LogicalVector{false},
-                                       z_mean, z_sd,
-                                       "pol_coefficients",
-                                       is_parallel);
-    
+  NumericMatrix all_grad_1 = ihpaDiff(-1.0 * z_h_1, inf_vec_1,
+                                      pol_coefficients, pol_degrees,
+                                      LogicalVector{false}, LogicalVector{false},
+                                      z_mean, z_sd,
+                                      "all",
+                                      is_parallel, true);
+
+  NumericMatrix all_grad_0 = ihpaDiff(neg_inf_vec_0, -1.0 * z_h_0,
+                                      pol_coefficients, pol_degrees,
+                                      LogicalVector{false}, LogicalVector{false},
+                                      z_mean, z_sd,
+                                      "all",
+                                      is_parallel, true);
+
+  // Store gradients respect to
+  
+    // polynomial coefficients
   for (int i = 0; i < (pol_coefficients_n - 1); i++) // for each parameter
   {
     NumericVector my_grad_tmp = NumericVector(n_obs);
 
-    my_grad_tmp[Range(0, n_obs_1 - 1)] = -1.0 * pol_coefficients_grad_1(_, i + 1) / cdf_z_1;
-    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = pol_coefficients_grad_0(_, i + 1) / cdf_z_0;
+    my_grad_tmp[Range(0, n_obs_1 - 1)] = all_grad_1(_, i + 1);
+    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = all_grad_0(_, i + 1);
 
     my_grad(_, i) = my_grad_tmp;
   }
-
-    // for regression coefficients
+  
+    // mean
+    if(!is_z_mean_fixed)
+    {
+      NumericVector my_grad_tmp_mean = NumericVector(n_obs);
+      
+      my_grad_tmp_mean[Range(0, n_obs_1 - 1)] = all_grad_1(_, pol_coefficients_n);
+      my_grad_tmp_mean[Range(n_obs_1, n_obs - 1)] = all_grad_0(_, pol_coefficients_n);
+      
+      my_grad(_, z_mean_ind) = my_grad_tmp_mean;
+    }
     
-  NumericVector z_coef_grad_shareble_1;
-  NumericVector z_coef_grad_shareble_0;
-  
-  z_coef_grad_shareble_1 = pdf_z_1 / cdf_z_1;
-  z_coef_grad_shareble_0 = pdf_z_0 / cdf_z_0;
-  
-  NumericMatrix z_d_0_NM = wrap(z_d_0);
-  NumericMatrix z_d_1_NM = wrap(z_d_1);
+    // sd
+    if(!is_z_sd_fixed)
+    {
+      NumericVector my_grad_tmp_sd = NumericVector(n_obs);
+      
+      my_grad_tmp_sd[Range(0, n_obs_1 - 1)] = all_grad_1(_, pol_coefficients_n + 1);
+      my_grad_tmp_sd[Range(n_obs_1, n_obs - 1)] = all_grad_0(_, pol_coefficients_n + 1);
+      
+      my_grad(_, z_sd_ind) = my_grad_tmp_sd;
+    }
 
-  for (int i = 0; i < n_reg; i++) // for each regressor
+    // regression coefficients
+  NumericMatrix z_d_0_adj = wrap(-1 * z_d_0);
+  NumericMatrix z_d_1_adj = wrap(-1 * z_d_1);
+
+  for (int i = 0; i < n_reg; i++)
   {
     NumericVector my_grad_tmp = NumericVector(n_obs);
     
-    my_grad_tmp[Range(0, n_obs_1 - 1)] = z_d_1_NM(_, i + is_z_coef_first_fixed) * z_coef_grad_shareble_1;
-    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = -1.0 * z_d_0_NM(_, i + is_z_coef_first_fixed) * z_coef_grad_shareble_0;
+    my_grad_tmp[Range(0, n_obs_1 - 1)] = z_d_1_adj(_, i + is_z_coef_first_fixed) *
+                                         all_grad_1(_, pol_coefficients_n + 2);
+    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = z_d_0_adj(_, i + is_z_coef_first_fixed) *
+                                             all_grad_0(_, pol_coefficients_n + 3);
     
     my_grad(_, z_coef_ind[i]) = my_grad_tmp;
   }
 
-  // Numeric gradients
-  
-    // Set differentiation increment value for each parameter
-  double machinePrecision = std::numeric_limits<double>::epsilon();
-  double my_precision = std::sqrt(machinePrecision);
-  
-  NumericVector eps = abs(x0 * my_precision);
-  
-    // Control for zero values
-  eps[eps < (machinePrecision * 100)] = my_precision;
-  
-    // Estimate the gradient itself
-  NumericVector x0_eps = clone(x0);
-  
-  NumericVector f1 = NumericVector(n_obs);
-  NumericVector f2 = NumericVector(n_obs);
-
-    // for mean
-  if (!is_z_mean_fixed)
-  {
-    
-      // Calculate f(x - eps)
-    x0_eps[z_mean_ind] = x0[z_mean_ind] - eps[z_mean_ind];
-    
-    f1 = hpaBinaryLnLOptim_ind(x0_eps, hpaBinary_args);
-    
-      // Calculate f(x - eps)
-    x0_eps[z_mean_ind] = x0[z_mean_ind] + eps[z_mean_ind];
-      
-    f2 = hpaBinaryLnLOptim_ind(x0_eps, hpaBinary_args);
-    
-      // Estimate the gradient 
-    my_grad(_, z_mean_ind) = (f2 - f1) / (2 * eps[z_mean_ind]);
-    
-      // Set x0_eps value to default
-    x0_eps[z_mean_ind] = x0[z_mean_ind];
-  }
-  
-  if (!is_z_sd_fixed)
-  {
-    
-    // Calculate f(x - eps)
-    x0_eps[z_sd_ind] = x0[z_sd_ind] - eps[z_sd_ind];
-    
-    f1 = hpaBinaryLnLOptim_ind(x0_eps, hpaBinary_args);
-    
-    // Calculate f(x - eps)
-    x0_eps[z_sd_ind] = x0[z_sd_ind] + eps[z_sd_ind];
-    
-    f2 = hpaBinaryLnLOptim_ind(x0_eps, hpaBinary_args);
-    
-    // Estimate the gradient 
-    my_grad(_, z_sd_ind) = (f2 - f1) / (2 * eps[z_sd_ind]);
-    
-    // Set x0_eps value to default
-    x0_eps[z_sd_ind] = x0[z_sd_ind];
-  }
-  
+  // Return the results
   List return_List = List::create(Named("aggregate") = colSums(my_grad),
                                   Named("individual") = my_grad);
   
@@ -1377,7 +1341,7 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
 NumericVector hpaBinaryLnLOptim_grad(NumericVector x0, List hpaBinary_args) 
 {
   List return_List = hpaBinaryLnLOptim_grad_List(x0, hpaBinary_args);
-  
+
   NumericVector return_aggregate = return_List["aggregate"];
 
   if(any(is_na(return_aggregate)))
@@ -1485,78 +1449,48 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   
   // Prepare precision related values for numeric differentiation
   double machinePrecision = std::numeric_limits<double>::epsilon();
-  double my_precision = std::sqrt(std::sqrt(machinePrecision));
+  double my_precision = std::sqrt(machinePrecision);
   
   NumericVector eps = abs(x0 * my_precision);
   
   // Control for zero values
-  
   eps[eps < (machinePrecision * 100)] = my_precision;
   
   // Estimate the gradient itself
-  
   NumericVector x0_eps = clone(x0);
   
-  double f_val = hpaBinaryLnLOptim(x0, hpaBinary_args);
-  double f_plus;
-  double f_minus;
-  double f_plus_minus;
-  double f_minus_plus;
+  // Values to store function values
+  // given small increment
+  NumericVector g_plus;
+  NumericVector g_minus;
   
+  // Perform hessian numeric estimation
   for (int i = 0; i < n_param; i++) // for each parameter
   {
-    for (int j = 0; j < n_param; j++) // for each parameter
+    // Calculate g(x + eps)
+    x0_eps[i] = x0[i] + eps[i];
+    g_plus = hpaBinaryLnLOptim_grad(x0_eps, hpaBinary_args);
+    
+    // Calculate g(x - eps)
+    x0_eps[i] = x0[i] - eps[i];
+    g_minus = hpaBinaryLnLOptim_grad(x0_eps, hpaBinary_args);
+    
+    // Store the results to hessian
+    my_hessian(_, i) = (g_plus - g_minus) / (2 * eps[i]);
+    
+    // Set x0_eps value to default
+    x0_eps[i] = x0[i];
+  }
+  
+  // Make hessian to be symmetric
+  for (int i = 0; i < n_param; i++) // for each parameter
+  {
+    for (int j = i; j < n_param; j++) // for each parameter
     {
-      if(i == j)
-      {
-        // Calculate f(x + eps)
-        x0_eps[i] = x0[i] + eps[i];
-        
-        f_plus = hpaBinaryLnLOptim(x0_eps, hpaBinary_args);
-        
-        // Calculate f(x - eps)
-        x0_eps[i] = x0[i] - eps[i];
-        
-        f_minus = hpaBinaryLnLOptim(x0_eps, hpaBinary_args);
-        
-        // Estimate the hessian
-        my_hessian(i, j) = (f_plus + f_minus - 2 * f_val) / (eps[i] * eps[i]);
-      }
-      
-      if(i > j)
-      {
-        // Calculate f(x + eps, y + eps)
-        x0_eps[i] = x0[i] + eps[i];
-        x0_eps[j] = x0[j] + eps[j];
-        
-        f_plus = hpaBinaryLnLOptim(x0_eps, hpaBinary_args);
-        
-        // Calculate f(x - eps, y - eps)
-        x0_eps[i] = x0[i] - eps[i];
-        x0_eps[j] = x0[j] - eps[j];
-        
-        f_minus = hpaBinaryLnLOptim(x0_eps, hpaBinary_args);
-        
-        // Calculate f(x + eps, y - eps)
-        x0_eps[i] = x0[i] + eps[i];
-        x0_eps[j] = x0[j] - eps[j];
-        
-        f_plus_minus = hpaBinaryLnLOptim(x0_eps, hpaBinary_args);
-        
-        // Calculate f(x - eps, y + eps)
-        x0_eps[i] = x0[i] - eps[i];
-        x0_eps[j] = x0[j] + eps[j];
-        
-        f_minus_plus = hpaBinaryLnLOptim(x0_eps, hpaBinary_args);
-        
-        // Estimate the hessian
-        my_hessian(i, j) = (f_plus + f_minus - f_plus_minus - f_minus_plus) / (4 * eps[i] * eps[j]);
-        my_hessian(j, i) = my_hessian(i, j);
-      }
-      
-      // Set x0_eps value to default
-      x0_eps[i] = x0[i];
-      x0_eps[j] = x0[j];
+      double hessian_val_1 = my_hessian(i, j);
+      double hessian_val_2 = my_hessian(j, i);
+      my_hessian(i, j) = (hessian_val_1 + hessian_val_2) * 0.5;
+      my_hessian(j, i) = my_hessian(i, j);
     }
   }
   
@@ -1670,7 +1604,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, boo
 	NumericVector z_prob = 1 - phpa((-1) * z_latent, pol_coefficients,
 		NumericVector::create(K),
 		LogicalVector::create(0), LogicalVector::create(0),
-		z_mean, z_sd, false);
+		z_mean, z_sd, false, false);
 
 	return(z_prob);
 }
@@ -1880,7 +1814,7 @@ void plot_hpaBinary(List x)
 		pol_coefficients, pol_degrees,
 		LogicalVector::create(false),
 		LogicalVector::create(false),
-		mean, sd, false);
+		mean, sd, false, false);
 
 	double den_min = min(den);
 	double den_max = max(den);

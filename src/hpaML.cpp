@@ -46,7 +46,7 @@ using namespace RcppParallel;
 //' \item \code{tr_right} - the same as \code{tr_right} input parameter.
 //' \item \code{omit_ind }- the same as \code{omit_ind} input parameter.
 //' \item \code{given_ind} - the same as \code{given_ind} input parameter.
-//' \item \code{cov_matrix} - estimated parameters covariance matrix estimate.
+//' \item \code{cov_mat} - covariance matrix estimate.
 //' \item \code{results} - numeric matrix representing estimation results.
 //' \item \code{log-likelihood} - value of Log-Likelihood function.
 //' \item \code{AIC} - AIC value.
@@ -70,6 +70,28 @@ List hpaML(NumericMatrix x,
 	String opt_type = "optim",
 	List opt_control = R_NilValue)
 {
+  // Validation
+  
+    // Check covariance matrix type
+  if((cov_type != "sandwich") & (cov_type != "sandwichFD") &
+     (cov_type != "bootstrap") & (cov_type != "gop") & 
+     (cov_type != "hessian") & (cov_type != "hessianFD"))
+  {
+    stop("Incorrect cov_type argument value.");
+  }
+  
+    // Check opt_type
+  if((opt_type != "optim") & (opt_type != "GA"))
+  {
+    stop("Incorrect opt_type argument value.");
+  }
+  
+    // Warning concerning large number of bootstrap iterations
+  if(boot_iter > 1000)
+  {
+    warning("Since boot_iter is large estimation may take lot's of time.");
+  }
+  
 	// Load additional environments
 
 		// stats environment
@@ -83,6 +105,7 @@ List hpaML(NumericMatrix x,
 	Rcpp::Function c_R = base_env["c"];
 	Rcpp::Function diag_R = base_env["diag"];
 	Rcpp::Function requireNamespace_R = base_env["requireNamespace"];
+	Rcpp::Function cat_R = base_env["cat"];
 	
 	  // GA environment
 	Rcpp::Function ga_R = stats_env["optim"];
@@ -227,8 +250,8 @@ List hpaML(NumericMatrix x,
 	List PGN_control = List::create(
 	     Named("maxit") = 100000000, 
        Named("fnscale") = -1.0,
-       Named("abstol") = std::sqrt(std::numeric_limits<double>::epsilon()),
-       Named("reltol") = std::sqrt(std::numeric_limits<double>::epsilon()));
+       Named("abstol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01,
+       Named("reltol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01);
 	
 	List hpaML_args = List::create(Named("x_data") = x,
                                  Named("pol_coefficients_ind") = pol_coefficients_ind,
@@ -373,11 +396,20 @@ List hpaML(NumericMatrix x,
   	int ga_seed;
   	if(opt_control.containsElementNamed("seed"))
   	{
-  	  ga_elitism = opt_control["seed"];
+  	  ga_seed = opt_control["seed"];
   	} else {
-  	  ga_elitism = 8;
+  	  ga_seed = 8;
   	}
   	
+  	  // set monitor parameter
+  	bool ga_monitor;
+  	if(opt_control.containsElementNamed("monitor"))
+  	{
+  	  ga_monitor = opt_control["monitor"];
+  	} else {
+  	  ga_monitor = true;
+  	}
+
       // apply genetic algorithm for global optimization
   	ga_List = List::create(Named("GA") = ga_R(
   	  Rcpp::_["lower"] = ga_lower,
@@ -393,7 +425,14 @@ List hpaML(NumericMatrix x,
   	  Rcpp::_["optimArgs"] = ga_optimArgs,
   	  Rcpp::_["suggestions"] = ga_suggestions,
   	  Rcpp::_["seed"] = ga_seed,
-      Rcpp::_["hpaML_args"] = hpaML_args));
+      Rcpp::_["hpaML_args"] = hpaML_args,
+      Rcpp::_["monitor"] = ga_monitor));
+  	
+  	  // add \n in order to ensure that the prompt is at the next line
+  	  if(ga_monitor)
+  	  {
+    	  cat_R("\n");
+  	  }
 
       // get ga function summary object
   	ga_summary = ga_summary_R(ga_List["GA"]);
@@ -693,12 +732,12 @@ List hpaLnLOptim_List(NumericVector x0, List hpaML_args)
 	// Perform calculations
 	if (!(R_IsNA(tr_left(0, 0))) & !(R_IsNA(tr_right(0, 0))))
 	{
-	  return_individual = log(dtrhpa(x_data,
-                                   tr_left, tr_right,
-                                   pol_coefficients, pol_degrees,
-                                   given_ind, omit_ind,
-                                   mean, sd,
-                                   is_parallel));
+	  return_individual = dtrhpa(x_data,
+                               tr_left, tr_right,
+                               pol_coefficients, pol_degrees,
+                               given_ind, omit_ind,
+                               mean, sd,
+                               is_parallel, true);
 	  
 	  return_aggregate = sum(return_individual);
 	  
@@ -709,7 +748,7 @@ List hpaLnLOptim_List(NumericVector x0, List hpaML_args)
 	    pol_coefficients, pol_degrees,
 	    given_ind, omit_ind, 
 	    mean, sd,
-	    is_parallel)[0] < std::sqrt(std::numeric_limits<double>::epsilon()))
+	    is_parallel, false)[0] < std::sqrt(std::numeric_limits<double>::epsilon()))
 	  {
 	    std::fill(return_individual.begin(), return_individual.end(), R_NegInf);
 	    
@@ -726,11 +765,11 @@ List hpaLnLOptim_List(NumericVector x0, List hpaML_args)
 	}
 	
 	// Calculate log-likelihood values for each observations
-	return_individual = log(dhpa(x_data,
-                  		         pol_coefficients, pol_degrees,
-                  		         given_ind, omit_ind,
-                  		         mean, sd, 
-                  		         is_parallel));
+	return_individual = dhpa(x_data,
+                  		     pol_coefficients, pol_degrees,
+                  		     given_ind, omit_ind,
+                  		     mean, sd, 
+                  		     is_parallel, true);
 	
 	// Calculate log-likelihood function value
 	return_aggregate = sum(return_individual);
@@ -797,109 +836,50 @@ List hpaLnLOptim_grad_List(NumericVector x0, List hpaML_args)
   NumericVector mean = x0[mean_ind];
   NumericVector sd = x0[sd_ind];
   
+  // Get dimensions of random vectors realizations
+  // representing observations
+  int pol_degrees_n = mean.size();
+  
   NumericVector pol_coefficients = x0[pol_coefficients_ind];
   pol_coefficients.push_front(1);
   
   int pol_coefficients_n = pol_coefficients.size();
   
-  // Initial function value
-  NumericVector fn_values = dhpa(x_data,
-                                 pol_coefficients, pol_degrees,
-                                 given_ind, omit_ind,
-                                 mean, sd,
-                                 is_parallel);
+  // Gradient estimation
   
-  // Denominator for truncated densities
-  NumericVector fn_values_cdf;
+   // while there is excess calculation of gradient for
+   // x it is still much faster then calculating gradients
+   // for pol_coefficients, mean and sd separately since their
+   // gradient share many common parts while gradient of x
+   // is fast to calculate given this common parts
+  NumericMatrix all_grad = dhpaDiff(x_data,
+                                    pol_coefficients, pol_degrees,
+                                    given_ind, omit_ind,
+                                    mean, sd,
+                                    "all",
+                                    is_parallel, true);
   
-  if (!(R_IsNA(tr_left(0, 0))) & !(R_IsNA(tr_right(0, 0))))
+  for(int i = 0; i < n_param; i++)
   {
-    fn_values_cdf = ihpa(tr_left, tr_right,
-                         pol_coefficients, pol_degrees,
-                         given_ind, omit_ind,
-                         mean, sd,
-                         is_parallel);
-    
-    if (fn_values_cdf[0] < std::sqrt(std::numeric_limits<double>::epsilon()))
-    {
-      std::fill(my_grad.begin(), my_grad.end(),
-                R_NegInf);
-      
-      return_List = List::create(Named("aggregate") = colSums(my_grad),
-                                 Named("individual") = my_grad);
-      
-      return(return_List);
-    }
-  }
-  
-  // Analytical part of gradient (for polynomial coefficients)
-  NumericMatrix pol_coefficients_grad = dhpaDiff(x_data,
-                                                 pol_coefficients, pol_degrees,
-                                                 given_ind, omit_ind,
-                                                 mean, sd,
-                                                 "pol_coefficients",
-                                                 is_parallel);
-  
-  for (int i = 0; i < (pol_coefficients_n - 1); i++) // for each parameter
-  {
-    my_grad(_, i) = pol_coefficients_grad(_, i + 1) / fn_values;
+    my_grad(_, i) = all_grad(_, i + 1);
   }
   
     // Deal with truncation
-  NumericMatrix pol_coefficients_grad_cdf;
-  
   if (!(R_IsNA(tr_left(0, 0))) & !(R_IsNA(tr_right(0, 0))))
   {
-    pol_coefficients_grad_cdf = ihpaDiff(tr_left, tr_right,
-                                         pol_coefficients, pol_degrees,
-                                         given_ind, omit_ind,
-                                         mean, sd,
-                                         "pol_coefficients",
-                                         is_parallel);
-    
-    for (int i = 0; i < (pol_coefficients_n - 1); i++) // for each parameter
+    NumericMatrix tr_grad = ihpaDiff(tr_left, tr_right,
+                                     pol_coefficients, pol_degrees,
+                                     given_ind, omit_ind,
+                                     mean, sd,
+                                     "all",
+                                     is_parallel, true);
+
+    for (int i = 0; i < n_param; i++)
     {
-      double tr_grad = sum(pol_coefficients_grad_cdf(_, i + 1) / fn_values_cdf);
-      my_grad(_, i) = my_grad(_, i) - tr_grad;
+      my_grad(_, i) = my_grad(_, i) - sum(tr_grad(_, i + 1));
     }
   }
-  
-  // Numeric part of gradient (for mu and sigma)
-  
-    // Set differentiation increment value for each parameter
-  double machinePrecision = std::numeric_limits<double>::epsilon();
-  double my_precision = std::sqrt(machinePrecision);
-  
-  NumericVector eps = abs(x0 * my_precision);
-  
-    // Control for zero values
-  eps[eps < (machinePrecision * 100)] = my_precision;
-  
-    // Estimate the gradient itself
-  NumericVector x0_eps = clone(x0);
-  
-  NumericVector f1;
-  NumericVector f2;
-  
-  for (int i = pol_coefficients_n - 1; i < n_param; i++) // for each parameter
-  {
-      
-      // Calculate f(x - eps)
-      x0_eps[i] = x0[i] - eps[i];
-
-      f1 = hpaLnLOptim_ind(x0_eps, hpaML_args);
-    
-      // Calculate f(x + eps)
-      x0_eps[i] = x0[i] + eps[i];
-
-      f2 = hpaLnLOptim_ind(x0_eps, hpaML_args);
-      
-      // Estimate the gradient 
-      my_grad(_, i) = (f2 - f1) / (2 * eps[i]);
-    
-      // Set x0_eps value to default
-      x0_eps[i] = x0[i];
-  }
+  // Return the results
   
   return_List = List::create(Named("aggregate") = colSums(my_grad),
                              Named("individual") = my_grad);
@@ -958,7 +938,7 @@ NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
   // Initialize vector to store hessian values
   NumericMatrix my_hessian = NumericMatrix(n_param, n_param);
   
-  // Assign values based on their indecies
+  // Assign values based on their indices
   NumericVector mean = x0[mean_ind];
   NumericVector sd = x0[sd_ind];
   
@@ -967,84 +947,51 @@ NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
   
   // Prepare precision related values for numeric differentiation
   double machinePrecision = std::numeric_limits<double>::epsilon();
-  double my_precision = std::sqrt(std::sqrt(machinePrecision));
+  double my_precision = std::sqrt(machinePrecision);
   
   NumericVector eps = abs(x0 * my_precision);
   
   // Control for zero values
-  eps[eps < (machinePrecision * 100)] = my_precision;
+  eps[eps < (machinePrecision * 100)] = machinePrecision * 100;
   
   // Estimate the gradient itself
   NumericVector x0_eps = clone(x0);
   
-  // Calculate function at current point
-  double f_val = hpaLnLOptim(x0, hpaML_args);
-  
   // Values to store function values
   // given small increment
-  double f_plus;
-  double f_minus;
-  double f_plus_minus;
-  double f_minus_plus;
+  NumericVector g_plus;
+  NumericVector g_minus;
   
   // Perform hessian numeric estimation
   for (int i = 0; i < n_param; i++) // for each parameter
   {
-    for (int j = 0; j < n_param; j++) // for each parameter
+    // Calculate g(x + eps)
+    x0_eps[i] = x0[i] + eps[i];
+    g_plus = hpaLnLOptim_grad(x0_eps, hpaML_args);
+
+    // Calculate g(x - eps)
+    x0_eps[i] = x0[i] - eps[i];
+    g_minus = hpaLnLOptim_grad(x0_eps, hpaML_args);
+    
+    // Store the results to hessian
+    my_hessian(_, i) = (g_plus - g_minus) / (2 * eps[i]);
+    
+    // Set x0_eps value to default
+    x0_eps[i] = x0[i];
+  }
+
+  // Make hessian to be symmetric
+  for (int i = 0; i < n_param; i++) // for each parameter
+  {
+    for (int j = i; j < n_param; j++) // for each parameter
     {
-      if(i == j)
-      {
-        // Calculate f(x + eps)
-        x0_eps[i] = x0[i] + eps[i];
-        
-        f_plus = hpaLnLOptim(x0_eps, hpaML_args);
-        
-        // Calculate f(x - eps)
-        x0_eps[i] = x0[i] - eps[i];
-        
-        f_minus = hpaLnLOptim(x0_eps, hpaML_args);
-        
-        // Estimate the hessian
-        my_hessian(i, j) = (f_plus + f_minus - 2 * f_val) / (eps[i] * eps[i]);
-      }
-      
-      if(i > j)
-      {
-        // Calculate f(x + eps, y + eps)
-        x0_eps[i] = x0[i] + eps[i];
-        x0_eps[j] = x0[j] + eps[j];
-        
-        f_plus = hpaLnLOptim(x0_eps, hpaML_args);
-        
-        // Calculate f(x - eps, y - eps)
-        x0_eps[i] = x0[i] - eps[i];
-        x0_eps[j] = x0[j] - eps[j];
-        
-        f_minus = hpaLnLOptim(x0_eps, hpaML_args);
-        
-        // Calculate f(x + eps, y - eps)
-        x0_eps[i] = x0[i] + eps[i];
-        x0_eps[j] = x0[j] - eps[j];
-        
-        f_plus_minus = hpaLnLOptim(x0_eps, hpaML_args);
-        
-        // Calculate f(x - eps, y + eps)
-        x0_eps[i] = x0[i] - eps[i];
-        x0_eps[j] = x0[j] + eps[j];
-        
-        f_minus_plus = hpaLnLOptim(x0_eps, hpaML_args);
-        
-        // Estimate the hessian
-        my_hessian(i, j) = (f_plus + f_minus - f_plus_minus - f_minus_plus) / (4 * eps[i] * eps[j]);
-        my_hessian(j, i) = my_hessian(i, j);
-      }
-      
-      // Set x0_eps value to default
-      x0_eps[i] = x0[i];
-      x0_eps[j] = x0[j];
+      double hessian_val_1 = my_hessian(i, j);
+      double hessian_val_2 = my_hessian(j, i);
+      my_hessian(i, j) = (hessian_val_1 + hessian_val_2) * 0.5;
+      my_hessian(j, i) = my_hessian(i, j);
     }
   }
-  
+
   return(my_hessian);
 }
 
@@ -1096,13 +1043,13 @@ NumericVector predict_hpaML(List object,
 			tr_left, tr_right,
 			pol_coefficients, pol_degrees,
 			given_ind, omit_ind,
-			mean, sd, false));
+			mean, sd, false, false));
 	}
 
 	return(dhpa(newdata,
 		pol_coefficients, pol_degrees,
 		given_ind, omit_ind,
-		mean, sd, false));
+		mean, sd, false, false));
 }
 
 //' Summarizing hpaML Fits
@@ -1210,7 +1157,7 @@ double AIC_hpaML(List object, double k = 2)
 double logLik_hpaML(List object)
 {
 	double lnL = object["log-likelihood"];
-
+  
 	return(lnL);
 }
 

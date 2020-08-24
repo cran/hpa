@@ -15,9 +15,11 @@ using namespace RcppArmadillo;
 //' @description This function performs semi-nonparametric selection model estimation
 //' via hermite polynomial densities approximation.
 //' @param selection an object of class "formula" (or one that can be coerced to that class): 
-//' a symbolic description of the selection equation form.
+//' a symbolic description of the selection equation form. All variables in \code{selection}
+//' should be numeric vectors of the same length.
 //' @param outcome an object of class "formula" (or one that can be coerced to that class): 
-//' a symbolic description of the outcome equation form.
+//' a symbolic description of the outcome equation form. All variables in \code{outcome}
+//' should be numeric vectors of the same length.
 //' @template data_Template
 //' @template z_K_Template
 //' @template y_K_Template
@@ -27,7 +29,6 @@ using namespace RcppArmadillo;
 //' @param is_Newey_loocv logical; if TRUE then number of conditional expectation approximating terms for Newey's method will be selected
 //' based on leave-one-out cross-validation criteria iterating througt 0 to pol_elements number of these terms.
 //' @template x0_selection_Template
-//' @param z_sd_fixed positive value that is fixed sigma parameter for selection equation.
 //' @template cov_type_Template
 //' @template boot_iter_Template
 //' @template is_parallel_Template
@@ -38,7 +39,6 @@ using namespace RcppArmadillo;
 //' @template first_coef_Template
 //' @details Note that coefficient for the first
 //' independent variable in \code{selection} will be fixed to 1.
-//' @template sd_adjust_Template
 //' @template is_numeric_selection_Template
 //' @template parametric_paradigm_Template
 //' @template Newey_details_Template
@@ -58,16 +58,15 @@ using namespace RcppArmadillo;
 //' \item \code{Newey} - list containing information concerning Newey's method estimation results.
 //' \item \code{z_mean} - estimate of the hermite polynomial mean parameter related to selection equation random error marginal distribution.
 //' \item \code{y_mean} - estimate of the hermite polynomial mean parameter related to outcome equation random error marginal distribution.
-//' \item \code{z_sd} - adjusted value of sd parameter related to selection equation random error marginal distribution.
+//' \item \code{z_sd} - estimate of sd parameter related to selection equation random error marginal distribution.
 //' \item \code{y_sd} - estimate of the hermite polynomial sd parameter related to outcome equation random error marginal distribution.
 //' \item \code{pol_coefficients} - polynomial coefficients estimates.
 //' \item \code{pol_degrees} - numeric vector which first element is \code{z_K} and the second is \code{y_K}.
 //' \item \code{z_coef} - selection equation regression coefficients estimates.
 //' \item \code{y_coef} - outcome equation regression coefficients estimates.
-//' \item \code{cov_matrix} - estimated parameters covariance matrix estimate.
+//' \item \code{cov_mat} - covariance matrix estimate.
 //' \item \code{results} - numeric matrix representing estimation results.
 //' \item \code{log-likelihood} - value of Log-Likelihood function.
-//' \item \code{AIC} - AIC value.
 //' \item \code{re_moments} - list which contains information about random errors expectations, variances and correlation.
 //' \item \code{data_List} - list containing model variables and their partiotion according to outcome and selection equations.
 //' \item \code{n_obs} - number of observations.
@@ -110,13 +109,34 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	bool is_Newey = false,
 	NumericVector x0 = NumericVector(0),
 	bool is_Newey_loocv = false,
-  double z_sd_fixed = -1,
   String cov_type = "sandwich",
   int boot_iter = 100,
   bool is_parallel = false,
   String opt_type = "optim",
   List opt_control = R_NilValue) 
 {
+  // Validation
+  
+    // Check covariance matrix type
+  if((cov_type != "sandwich") & (cov_type != "sandwichFD") &
+     (cov_type != "bootstrap") & (cov_type != "gop") & 
+     (cov_type != "hessian") & (cov_type != "hessianFD"))
+  {
+    stop("Incorrect cov_type argument value.");
+  }
+  
+    // Check opt_type
+  if((opt_type != "optim") & (opt_type != "GA"))
+  {
+    stop("Incorrect opt_type argument value.");
+  }
+  
+    // Warning concerning large number of bootstrap iterations
+  if(boot_iter > 1000)
+  {
+    warning("Since boot_iter is large estimation may take lot's of time.");
+  }
+  
 	// Load additional environments
 
 	  // stats environment
@@ -137,6 +157,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	Rcpp::Function subset_R = base_env["subset"];
 	Rcpp::Function diag_R = base_env["diag"];
 	Rcpp::Function requireNamespace_R = base_env["requireNamespace"];
+	Rcpp::Function cat_R = base_env["cat"];
 	
 	  // GA environment
 	Rcpp::Function ga_R = stats_env["optim"];
@@ -226,7 +247,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	if (x0.size() == 0)
 	{
 		x0_given = false;
-		x0 = NumericVector(pol_coefficients_n + 2 + z_d_col + y_d_col); //+2 for mean and sd
+		x0 = NumericVector(pol_coefficients_n + 3 + z_d_col + y_d_col); //+2 for mean and sd
 	}
 
 	// Assign indexes
@@ -248,8 +269,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	int y_mean_ind = z_mean_ind + 1;
 
 		// for sd vector
-	int y_sd_ind;
-	y_sd_ind = y_mean_ind + 1;
+	int z_sd_ind = y_mean_ind + 1;
+	int y_sd_ind = z_sd_ind + 1;
 
 		// for z coefficients
 	NumericVector z_coef_ind(z_d_col - 1);
@@ -294,33 +315,30 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	arma::vec z_0 = as<arma::vec>(z[z == 0]);
 	arma::mat z_d_0 = (as<arma::mat>(z_d)).rows(arma::find(z_arma == 0));
 
+	// Create List to store Newey's method post estimates
 	List Newey;
-	double z_sd = 1;
-	if (z_sd_fixed > 0)
-	{
-	  z_sd = z_sd_fixed;
-	}
 	
 	// Get initial values from hpaBinary and Newey
 	if (!x0_given | is_Newey)
 	{
-		// for hpaBinary
+		// Estimate selection equation parameters via hpaBinary
 		List modelBinary;
 		try
 		{
 			modelBinary = hpaBinary(selection,
 				data, z_K,
-				NA_REAL, 1, 0,
-				true, true, true, NumericVector(0), 
-				"hessian", 100, is_parallel, "optim", R_NilValue);
+				NA_REAL, NA_REAL, 0,
+				true, true, false, NumericVector(0), 
+				"sandwich", 100, is_parallel, "optim", R_NilValue);
 		} catch (std::exception &ex) {
 			warning("Warning: can't get initial values from semi-nonparametric binary choice model");
 			forward_exception_to_r(ex);
 		}
 
-		List modelBinary_K = modelBinary[z_K];
-		
-		NumericVector z_pol_coef_temporal = modelBinary_K["pol_coefficients"];
+		// Store hpaBinary estimates to x0
+
+		  // store polynomial coefficients
+		NumericVector z_pol_coef_temporal = modelBinary["pol_coefficients"];
 
 		int z_pol_ind = 1;
 		for (int i = 1; i < pol_coefficients_n; i++)
@@ -332,34 +350,39 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 			}
 		}
 
-		  // store estimates from the binary choice model
-		NumericVector z_coef_temporal = modelBinary_K["coefficients"];
+		  // store mean and sd estimates
+		  x0[z_mean_ind] = modelBinary["mean"];
+		  x0[z_sd_ind] = modelBinary["sd"];
+
+		  // store coefficients
+		NumericVector z_coef_temporal = modelBinary["coefficients"];
 		NumericVector z_coef_ind_temporal = z_coef_temporal[Rcpp::Range(1, z_d_col - 1)];
 		x0[z_coef_ind] = z_coef_ind_temporal;
-		x0[z_mean_ind] = modelBinary_K["mean"];
-		z_sd = modelBinary_K["sd"];
+		int z_coef_n = z_coef_temporal.size();
 
 		  // get latent variable value
 		NumericVector z_latent = wrap(z_d_arma * as<arma::vec>(z_coef_temporal));
-		double z_exp = modelBinary_K["errors_exp"];
-		double z_var = modelBinary_K["errors_var"];
-		z_latent = (z_latent - z_exp) / sqrt(z_var); // standartize for mills ratio
+		double z_exp = modelBinary["errors_exp"];
+		double z_var = modelBinary["errors_var"];
+		NumericVector z_latent_std = (z_latent + z_exp) / sqrt(z_var); // standardize for mills ratio
 
-		  // seperate latent variable values depending on the outcome
+		  // separate latent variable values depending on the outcome
 		NumericVector z_latent_1 = z_latent[z == 1];
-		NumericVector z_latent_0 = z_latent[z == 0];
+		NumericVector z_latent_std_1 = z_latent_std[z == 1];
 
 		  // estimate mills ratios
-		NumericVector z_mills_base = dnorm(z_latent_1) / pnorm(z_latent_1);
+		NumericVector z_mills_std_dnorm = dnorm(z_latent_std_1);
+		NumericVector z_mills_std_pnorm = pnorm(z_latent_std_1);
+		NumericVector z_mills_base = z_mills_std_dnorm / z_mills_std_pnorm;
+		
 		NumericMatrix z_mills = NumericMatrix(n_1, pol_elements + 1);
 
-		for (int i = 0; i <= pol_elements; i++)
+		for (int i = 0; i < (pol_elements + 1); i++)
 		{
 			z_mills(_, i) = pow(z_mills_base, i);
 		}
 
 		// Newey method with pol_elements approximating polynomial elements
-
 		int pol_elements_i = pol_elements;
 
 		if (is_Newey_loocv)
@@ -367,16 +390,16 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 			pol_elements_i = 0;
 		}
 		
-			// values to return from cycle based on loocv
+			// Values to return from cycle based on loocv
 		float loocv_best = R_PosInf;
 		float pol_elements_best = pol_elements_i;
 		NumericVector y_coef_Newey;
 		NumericVector residuals_ls;
-			
-			// iterate throught all polynomial degrees
+
+			// Iterate through all polynomial degrees
 		for(int t = pol_elements_i; t <= pol_elements; t++)
 		{
-			// prepare the data
+			// Prepare the data
 			arma::mat y_d_1_Newey = arma::mat(n_1, y_d_col + t + 1, arma::fill::ones);
 
 			for (int i = 0; i < y_d_col; i++)
@@ -390,13 +413,13 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 				y_d_1_Newey.col(i) = as<arma::vec>(z_mills_temporal);
 			}
 
-			  // estimate hat matrix
+			  // Estimate hat matrix
 			NumericMatrix hat_Newey_cycle = wrap(y_d_1_Newey * inv(y_d_1_Newey.t() * y_d_1_Newey) * y_d_1_Newey.t());
 
-			  // estimate coefficients
+			  // Estimate coefficients
 			NumericVector y_coef_Newey_cycle = wrap(inv(y_d_1_Newey.t() * y_d_1_Newey) * y_d_1_Newey.t() * y_1);
 
-			  // estimate loocv
+			  // Estimate loocv
 			NumericVector residuals_ls_cycle = wrap(y_d_1_Newey * as<arma::vec>(y_coef_Newey_cycle) - y_1);
 
 			float loocv = 0.0;
@@ -418,45 +441,46 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 				y_coef_Newey = y_coef_Newey_cycle;
 				residuals_ls = residuals_ls_cycle;
 			}
-			
+
 		}
 
-		  // assign values from the cycle
-		pol_elements = pol_elements_best;
+		// Assign values from the cycle
 
-		  // assign coefficients to x0
+		  // Assign coefficients to x0
 		NumericVector y_coef_Newey_temporal = y_coef_Newey[Rcpp::Range(0, y_d_col - 1)];
-
 		x0[y_coef_ind] = y_coef_Newey_temporal;
 		x0[y_mean_ind] = y_coef_Newey[y_d_col];
 
 		arma::mat residuals_ls_arma = as<arma::mat>(residuals_ls);
 		arma::mat residuals_squared = residuals_ls_arma.t() * residuals_ls_arma;
-		
+
 		x0[y_sd_ind] = accu(sqrt(residuals_squared / (n_1 - 1 - y_d_col)));
 
-		  // get additional values for inverse mills ratios
-		NumericVector y_coef_Newey_mills = y_coef_Newey[Rcpp::Range(y_d_col, y_d_col + pol_elements)];
+		  // Get additional values for inverse mills ratios
+		arma::mat y_d_1_Newey = arma::mat(n_1, y_d_col + pol_elements_best + 1, arma::fill::ones);
+		NumericVector y_coef_Newey_mills = y_coef_Newey[Rcpp::Range(y_d_col, y_d_col + pol_elements_best)];
 		NumericVector z_expect = NumericVector(n_1);
 
-		for (int i = 0; i < (pol_elements + 1); i++)
+		for (int i = 0; i < (pol_elements_best + 1); i++)
 		{
+		  NumericVector z_mills_temporal = z_mills(_, i);
+		  y_d_1_Newey.col(i) = as<arma::vec>(z_mills_temporal);
 			z_expect = z_expect + y_coef_Newey_mills[i] * z_mills(_, i);
 		}
-
-		  // summarize the output for Newey's method
+		
+		  // Summarize the output for Newey's method
 		Newey = List::create(Named("y_coef") = y_coef_Newey_temporal,
 			Named("z_coef") = z_coef_ind_temporal,
 			Named("constant_biased") = x0[y_mean_ind], 
-			Named("sd_biased") = x0[y_sd_ind],
+			Named("sd_biased") = x0[y_sd_ind], // substitute for cov_mat in future
 			Named("inv_mills") = z_mills,
 			Named("inv_mills_coef") = y_coef_Newey_mills,
-			Named("pol_elements") = pol_elements,
+			Named("pol_elements") = pol_elements_best,
 			Named("outcome_exp_cond") = z_expect,
 			Named("selection_exp") = z_exp,
 			Named("selection_var") = z_var,
 			Named("z_mean") = x0[z_mean_ind],
-			Named("z_sd") = z_sd,
+			Named("z_sd") = x0[z_sd_ind],
 			Named("y_mean") = x0[y_mean_ind],
 			Named("y_sd") = x0[y_sd_ind],
 			Named("hpaBinaryModel") = modelBinary);
@@ -469,7 +493,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		}
 	}
 
-	// Create list for some variables because unfortunatelly optim function has limitation for the
+	// Create list for some variables because unfortunately optim function has limitation for the
 	// parameters number (parameters itself not estimated)
 	
 	  // Collect some values to lists since there are limited number of objects could be
@@ -479,9 +503,10 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		Named("z_mean_ind") = z_mean_ind,
 		Named("y_mean_ind") = y_mean_ind,
 		Named("y_sd_ind") = y_sd_ind,
+		Named("z_sd_ind") = z_sd_ind,
 		Named("y_coef_ind") = y_coef_ind,
 		Named("z_coef_ind") = z_coef_ind);
-	
+
 	  // Store all the values into the list
 	List hpaSelection_args = List::create(
 	  Named("ind_List") = ind_List,
@@ -490,15 +515,14 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
     Named("y_d_1") = y_d_1, Named("y_d_0") = y_d_0,
     Named("z_d_1") = z_d_1, Named("z_d_0") = z_d_0,
     Named("pol_degrees") = pol_degrees,
-    Named("z_sd") = z_sd,
     Named("is_parallel") = is_parallel);
 
 	// Apply optimization routine
 	List PGN_control = List::create(
 	  Named("maxit") = 10000000, 
 	  Named("fnscale") = -1.0,
-	  Named("abstol") = std::sqrt(std::numeric_limits<double>::epsilon()),
-	  Named("reltol") = std::sqrt(std::numeric_limits<double>::epsilon()));
+	  Named("abstol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01,
+	  Named("reltol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01);
 
 	List optim_results = optim(
 		Rcpp::_["par"] = x0,
@@ -508,7 +532,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		Rcpp::_["method"] = "BFGS",
 		Rcpp::_["hessian"] = true,
 		Rcpp::_["hpaSelection_args"] = hpaSelection_args);
-	
+
 	// Extract coefficients and function value
 	
 	NumericVector x1 = optim_results["par"];
@@ -587,7 +611,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
   	  ga_upper[pol_coefficients_ind] = 10;
 	  }
 	  
-	  // set maximum number of iterations
+  	  // set maximum number of iterations
 	  int ga_maxiter;
 	  if(opt_control.containsElementNamed("maxiter"))
 	  {
@@ -596,7 +620,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    ga_maxiter = 50 * (1 + z_K) * (1 + y_K) + 10 * (z_d_col + y_d_col);
 	  }
 	  
-	  // set population size
+  	  // set population size
 	  int ga_popSize;
 	  if(opt_control.containsElementNamed("popSize"))
 	  {
@@ -605,7 +629,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    ga_popSize = 10 + (1 + z_K) * (1 + y_K) * 5 + 2 * (z_d_col + y_d_col);
 	  }
 	  
-	  // set mutation probability
+  	  // set mutation probability
 	  double ga_pmutation;
 	  if(opt_control.containsElementNamed("pmutation"))
 	  {
@@ -614,7 +638,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    ga_pmutation = 0.2;
 	  }
 	  
-	  // set crossover probability
+  	  // set crossover probability
 	  double ga_pcrossover;
 	  if(opt_control.containsElementNamed("pcrossover"))
 	  {
@@ -623,7 +647,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    ga_pcrossover = 0.8;
 	  }
 	  
-	  // set elitism parameter
+  	  // set elitism parameter
 	  int ga_elitism;
 	  if(opt_control.containsElementNamed("elitism"))
 	  {
@@ -632,7 +656,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    ga_elitism = 5 + (int)(std::round(ga_popSize * 0.1));
 	  }
 	  
-	  // set optim parameter
+  	  // set optim parameter
 	  bool ga_optim;
 	  if(opt_control.containsElementNamed("optim"))
 	  {
@@ -641,7 +665,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    ga_optim = true;
 	  }
 	  
-	  // set optim args
+  	  // set optim args
 	  List ga_optimArgs;
 	  if(opt_control.containsElementNamed("optimArgs"))
 	  {
@@ -653,7 +677,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	      Named("poptim") = 0.2);
 	  }
 	  
-	  // set seed parameter
+  	  // set seed parameter
 	  int ga_seed;
 	  if(opt_control.containsElementNamed("seed"))
 	  {
@@ -661,7 +685,17 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	  } else {
 	    ga_seed = 8;
 	  }
+	  
+  	  // set monitor parameter
+	  bool ga_monitor;
+	  if(opt_control.containsElementNamed("monitor"))
+	  {
+	    ga_monitor = opt_control["monitor"];
+	  } else {
+	    ga_monitor = true;
+	  }
 
+  	  // apply genetic algorithm for global optimization
 	  ga_List = List::create(Named("GA") = ga_R(
 	    Rcpp::_["lower"] = ga_lower,
 	    Rcpp::_["upper"] = ga_upper,
@@ -676,8 +710,16 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    Rcpp::_["optimArgs"] = ga_optimArgs,
 	    Rcpp::_["suggestions"] = ga_suggestions,
 	    Rcpp::_["seed"] = ga_seed,
-	    Rcpp::_["hpaSelection_args"] = hpaSelection_args));
+	    Rcpp::_["hpaSelection_args"] = hpaSelection_args,
+	    Rcpp::_["monitor"] = ga_monitor));
 
+  	  // add \n in order to ensure that the prompt is at the next line
+	  if(ga_monitor)
+	  {
+	    cat_R("\n");
+	  }
+	  
+	  // get ga function summary object
 	  ga_summary = ga_summary_R(ga_List["GA"]);
 	  x1 = ga_summary["solution"];
 	  
@@ -715,6 +757,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	double z_mean = x1[z_mean_ind];
 	double y_mean = x1[y_mean_ind];
 	double y_sd = x1[y_sd_ind];
+	double z_sd = x1[z_sd_ind];
 
 		// get coefficients
 	NumericVector z_coef = x1[z_coef_ind];
@@ -781,16 +824,16 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	
 	// Apply bootstrap
 	
-	// store parameters for each iteration
+	  // store parameters for each iteration
 	NumericMatrix boot_parameters = NumericMatrix(boot_iter, x1_n);
 	
-	// store standard deviation
+	  // store standard deviation
 	NumericVector sd_dev = NumericVector(x1_n);
 	
-	// temporal index matrix for each iteration
+	  // temporal index matrix for each iteration
 	NumericVector sample_ind = NumericVector(n);
 	
-	// list to store bootstrap results
+	  // list to store bootstrap results
 	List boot_List;
 	
 	if (cov_type == "bootstrap")
@@ -912,6 +955,15 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	F_z_stat = pnorm(NumericVector::create(z_stat));
 	results(y_mean_ind, 2) = z_stat;
 	results(y_mean_ind, 3) = 2 * std::min(F_z_stat[0], 1 - F_z_stat[0]);
+	
+	  // for z_sd
+	results_rows[z_sd_ind] = "z_sd";
+	results(z_sd_ind, 0) = x1[z_sd_ind];
+	results(z_sd_ind, 1) = sqrt(cov_mat((z_sd_ind), (z_sd_ind)));
+	z_stat = results(z_sd_ind, 0) / results(z_sd_ind, 1);
+	F_z_stat = pnorm(NumericVector::create(z_stat));
+	results(z_sd_ind, 2) = z_stat;
+	results(z_sd_ind, 3) = 2 * std::min(F_z_stat[0], 1 - F_z_stat[0]);
 
 		// for y_sd
 	results_rows[y_sd_ind] = "y_sd";
@@ -1087,7 +1139,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		Named("x1") = x1,
 		Named("Newey") = Newey,
 		Named("log-likelihood") = lnL,
-		Named("AIC") = AIC,
+		Named("cov_mat") = cov_mat,
 		Named("n_obs") = n,
 		Named("data_List") = data_List,
 		Named("results") = results,
@@ -1123,53 +1175,59 @@ List hpaSelectionLnLOptim_List(NumericVector x0, List hpaSelection_args)
   arma::mat y_d_0 = hpaSelection_args["y_d_0"];
   arma::mat y_d_1 = hpaSelection_args["y_d_1"];
   NumericVector pol_degrees = hpaSelection_args["pol_degrees"];
-  double z_sd = hpaSelection_args["z_sd"];
   bool is_parallel = hpaSelection_args["is_parallel"];
   
-    //Get values from the ind_List
+    // Get values from the ind_List
   NumericVector pol_coefficients_ind = ind_List["pol_coefficients_ind"];
   int z_mean_ind = ind_List["z_mean_ind"];
   int y_mean_ind = ind_List["y_mean_ind"];
   int y_sd_ind = ind_List["y_sd_ind"];
+  int z_sd_ind = ind_List["z_sd_ind"];
   NumericVector z_coef_ind = ind_List["z_coef_ind"];
   NumericVector y_coef_ind = ind_List["y_coef_ind"];
   
-  //Assign estimated parameters values to corresponding vectors
+  // Assign estimated parameters values to corresponding vectors
   
-    //polynomial coefficients and degrees
+    // polynomial coefficients and degrees
   NumericVector pol_coefficients = x0[pol_coefficients_ind];
   pol_coefficients.push_front(1); //add alpha(0...0)
   
-    //mean
+    // mean
   double z_mean = x0[z_mean_ind];
   double y_mean = x0[y_mean_ind];
   NumericVector mean = {z_mean, y_mean};
   
-    //sd
+    // sd
   double y_sd = x0[y_sd_ind];
+  double z_sd = x0[z_sd_ind];
   NumericVector sd = {z_sd, y_sd};
   
   if (y_sd <= 0)
   {
     y_sd = std::sqrt(std::numeric_limits<double>::epsilon());
   }
+  
+  if (z_sd <= 0)
+  {
+    z_sd = std::sqrt(std::numeric_limits<double>::epsilon());
+  }
 
-  //coefficients for independend variables
+  // coefficients for independend variables
   arma::vec y_coef = as<arma::vec>(x0[y_coef_ind]);
   NumericVector z_coef_temporal = x0[z_coef_ind];
   z_coef_temporal.push_front(1); //for fixed coefficient
   arma::vec z_coef = as<arma::vec>(z_coef_temporal);
 
-  //get estimates for z*
+  // get estimates for z*
   NumericVector z_h_1 = wrap(z_d_1 * z_coef);
   NumericVector z_h_0 = wrap(z_d_0 * z_coef);
   
-  //get estimates for y and random errors
+  // get estimates for y and random errors
   arma::mat y_h_1 = y_d_1 * y_coef;
   
   NumericVector e_h_1 = wrap(y_1 - y_h_1);
   
-  //concatenate e_h and z_h and prepare to insert into function
+  // concatenate e_h and z_h and prepare to insert into function
   NumericMatrix z_y_1 = NumericMatrix(z_h_1.size(), 2);
   NumericMatrix z_y_0 = NumericMatrix(z_h_0.size(), 2);
   
@@ -1177,28 +1235,39 @@ List hpaSelectionLnLOptim_List(NumericVector x0, List hpaSelection_args)
   z_y_1(_, 1) = e_h_1;
   z_y_0(_, 0) = -1.0 * z_h_0;
   
+  // get number of observations with 0 and 1 values
+  int n_obs_0 = z_h_0.size();
+  int n_obs_1 = z_h_1.size();
+  int n_obs = n_obs_0 + n_obs_1;
+  
+  // lower tail negative infinity matrix
+  NumericMatrix inf_y_vec_1 = NumericMatrix(n_obs_1, 2);
+  std::fill(inf_y_vec_1.begin(), inf_y_vec_1.end(), R_PosInf);
+  inf_y_vec_1(_, 1) = e_h_1; // in order to condition on e_h_1
+  NumericMatrix neg_inf_vec_0 = NumericMatrix(n_obs_0, 2);
+  std::fill(neg_inf_vec_0.begin(), neg_inf_vec_0.end(), R_NegInf);
+  
   // likelihood calculation
-  NumericVector lnL_y_1;
-  NumericVector lnL_z_y_1;
-  NumericVector lnL_z_y_0;
+  NumericVector lnL_y_1 = dhpa(z_y_1,
+                               pol_coefficients, pol_degrees,
+                               LogicalVector{false, false}, 
+                               LogicalVector{true, false},
+                               mean, sd,
+                               is_parallel, true);
   
-  lnL_y_1 = log(dhpa(z_y_1,
-                     pol_coefficients, pol_degrees,
-                     LogicalVector{false, false}, LogicalVector{true, false},
-                     mean, sd,
-                     is_parallel));
+  NumericVector lnL_z_y_1 = ihpa(z_y_1, inf_y_vec_1,
+                                 pol_coefficients, pol_degrees,
+                                 LogicalVector{false, true}, 
+                                 LogicalVector{false, false},
+                                 mean, sd,
+                                 is_parallel, true);
   
-  lnL_z_y_1 = log(1 - phpa(z_y_1,
-                           pol_coefficients, pol_degrees,
-                           LogicalVector{false, true}, LogicalVector{false, false},
-                           mean, sd,
-                           is_parallel));
-  
-  lnL_z_y_0 = log(phpa(z_y_0,
-                       pol_coefficients, pol_degrees,
-                       LogicalVector{false, false}, LogicalVector{false, true},
-                       mean, sd,
-                       is_parallel));
+  NumericVector lnL_z_y_0 = ihpa(neg_inf_vec_0, z_y_0,
+                                 pol_coefficients, pol_degrees,
+                                 LogicalVector{false, false}, 
+                                 LogicalVector{false, true},
+                                 mean, sd,
+                                 is_parallel, true);
 
   // Initialize list to store calculation results
   double aggregate_y_1 = 0.0;
@@ -1281,7 +1350,6 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
   arma::mat y_d_0 = hpaSelection_args["y_d_0"];
   arma::mat y_d_1 = hpaSelection_args["y_d_1"];
   NumericVector pol_degrees = hpaSelection_args["pol_degrees"];
-  double z_sd = hpaSelection_args["z_sd"];
   bool is_parallel = hpaSelection_args["is_parallel"];
   
   // Get values from the ind_List
@@ -1289,6 +1357,7 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
   int z_mean_ind = ind_List["z_mean_ind"];
   int y_mean_ind = ind_List["y_mean_ind"];
   int y_sd_ind = ind_List["y_sd_ind"];
+  int z_sd_ind = ind_List["z_sd_ind"];
   NumericVector z_coef_ind = ind_List["z_coef_ind"];
   NumericVector y_coef_ind = ind_List["y_coef_ind"];
   
@@ -1305,6 +1374,7 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
   
     // sd
   double y_sd = x0[y_sd_ind];
+  double z_sd = x0[z_sd_ind];
   NumericVector sd = {z_sd, y_sd};
   
   if (y_sd <= 0)
@@ -1312,7 +1382,12 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
     y_sd = std::sqrt(std::numeric_limits<double>::epsilon());
   }
   
-  // coefficients for independend variables
+  if (z_sd <= 0)
+  {
+    z_sd = std::sqrt(std::numeric_limits<double>::epsilon());
+  }
+  
+  // coefficients for independent variables
   arma::vec y_coef = as<arma::vec>(x0[y_coef_ind]);
   NumericVector z_coef_temporal = x0[z_coef_ind];
   z_coef_temporal.push_front(1); //for fixed coefficient
@@ -1333,46 +1408,10 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
   z_y_1(_, 0) = -1.0 * z_h_1;
   z_y_1(_, 1) = e_h_1;
   z_y_0(_, 0) = -1.0 * z_h_0;
-  
-  // Preliminary probabilities calculations
-  NumericVector pdf_y_1 = dhpa(z_y_1,
-                               pol_coefficients, pol_degrees,
-                               LogicalVector{false, false}, 
-                               LogicalVector{true, false},
-                               mean, sd,
-                               is_parallel);
-  
-  NumericVector cdf_z_y_1 = 1 - phpa(z_y_1,
-                                     pol_coefficients, pol_degrees,
-                                     LogicalVector{false, true}, 
-                                     LogicalVector{false, false},
-                                     mean, sd,
-                                     is_parallel);
-  
-  NumericVector cdf_z_y_0 = phpa(z_y_0,
-                                 pol_coefficients, pol_degrees,
-                                 LogicalVector{false, false}, 
-                                 LogicalVector{false, true},
-                                 mean, sd,
-                                 is_parallel);
-
-  NumericVector pdf_z_y_1 = dhpa(z_y_1,
-                                 pol_coefficients, pol_degrees,
-                                 LogicalVector{false, true}, 
-                                 LogicalVector{false, false},
-                                 mean, sd,
-                                 is_parallel);
-  
-  NumericVector pdf_z_y_0= dhpa(z_y_0,
-                                pol_coefficients, pol_degrees,
-                                LogicalVector{false, false}, 
-                                LogicalVector{false, true},
-                                mean, sd,
-                                is_parallel);
 
   // get number of observations with 0 and 1 values
-  int n_obs_0 = cdf_z_y_0.size();
-  int n_obs_1 = cdf_z_y_1.size();
+  int n_obs_0 = z_h_0.size();
+  int n_obs_1 = z_h_1.size();
   int n_obs = n_obs_0 + n_obs_1;
   
   // get the number of estimated parameters
@@ -1381,75 +1420,59 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
   // Initialize vector to store gradient values
   NumericMatrix my_grad = NumericMatrix(n_obs_0 + n_obs_1, n_param);
 
-  // Analytical part of gradient
+  // infinity matricies
+  NumericMatrix inf_y_vec_1 = NumericMatrix(n_obs_1, 2);
+  std::fill(inf_y_vec_1.begin(), inf_y_vec_1.end(), R_PosInf);
+  inf_y_vec_1(_, 1) = e_h_1; // in order to condition on e_h_1
+  NumericMatrix neg_inf_vec_0 = NumericMatrix(n_obs_0, 2);
+  std::fill(neg_inf_vec_0.begin(), neg_inf_vec_0.end(), R_NegInf);
   
-  // For polynomial coefficients
+  // Store the number of polynomial coefficients
   int pol_coefficients_n = pol_coefficients.size();
   
-  NumericMatrix pol_coefficients_grad_z_y_0;
-  NumericMatrix pol_coefficients_grad_z_y_1;
-  NumericMatrix pol_coefficients_grad_y_1;
+  // Gradient calculation
   
-    // gradient for z_y_1 values respect to polynomial coefficients
-
-    // lower tail negative infinity matrix
-    NumericMatrix x_lower_1 = NumericMatrix(n_obs_1, 2);
-    std::fill(x_lower_1.begin(), x_lower_1.end(), R_NegInf);
-
-    //gradient calculations
-    pol_coefficients_grad_z_y_1 = ihpaDiff(x_lower_1, z_y_1,
-                                           pol_coefficients, pol_degrees,
-                                           LogicalVector{false, true}, 
-                                           LogicalVector{false, false},
-                                           mean, sd,
-                                           "pol_coefficients",
-                                           is_parallel);
-
-  // gradient for y_1 values respect to polynomial coefficients
-
-    //gradient calculations
-    pol_coefficients_grad_y_1 = dhpaDiff(z_y_1,
-                                         pol_coefficients, pol_degrees,
-                                         LogicalVector{false, false}, 
-                                         LogicalVector{true, false},
-                                         mean, sd,
-                                         "pol_coefficients",
-                                         is_parallel);
-
-    // gradient for z_y_0 values respect to polynomial coefficients
-    
-      // lower tail negative infinity matrix
-    NumericMatrix x_lower_0 = NumericMatrix(n_obs_0, 2);
-    std::fill(x_lower_0.begin(), x_lower_0.end(), R_NegInf);
-    
-      //gradient calculations
-    pol_coefficients_grad_z_y_0 = ihpaDiff(x_lower_0, z_y_0,
-                                           pol_coefficients, pol_degrees,
-                                           LogicalVector{false, false}, 
-                                           LogicalVector{false, true},
-                                           mean, sd,
-                                           "pol_coefficients",
-                                           is_parallel);
-
-  for (int i = 0; i < (pol_coefficients_n - 1); i++) // for each parameter
+  NumericMatrix grad_y_1 = dhpaDiff(z_y_1,
+                                    pol_coefficients, pol_degrees,
+                                    LogicalVector{false, false}, 
+                                    LogicalVector{true, false},
+                                    mean, sd,
+                                    "all",
+                                    is_parallel, true);
+  
+  NumericMatrix grad_z_y_1 = ihpaDiff(z_y_1, inf_y_vec_1,
+                                      pol_coefficients, pol_degrees,
+                                      LogicalVector{false, true}, 
+                                      LogicalVector{false, false},
+                                      mean, sd,
+                                      "all",
+                                      is_parallel, true);
+  
+  NumericMatrix grad_z_y_0 = ihpaDiff(neg_inf_vec_0, z_y_0,
+                                      pol_coefficients, pol_degrees,
+                                      LogicalVector{false, false}, 
+                                      LogicalVector{false, true},
+                                      mean, sd,
+                                      "all",
+                                      is_parallel, true);
+  
+  // Store gradients respect to
+  
+    // polynomial coefficients, mean and sd
+  for (int i = 0; i < (pol_coefficients_n + 3); i++) // for each parameter
   {
     NumericVector my_grad_tmp = NumericVector(n_obs);
-    my_grad_tmp[Range(0, n_obs_1 - 1)] = (-1.0 * pol_coefficients_grad_z_y_1(_, i + 1) / cdf_z_y_1) +
-                                         (pol_coefficients_grad_y_1(_, i + 1) / pdf_y_1);
-    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = pol_coefficients_grad_z_y_0(_, i + 1) / cdf_z_y_0;
+    
+    my_grad_tmp[Range(0, n_obs_1 - 1)] = grad_z_y_1(_, i + 1) + 
+                                         grad_y_1(_, i + 1);
+    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = grad_z_y_0(_, i + 1);
+    
     my_grad(_, i) = my_grad_tmp;
   }
-  
-  // For selection equation regression coefficients
-  
-  NumericVector z_coef_grad_shareble_1;
-  NumericVector z_coef_grad_shareble_0;
-  
-  z_coef_grad_shareble_1 = pdf_z_y_1 / cdf_z_y_1;
-  z_coef_grad_shareble_0 = pdf_z_y_0 / cdf_z_y_0;
-  
-  NumericMatrix z_d_0_NM = wrap(z_d_0);
-  NumericMatrix z_d_1_NM = wrap(z_d_1);
+
+    // selection equation regression coefficients
+  NumericMatrix z_d_0_adj = wrap(-1.0 * z_d_0);
+  NumericMatrix z_d_1_adj = wrap(-1.0 * z_d_1);
   
   int z_coef_n = z_coef_ind.size();
   
@@ -1457,53 +1480,28 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
   {
     NumericVector my_grad_tmp = NumericVector(n_obs);
 
-    my_grad_tmp[Range(0, n_obs_1 - 1)] = z_d_1_NM(_, i + 1) * z_coef_grad_shareble_1;
-    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = -1.0 * z_d_0_NM(_, i + 1) * z_coef_grad_shareble_0;
+    my_grad_tmp[Range(0, n_obs_1 - 1)] = z_d_1_adj(_, i + 1) * 
+                                         grad_z_y_1(_, pol_coefficients_n + 4);
+    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = z_d_0_adj(_, i + 1) * 
+                                             grad_z_y_0(_, pol_coefficients_n + 6);
 
     my_grad(_, z_coef_ind[i]) = my_grad_tmp;
   }
 
-  // Numeric part of gradient
-  
-    // Set differentiation increment value for each parameter
-  double machinePrecision = std::numeric_limits<double>::epsilon();
-  double my_precision = std::sqrt(machinePrecision);
-  
-  NumericVector eps = abs(x0 * my_precision);
-  
-    // Control for zero values
-  eps[eps < (machinePrecision * 100)] = my_precision;
-  
-    // Estimate the gradient itself
-  NumericVector x0_eps = clone(x0);
-  
-  NumericVector f1;
-  NumericVector f2;
-  
-  // interval to omit since corresponding gradients have been calculated analytically
-  int z_coef_ind_min = min(z_coef_ind);
-  int z_coef_ind_max = max(z_coef_ind);
-  
-  for (int i = pol_coefficients_n - 1; i < n_param; i++) // for each parameter
+    // outcome equation regression coefficients
+  NumericMatrix y_d_1_adj = wrap(-1.0 * y_d_1);
+    
+  int y_coef_n = y_coef_ind.size();
+
+  for (int i = 0; i < y_coef_n; i++) // for each regressor
   {
-    if((i > z_coef_ind_max)  | (i < z_coef_ind_min)) // omite numeric calculations for z_coef
-    {
-      // Calculate f(x - eps)
-      x0_eps[i] = x0[i] - eps[i];
-      
-      f1 = hpaSelectionLnLOptim_ind(x0_eps, hpaSelection_args);
-      
-      // Calculate f(x + eps)
-      x0_eps[i] = x0[i] + eps[i];
-      
-      f2 = hpaSelectionLnLOptim_ind(x0_eps, hpaSelection_args);
-      
-      // Estimate the gradient 
-      my_grad(_, i) = (f2 - f1) / (2 * eps[i]);
-      
-      // Set x0_eps value to default
-      x0_eps[i] = x0[i];
-    }
+    NumericVector my_grad_tmp = NumericVector(n_obs);
+
+    my_grad_tmp[Range(0, n_obs_1 - 1)] = y_d_1_adj(_, i) *
+                                         (grad_y_1(_, pol_coefficients_n + 5) +
+                                          grad_z_y_1(_, pol_coefficients_n + 7));
+
+    my_grad(_, y_coef_ind[i]) = my_grad_tmp;
   }
 
   // Return the results
@@ -1538,7 +1536,6 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, List hpaSelection_a
   arma::mat y_d_0 = hpaSelection_args["y_d_0"];
   arma::mat y_d_1 = hpaSelection_args["y_d_1"];
   NumericVector pol_degrees = hpaSelection_args["pol_degrees"];
-  double z_sd = hpaSelection_args["z_sd"];
   bool is_parallel = hpaSelection_args["is_parallel"];
   
   // Get parameters number
@@ -1552,6 +1549,7 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, List hpaSelection_a
   int z_mean_ind = ind_List["z_mean_ind"];
   int y_mean_ind = ind_List["y_mean_ind"];
   int y_sd_ind = ind_List["y_sd_ind"];
+  int z_sd_ind = ind_List["z_sd_ind"];
   NumericVector z_coef_ind = ind_List["z_coef_ind"];
   NumericVector y_coef_ind = ind_List["y_coef_ind"];
   
@@ -1568,6 +1566,7 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, List hpaSelection_a
   
   // sd
   double y_sd = x0[y_sd_ind];
+  double z_sd = x0[z_sd_ind];
   NumericVector sd = {z_sd, y_sd};
   
   if (y_sd <= 0)
@@ -1575,9 +1574,14 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, List hpaSelection_a
     y_sd = std::sqrt(std::numeric_limits<double>::epsilon());
   }
   
+  if (z_sd <= 0)
+  {
+    z_sd = std::sqrt(std::numeric_limits<double>::epsilon());
+  }
+  
   // Prepare precision related values for numeric differentiation
   double machinePrecision = std::numeric_limits<double>::epsilon();
-  double my_precision = std::sqrt(std::sqrt(machinePrecision));
+  double my_precision = std::sqrt(machinePrecision);
   
   NumericVector eps = abs(x0 * my_precision);
   
@@ -1587,67 +1591,38 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, List hpaSelection_a
   // Estimate the gradient itself
   NumericVector x0_eps = clone(x0);
   
-  double f_val = hpaSelectionLnLOptim(x0, hpaSelection_args);
+  // Values to store function values
+  // given small increment
+  NumericVector g_plus;
+  NumericVector g_minus;
   
-  double f_plus;
-  double f_minus;
-  double f_plus_minus;
-  double f_minus_plus;
-  
+  // Perform hessian numeric estimation
   for (int i = 0; i < n_param; i++) // for each parameter
   {
-    for (int j = 0; j < n_param; j++) // for each parameter
+    // Calculate g(x + eps)
+    x0_eps[i] = x0[i] + eps[i];
+    g_plus = hpaSelectionLnLOptim_grad(x0_eps, hpaSelection_args);
+    
+    // Calculate g(x - eps)
+    x0_eps[i] = x0[i] - eps[i];
+    g_minus = hpaSelectionLnLOptim_grad(x0_eps, hpaSelection_args);
+    
+    // Store the results to hessian
+    my_hessian(_, i) = (g_plus - g_minus) / (2 * eps[i]);
+    
+    // Set x0_eps value to default
+    x0_eps[i] = x0[i];
+  }
+  
+  // Make hessian to be symmetric
+  for (int i = 0; i < n_param; i++) // for each parameter
+  {
+    for (int j = i; j < n_param; j++) // for each parameter
     {
-      if(i == j)
-      {
-        // Calculate f(x + eps)
-        x0_eps[i] = x0[i] + eps[i];
-        
-        f_plus = hpaSelectionLnLOptim(x0_eps, hpaSelection_args);
-        
-        // Calculate f(x - eps)
-        x0_eps[i] = x0[i] - eps[i];
-        
-        f_minus = hpaSelectionLnLOptim(x0_eps, hpaSelection_args);
-        
-        // Estimate the hessian
-        my_hessian(i, j) = (f_plus + f_minus - 2 * f_val) / (eps[i] * eps[i]);
-      }
-      
-      if(i > j)
-      {
-        // Calculate f(x + eps, y + eps)
-        x0_eps[i] = x0[i] + eps[i];
-        x0_eps[j] = x0[j] + eps[j];
-        
-        f_plus = hpaSelectionLnLOptim(x0_eps, hpaSelection_args);
-        
-        // Calculate f(x - eps, y - eps)
-        x0_eps[i] = x0[i] - eps[i];
-        x0_eps[j] = x0[j] - eps[j];
-        
-        f_minus = hpaSelectionLnLOptim(x0_eps, hpaSelection_args);
-        
-        // Calculate f(x + eps, y - eps)
-        x0_eps[i] = x0[i] + eps[i];
-        x0_eps[j] = x0[j] - eps[j];
-        
-        f_plus_minus = hpaSelectionLnLOptim(x0_eps, hpaSelection_args);
-        
-        // Calculate f(x - eps, y + eps)
-        x0_eps[i] = x0[i] - eps[i];
-        x0_eps[j] = x0[j] + eps[j];
-        
-        f_minus_plus = hpaSelectionLnLOptim(x0_eps, hpaSelection_args);
-        
-        // Estimate the hessian
-        my_hessian(i, j) = (f_plus + f_minus - f_plus_minus - f_minus_plus) / (4 * eps[i] * eps[j]);
-        my_hessian(j, i) = my_hessian(i, j);
-      }
-      
-      // Set x0_eps value to default
-      x0_eps[i] = x0[i];
-      x0_eps[j] = x0[j];
+      double hessian_val_1 = my_hessian(i, j);
+      double hessian_val_2 = my_hessian(j, i);
+      my_hessian(i, j) = (hessian_val_1 + hessian_val_2) * 0.5;
+      my_hessian(j, i) = my_hessian(i, j);
     }
   }
   
@@ -1680,7 +1655,6 @@ NumericMatrix hpaSelectionLnLOptim_grad_ind(NumericVector x0, List hpaSelection_
 List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::string method = "HPA", 
 	bool is_cond = true, bool is_outcome = true)
 {
-
 	List model = object;
 
 	// Add additional environments
@@ -1703,7 +1677,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 	NumericVector pol_degrees = model["pol_degrees"];
 	NumericVector pol_coefficients = model["pol_coefficients"];
 
-		// Check wheather new dataframe has been supplied
+		// Check whether new dataframe has been supplied
 	Rcpp::Formula selection = model["selection_formula"];
 	Rcpp::Formula outcome = model["outcome_formula"];
 
@@ -1727,13 +1701,13 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 	int z_df_n = z_df.size();
 	int y_df_n = y_df.size();
 
-	// Extract dependend variables
+	// Extract dependent variables
 	NumericVector z = z_df[0]; //it is reference
 	NumericVector y = y_df[0]; //it is reference
 
 	int n = z.size();
 
-	// Extract independend variable
+	// Extract independent variable
 	NumericMatrix z_d(n, z_df_n - 1);//-1 because there is no constant term
 	NumericMatrix y_d(n, y_df_n - 1);//-1 because there is no constant term
 
@@ -1806,17 +1780,15 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 				pol_degrees,
 				LogicalVector::create(false, true), LogicalVector::create(false, false),
 				NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd), 
-				false);
+				false, false);
 
 			return(List::create(Named("prob") = z_prob));
-		}
-		else
-		{
+		} else {
 			NumericVector z_prob = 1 - phpa(z_y, pol_coefficients,
 				pol_degrees,
 				LogicalVector::create(false, false), LogicalVector::create(false, true),
 				NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd), 
-				false);
+				false, false);
 		  
 			return(List::create(Named("prob") = z_prob));
 		}
@@ -1879,7 +1851,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 		NumericVector y_cond_0 = y_uncond + e_tr_0;
 
 		// aggregate result
-		y_cond = y_cond_1;
+		y_cond[z == 1] = y_cond_1[z == 1];
 		y_cond[z == 0] = y_cond_0[z == 0];
 
 		results = List::create(Named("y") = y_cond,
@@ -1903,7 +1875,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 		int pol_elements = Newey["pol_elements"];
 
 		NumericVector y_coef_mills = Newey["inv_mills_coef"];
-		z_latent = (z_latent - z_exp) / sqrt(z_var);
+		z_latent = (z_latent + z_exp) / sqrt(z_var);
 		NumericVector z_mills = dnorm(z_latent) / pnorm(z_latent);
 
 		for (int i = 0; i <= pol_elements; i++)
@@ -1983,14 +1955,12 @@ void print_summary_hpaSelection(List x) {
 
 	StringVector results_rownames = rownames(results);
 	StringVector results_colnames = colnames(results);
-
-	double z_sd = model["z_sd"];
 	
 	int n_obs = model["n_obs"];
 	int df = x1.size();
 
 	double lnL = model["log-likelihood"];
-	double AIC = model["AIC"];
+	double AIC = AIC_hpaSelection(x, 2);
 	double n_obs_double = n_obs * 1.0;
 	double BIC = log(n_obs_double) * x1.size() - 2 * lnL;
 
@@ -2053,8 +2023,6 @@ void print_summary_hpaSelection(List x) {
 
 	cat_R("Fixed Distribution Parameters:\n");
 	cat_R("a_0 = 1\n");
-	std::string new_str_z_sd = "z_sd = " + std::to_string(z_sd) + "\n";
-	cat_R(new_str_z_sd.c_str());
 
 	cat_R("---\n");
 
@@ -2165,7 +2133,7 @@ List plot_hpaSelection(List x, bool is_outcome = true) {
 		pol_coefficients, pol_degrees,
 		LogicalVector::create(false, false),
 		LogicalVector::create(is_outcome, !is_outcome),
-		mean, sd, false);
+		mean, sd, false, false);
 
 	double den_min = min(den);
 	double den_max = max(den);
@@ -2197,14 +2165,15 @@ List plot_hpaSelection(List x, bool is_outcome = true) {
 double AIC_hpaSelection(List object, double k = 2) 
 {
 
-	double AIC = object["AIC"];
+  NumericVector x1 = object["x1"];
+  
+	double AIC = 2 * (x1.size() - 
+                    logLik_hpaSelection(object));
 
 	if (k == 2)
 	{
 		return(AIC);
 	}
-
-	NumericVector x1 = object["x1"];
 
 	AIC += (k - 2) * x1.size();
 

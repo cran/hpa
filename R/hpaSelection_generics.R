@@ -17,7 +17,7 @@ predict.hpaSelection <- function (object,  ...,
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.")   
+    warnings("Additional arguments passed throught ... are ignored.\n")   
   }
   return(predict_hpaSelection(object, newdata, 
                        method, is_cond, 
@@ -34,19 +34,19 @@ summary.hpaSelection <- function (object, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.")   
+    warnings("Additional arguments passed throught ... are ignored.\n")   
   }
   return(summary_hpaSelection(object))
 }
 ###
-#' Summary for hpaSelection output
+#' Summary for "hpaSelection" object
 #' @param x Object of class "hpaSelection"
 #' @template elipsis_Template
 print.summary.hpaSelection <- function (x, ...) 
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.")   
+    warnings("Additional arguments passed throught ... are ignored.\n")   
   }
   return(print_summary_hpaSelection(x))
 }
@@ -64,11 +64,11 @@ plot.hpaSelection <- function (x, y = NULL, ..., is_outcome = TRUE)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.")   
+    warnings("Additional arguments passed throught ... are ignored.\n")   
   }
   if (!is.null(y))
   {
-    warnings("Note that y parameter currently ignored")   
+    warnings("Note that y parameter currently ignored\n")   
   }
   return(plot_hpaSelection(x, is_outcome))
 }
@@ -82,7 +82,7 @@ AIC.hpaSelection <- function (object, ..., k = 2)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.")   
+    warnings("Additional arguments passed throught ... are ignored.\n")   
   }
   return(AIC_hpaSelection(object, k))
 }
@@ -96,7 +96,34 @@ logLik.hpaSelection <- function (object, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.")   
+    warnings("Additional arguments passed throught ... are ignored.\n")   
   }
-  return(logLik_hpaSelection(object))
+  
+  lnL <- logLik_hpaSelection(object)
+  attr(lnL, "class") <- "logLik"
+  attr(lnL, "df") <- length(as.vector(object$x1))
+  
+  return(lnL)
+}
+###
+#' Print method for "hpaSelection" object
+#' @param x Object of class "hpaSelection"
+#' @template elipsis_Template
+print.hpaSelection <- function (x, ...) 
+{
+  if (length(list(...)) > 0)
+  {
+    warnings("Additional arguments passed throught ... are ignored.\n")   
+  }
+  cat(paste("It is the object of class",class(x),"\n"))
+  cat("It contains the following elements:\n")
+  cat(names(x), sep = ", ")
+  cat("\n")
+  cat("---\n")
+  cat("Estimation results:\n")
+  print(x$results)
+  cat("---\n")
+  cat(paste("Log-likelihood function value is:", round(x$'log-likelihood', 3), "\n"))
+  cat("---\n")
+  cat("Please, use summary() function to get additional information\n")
 }

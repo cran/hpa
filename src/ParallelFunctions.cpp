@@ -185,6 +185,7 @@ NumericVector ParallelVectorExp(NumericVector x)
 //' @param mean double value.
 //' @param sd double positive value.
 //' @template is_parallel_Template
+//' @template dnorm_parallel_examples_Template
 //' @export
 // [[Rcpp::export]]
 NumericVector dnorm_parallel(NumericVector x, double mean = 0, 

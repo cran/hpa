@@ -13,7 +13,8 @@ ihpa(
   omit_ind = logical(0),
   mean = numeric(0),
   sd = numeric(0),
-  is_parallel = FALSE
+  is_parallel = FALSE,
+  is_log = FALSE
 )
 }
 \arguments{
@@ -21,7 +22,8 @@ ihpa(
 Note that \code{x_lower} rows are observations while variables are columns.}
 
 \item{x_upper}{numeric matrix of upper integration limits.
-Note that \code{x_upper} rows are observations while variables are columns.}
+Note that \code{x_upper} rows are observations while variables
+are columns.}
 
 \item{pol_coefficients}{numeric vector of polynomial coefficients.}
 
@@ -40,6 +42,9 @@ component is omitted. By default it is a logical vector of FALSE values.}
 \item{is_parallel}{if TRUE then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
+
+\item{is_log}{logical; if TRUE then probabilities p are given as log(p)
+or derivatives will be given respect to log(p)}
 }
 \value{
 This function returns interval distribution function hermite polynomial approximation at point \code{x}.
@@ -48,74 +53,82 @@ This function returns interval distribution function hermite polynomial approxim
 This function calculates interval distribution function hermite polynomial approximation.
 }
 \details{
-Interval distribution function represents probability that random vector components will be
-greater then values given in \code{x_lower} and lower then values that are in \code{x_upper}.
+Interval distribution function represents probability that random
+ vector components will be greater then values given in \code{x_lower} and 
+ lower then values that are in \code{x_upper}.
 
-Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
-The main idea is to approximate unknown distribution density with hermite polynomial of degree \code{pol_degree}. 
-In this framework hermite polynomial represents adjusted (to insure integration to 1) product of squared polynomial and normal distribution densities.
-Parameters \code{mean} and \code{sd} determine means and standard deviations of normal distribution density functions
-which are parts of this polynomial.
+Densities hermite polynomial approximation approach has been
+proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
+approximate unknown distribution density with hermite polynomial of  
+degree \code{pol_degree}. In this framework hermite polynomial represents
+adjusted (to insure integration to 1) product of squared polynomial and 
+normal distribution densities. Parameters \code{mean} and \code{sd} 
+determine means and standard deviations of normal distribution density
+functions which are parts of this polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind}, \code{omit_ind}
-should have the same length as \code{pol_degrees} parameter.
+Parameters \code{mean}, \code{sd}, \code{given_ind},
+\code{omit_ind} should have the same length as \code{pol_degrees} 
+parameter.
 }
 \examples{
-##Let's approximate some three random variables joint interval distribution function (idf)
-##at lower and upper points (0,1, 0.2, 0.3) and (0,4, 0.5, 0.6) correspondingly
-##with hermite polynomial of (1,2,3) degrees which polynomial coefficients equals 1 except
-##coefficient related to x1*(x^3) polynomial element which equals 2.
-##Also suppose that normal density related mean vector equals (1.1, 1.2, 1.3) while
-##standard deviations vector is (2.1, 2.2, 2.3).
+## Let's approximate some three random variables joint interval distribution
+##  function (idf) at lower and upper points (0,1, 0.2, 0.3) and 
+## (0,4, 0.5, 0.6) correspondingly with hermite polynomial of (1,2,3) degrees 
+## which polynomial coefficients equals 1 except coefficient related to 
+## x1*(x^3) polynomial element which equals 2. Also suppose that normal
+## density related mean vector equals (1.1, 1.2, 1.3) while standard
+## deviations vector is (2.1, 2.2, 2.3).
 
-##Prepare initial values
+## Prepare initial values
 x_lower <- matrix(c(0.1, 0.2, 0.3), nrow=1)
 x_upper <- matrix(c(0.4, 0.5, 0.6), nrow=1)
 mean <- c(1.1, 1.2, 1.3)
 sd <- c(2.1, 2.2, 2.3)
 pol_degrees <- c(1, 2, 3)
 
-#Create polynomial powers and indexes correspondence matrix
+# Create polynomial powers and indexes correspondence matrix
 pol_ind <- polynomialIndex(pol_degrees)
 
-#Set all polynomial coefficients to 1
+# Set all polynomial coefficients to 1
 pol_coefficients <- rep(1, ncol(pol_ind))
 pol_degrees_n <- length(pol_degrees)
 
-#Assign coefficient 2 to the polynomial element(x1 ^ 1)*(x2 ^ 0)*(x3 ^ 2)
-pol_coefficients[which(colSums(pol_ind == c(1, 0, 2)) == pol_degrees_n)] <- 2
+# Assign coefficient 2 to the polynomial element(x1 ^ 1)*(x2 ^ 0)*(x3 ^ 2)
+pol_coefficients[apply(pol_ind, 2, function(x) all(x == c(1, 0, 2)))] <- 2
 
-#Visualize correspondence between polynomial elements and their coefficients
+# Visualize correspondence between polynomial 
+# elements and their coefficients
 as.data.frame(rbind(pol_ind, pol_coefficients),
 	row.names = c("x1 power", "x2 power", "x3 power", "coefficients"),
 	optional = TRUE)
 printPolynomial(pol_degrees, pol_coefficients)
 
-#Calculate idf approximation at points x_lower and x_upper
+# Calculate idf approximation at points x_lower and x_upper
 ihpa(x_lower = x_lower, x_upper = x_upper, 
 	pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
 	mean = mean, sd = sd)
 	
-#Condition second component to be 0.7
-#Substitute x second component with conditional value 0.7
+# Condition second component to be 0.7
+# Substitute x second component with conditional value 0.7
 x_upper <- matrix(c(0.4, 0.7, 0.6), nrow = 1)
 
-#Set TRUE to the second component indicating that it is conditioned
+# Set TRUE to the second component indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
-#Calculate conditional(on x2 = 0.5) idf approximation at points x_lower and x_upper
+# Calculate conditional(on x2 = 0.5) idf approximation at points x_lower and x_upper
 ihpa(x_lower = x_lower, x_upper = x_upper,
 	pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
 	mean = mean, sd = sd,
 	given_ind = given_ind)
 	
-#Consider third component marginal distribution
-#conditioned on the second component 0.7 value
-#Set TRUE to the first component indicating that it is omitted
+# Consider third component marginal distribution
+# conditioned on the second component 0.7 value
+# Set TRUE to the first component indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
-#Calculate conditional (on x2=0.5) marginal (for x3) idf approximation at points x_lower and x_upper
+# Calculate conditional (on x2=0.5) marginal (for x3) 
+# idf approximation at points x_lower and x_upper
 ihpa(x_lower = x_lower, x_upper = x_upper,
 	pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
 	mean = mean, sd = sd,

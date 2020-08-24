@@ -14,7 +14,6 @@ hpaSelection(
   is_Newey = FALSE,
   x0 = numeric(0),
   is_Newey_loocv = FALSE,
-  z_sd_fixed = -1,
   cov_type = "sandwich",
   boot_iter = 100L,
   is_parallel = FALSE,
@@ -24,16 +23,20 @@ hpaSelection(
 }
 \arguments{
 \item{selection}{an object of class "formula" (or one that can be coerced to that class): 
-a symbolic description of the selection equation form.}
+a symbolic description of the selection equation form. All variables in \code{selection}
+should be numeric vectors of the same length.}
 
 \item{outcome}{an object of class "formula" (or one that can be coerced to that class): 
-a symbolic description of the outcome equation form.}
+a symbolic description of the outcome equation form. All variables in \code{outcome}
+should be numeric vectors of the same length.}
 
 \item{data}{data frame containing the variables in the model.}
 
-\item{z_K}{non-negative integer representing polynomial degree related to selection equation.}
+\item{z_K}{non-negative integer representing 
+polynomial degree related to selection equation.}
 
-\item{y_K}{non-negative integer representing polynomial degree related to outcome equation.}
+\item{y_K}{non-negative integer representing polynomial 
+degree related to outcome equation.}
 
 \item{pol_elements}{number of conditional expectation approximating terms for Newey's method. If \code{is_Newey_loocv} is \code{TRUE}
 then determines maximum number of these terms during leave-one-out cross-validation.}
@@ -46,19 +49,20 @@ Note that \code{x0=c(pol_coefficients[-1], mean, sd, z_coef, y_coef)}.}
 \item{is_Newey_loocv}{logical; if TRUE then number of conditional expectation approximating terms for Newey's method will be selected
 based on leave-one-out cross-validation criteria iterating througt 0 to pol_elements number of these terms.}
 
-\item{z_sd_fixed}{positive value that is fixed sigma parameter for selection equation.}
-
-\item{cov_type}{string value determinign the type of covariance matrix to be
+\item{cov_type}{string value determining the type of covariance matrix to be
 returned and used for summary. If \code{cov_type = "hessian"} then negative
-inverse of hessian matrix will be applied. If \code{cov_type = "gop"} then
-inverse of jacobian outer products will be applied.
+inverse of Hessian matrix will be applied. If \code{cov_type = "gop"} then
+inverse of Jacobian outer products will be used.
 If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
-with \code{boot_iter} iterations will be applied.
+with \code{boot_iter} iterations will be used.
 If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
-accurate but computationally demanding finite difference hessian
-approximation will be calculated for the inverse hessian and sandwich
-estimators correspondingly.}
+accurate but computationally demanding central difference Hessian
+approximation will be calculated for the inverse Hessian and sandwich
+estimators correspondingly. Central differences are computed via
+analytically provided gradient. This Hessian matrix estimation approach
+seems to be less accurate then BFGS approximation if polynomial order
+is high (usually greater then 5).}
 
 \item{boot_iter}{the number of bootstrap iterations
 for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
@@ -88,16 +92,15 @@ If \code{opt_type = "GA"} then it is the list containing
 \item \code{Newey} - list containing information concerning Newey's method estimation results.
 \item \code{z_mean} - estimate of the hermite polynomial mean parameter related to selection equation random error marginal distribution.
 \item \code{y_mean} - estimate of the hermite polynomial mean parameter related to outcome equation random error marginal distribution.
-\item \code{z_sd} - adjusted value of sd parameter related to selection equation random error marginal distribution.
+\item \code{z_sd} - estimate of sd parameter related to selection equation random error marginal distribution.
 \item \code{y_sd} - estimate of the hermite polynomial sd parameter related to outcome equation random error marginal distribution.
 \item \code{pol_coefficients} - polynomial coefficients estimates.
 \item \code{pol_degrees} - numeric vector which first element is \code{z_K} and the second is \code{y_K}.
 \item \code{z_coef} - selection equation regression coefficients estimates.
 \item \code{y_coef} - outcome equation regression coefficients estimates.
-\item \code{cov_matrix} - estimated parameters covariance matrix estimate.
+\item \code{cov_mat} - covariance matrix estimate.
 \item \code{results} - numeric matrix representing estimation results.
 \item \code{log-likelihood} - value of Log-Likelihood function.
-\item \code{AIC} - AIC value.
 \item \code{re_moments} - list which contains information about random errors expectations, variances and correlation.
 \item \code{data_List} - list containing model variables and their partiotion according to outcome and selection equations.
 \item \code{n_obs} - number of observations.
@@ -133,38 +136,40 @@ This function performs semi-nonparametric selection model estimation
 via hermite polynomial densities approximation.
 }
 \details{
-Semi-nonparametric (SNP) approach has been implemented via densities
-hermite polynomial approximation
+Semi-nonparametric (SNP) approach has been implemented via
+densities hermite polynomial approximation
 
-Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
-The main idea is to approximate unknown distribution density with hermite polynomial of degree \code{pol_degree}. 
-In this framework hermite polynomial represents adjusted (to insure integration to 1) product of squared polynomial and normal distribution densities.
-Parameters \code{mean} and \code{sd} determine means and standard deviations of normal distribution density functions
-which are parts of this polynomial.
+Densities hermite polynomial approximation approach has been
+proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
+approximate unknown distribution density with hermite polynomial of  
+degree \code{pol_degree}. In this framework hermite polynomial represents
+adjusted (to insure integration to 1) product of squared polynomial and 
+normal distribution densities. Parameters \code{mean} and \code{sd} 
+determine means and standard deviations of normal distribution density
+functions which are parts of this polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind}, \code{omit_ind}
-should have the same length as \code{pol_degrees} parameter.
+Parameters \code{mean}, \code{sd}, \code{given_ind},
+\code{omit_ind} should have the same length as \code{pol_degrees} 
+parameter.
 
-The first polynomial coefficient (zero powers) set to identity constant
-for identification reasons.
+The first polynomial coefficient (zero powers) 
+set to 1 for identification reasons.
 
 Note that coefficient for the first
 independent variable in \code{selection} will be fixed to 1.
 
-Parameter \code{sd} will be scale adjusted in order to
-provide better initial point for optimization routine. Please, extract
-\code{sd} adjusted value from this function's output list.
+All variables mentioned in \code{selection} and 
+\code{outcome} should be numeric vectors.
 
-All variables mentioned in \code{selection} and \code{outcome} should be numeric vectors.
+The function calculates standard errors via sandwich estimator
+and significance levels are reported taking into account quasi maximum
+likelihood estimator (QMLE) asymptotic normality. If ones wants to switch
+from QMLE to semi-nonparametric estimator (SNPE) during hypothesis testing
+then covariance matrix should be estimated again using bootstrap.
 
-The function calculates standard errors via sandwich estimator and significance 
-levels are reported taking into account quasi maximum likelihood estimator (QMLE) 
-asymptotic normality. If ones wants to switch from QMLE to semi-nonparametric estimator (SNPE) during
-hypothesis testing then covariance matrix should be reestimated using bootstrap.
-
-Initial values for optimization routine are obtained throught Newey method 
-(see the reference below).
+Initial values for optimization routine are 
+obtained by Newey's method (see the reference below).
 
 Note that selection equation dependent variables should have exactly two levels (0 and 1) where "0" states for the selection results 
 which leads to unobservable values of dependent variable in outcome equation.
@@ -190,8 +195,9 @@ If \code{opt_type = "GA"} then \code{opt_control} should be the
 list containing the values to be passed to \code{\link[GA]{ga}}
 function. It is possible to pass arguments \code{lower}, \code{upper},
 \code{popSize}, \code{pcrossover}, \code{pmutation}, \code{elitism},
-\code{maxiter}, \code{suggestions}, \code{optim}, \code{optimArgs} and
-\code{seed}. Note that it is possible to set \code{population},
+\code{maxiter}, \code{suggestions}, \code{optim}, \code{optimArgs},
+\code{seed} and \code{monitor}. 
+Note that it is possible to set \code{population},
 \code{selection}, \code{crossover} and \code{mutation} arguments changing
 \code{\link[GA]{ga}} default parameters via \code{\link[GA]{gaControl}} 
 function. These arguments information reported in \code{\link[GA]{ga}}.
@@ -252,10 +258,10 @@ h = data.frame("kids" = as.numeric(Mroz87$kids5 + Mroz87$kids618 > 0),
 	
 # Estimate model parameters
 model <- hpaSelection(selection = lfp ~ educ + age + I(age ^ 2) + 
-                                  kids + faminc,
+                                  kids + log(faminc),
                       outcome = log(wage) ~ exper + I(exper ^ 2) + 
                                             educ + city,
-                                  z_K = 1, y_K = 3, data = h, 
+                                  z_K = 2, y_K = 3, data = h, 
                                   pol_elements = 3, is_Newey_loocv = TRUE)
 summary(model)
 

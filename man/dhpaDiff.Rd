@@ -13,12 +13,14 @@ dhpaDiff(
   mean = numeric(0),
   sd = numeric(0),
   type = "pol_coefficients",
-  is_parallel = FALSE
+  is_parallel = FALSE,
+  is_log = FALSE
 )
 }
 \arguments{
 \item{x}{numeric matrix of density function arguments.
-Note that \code{x} rows are observations while variables are columns.}
+Note that \code{x} rows are observations while variables 
+are columns.}
 
 \item{pol_coefficients}{numeric vector of polynomial coefficients.}
 
@@ -34,14 +36,24 @@ component is omitted. By default it is a logical vector of FALSE values.}
 
 \item{sd}{positive numeric vector of standard deviations.}
 
-\item{type}{determines the partial derivatives to be included into gradient. 
-Currently \code{type="pol_coefficients"} is the only available option (default) 
-meaning that the gradient will contain partial derivatives respect to polynomial coefficients
-listed in the same order as \code{pol_coefficients}.}
+\item{type}{determines the partial derivatives to be included into
+gradient. If \code{type="pol_coefficients"} then gradient will contain 
+partial derivatives respect to polynomial coefficients listed in the
+same order as \code{pol_coefficients}. Other available types are 
+\code{type="mean"} and \code{type="sd"}.
+For function \code{\link[hpa]{dhpaDiff}} it is possible to take
+gradient respect to the x points setting \code{type="x"}.
+For function \code{\link[hpa]{ihpaDiff}} it is possible to take
+gradient respect to the x lower and upper points setting 
+\code{type="x_lower"} or \code{type="upper"} correspondingly.
+In order to get full gradient please set \code{type="all"}.}
 
 \item{is_parallel}{if TRUE then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
+
+\item{is_log}{logical; if TRUE then probabilities p are given as log(p)
+or derivatives will be given respect to log(p)}
 }
 \value{
 This function returns gradient of density function hermite polynomial 
@@ -53,30 +65,34 @@ This function calculates gradient of density function
 hermite polynomial approximation.
 }
 \details{
-Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
-The main idea is to approximate unknown distribution density with hermite polynomial of degree \code{pol_degree}. 
-In this framework hermite polynomial represents adjusted (to insure integration to 1) product of squared polynomial and normal distribution densities.
-Parameters \code{mean} and \code{sd} determine means and standard deviations of normal distribution density functions
-which are parts of this polynomial.
+Densities hermite polynomial approximation approach has been
+proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
+approximate unknown distribution density with hermite polynomial of  
+degree \code{pol_degree}. In this framework hermite polynomial represents
+adjusted (to insure integration to 1) product of squared polynomial and 
+normal distribution densities. Parameters \code{mean} and \code{sd} 
+determine means and standard deviations of normal distribution density
+functions which are parts of this polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind}, \code{omit_ind}
-should have the same length as \code{pol_degrees} parameter.
+Parameters \code{mean}, \code{sd}, \code{given_ind},
+\code{omit_ind} should have the same length as \code{pol_degrees} 
+parameter.
 
 If \code{x} has more then one row then the output will be jacobian matrix where 
 rows are gradients.
 }
 \examples{
 ## Let's approximate some three random variables joint density function
-## at point (0,1, 0.2, 0.3) with hermite polynomial of (1,2,3) degrees which polynomial
-## coefficients equals 1 except coefficient related to x1*(x^3) polynomial element
-## which equals 2. Also suppose that normal density related mean vector
-## equals (1.1, 1.2, 1.3) while standard deviations vector is (2.1, 2.2, 2.3).
-## In this example let's calculate density approximating function gradient respect to
-## polynomial coefficients.
+## at point (0,1, 0.2, 0.3) with hermite polynomial of (1,2,3) degrees 
+## which polynomial coefficients equals 1 except coefficient related to 
+## x1*(x^3) polynomial element which equals 2. Also suppose that normal 
+## density related mean vector equals (1.1, 1.2, 1.3) while standard 
+## deviations vector is (2.1, 2.2, 2.3). In this example let's calculate 
+## density approximating function's gradient respect to various parameters.
 
 # Prepare initial values
-x <- matrix(c(0.1, 0.2, 0.3), nrow=1)
+x <- matrix(c(0.1, 0.2, 0.3), nrow = 1)
 mean <- c(1.1, 1.2, 1.3)
 sd <- c(2.1, 2.2, 2.3)
 pol_degrees <- c(1, 2, 3)
@@ -88,9 +104,10 @@ pol_ind <- polynomialIndex(pol_degrees)
  pol_degrees_n <- length(pol_degrees)
 
 # Assign coefficient 2 to the polynomial element(x1 ^ 1)*(x2 ^ 0)*(x3 ^ 2)
-pol_coefficients[which(colSums(pol_ind == c(1, 0, 2)) == pol_degrees_n)] <- 2
+pol_coefficients[apply(pol_ind, 2, function(x) all(x == c(1, 0, 2)))] <- 2
 
-# Visualize correspondence between polynomial elements and their coefficients
+# Visualize correspondence between polynomial
+# elements and their coefficients
 as.data.frame(rbind(pol_ind, pol_coefficients),
  row.names = c("x1 power", "x2 power", "x3 power", "coefficients"),
  optional = TRUE)
@@ -108,7 +125,7 @@ x <- matrix(c(0.1, 0.5, 0.3), nrow = 1)
 # Set TRUE to the second component indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
-# Calculate conditional (on x2=0.5) density approximation 
+# Calculate conditional (on x2 = 0.5) density approximation's 
 # gradient respect to polynomial coefficients at point x
 dhpaDiff(x = x,
  pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
@@ -120,12 +137,31 @@ dhpaDiff(x = x,
 # Set TRUE to the first component indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
-# Calculate conditional (on x2=0.5) marginal (for x3) density approximation
-# gradient respect to polynomial coefficients at point x
+# Calculate conditional (on x2 = 0.5) marginal (for x3) density 
+# approximation's gradient respect to: 
+  # polynomial coefficients
 dhpaDiff(x = x,
  pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
  mean = mean, sd = sd,
  given_ind = given_ind, omit_ind = omit_ind)
+  # mean
+dhpaDiff(x = x,
+ pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
+ mean = mean, sd = sd,
+ given_ind = given_ind, omit_ind = omit_ind,
+ type = "mean")
+  # sd
+dhpaDiff(x = x,
+ pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
+ mean = mean, sd = sd,
+ given_ind = given_ind, omit_ind = omit_ind,
+ type = "sd")
+ # x
+dhpaDiff(x = x,
+ pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
+ mean = mean, sd = sd,
+ given_ind = given_ind, omit_ind = omit_ind,
+ type = "x")
 }
 \references{
 A. Gallant and D. W. Nychka (1987) <doi:10.2307/1913241>

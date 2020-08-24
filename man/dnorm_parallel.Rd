@@ -22,3 +22,16 @@ Calculate in parallel for each value from vector \code{x}
 density function of normal distribution with 
 mean equal to \code{mean} and standard deviation equal to \code{sd}.
 }
+\examples{
+## Consider normal distribution with mean 3 and standard deviation 5.
+## Calculate it's density function at points 2 and 3.
+
+# Create vector of points
+my_points <- c(2, 3)
+
+# Calculate pdf at these points 
+# (set is_parallel = TRUE in order 
+# to turn on parallel computations)
+dnorm_parallel(my_points, 3, 5, 
+               is_parallel = FALSE)
+}

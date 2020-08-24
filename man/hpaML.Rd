@@ -20,8 +20,9 @@ hpaML(
 )
 }
 \arguments{
-\item{x}{numeric matrix which rows are realizations of independend 
-identically distributed random vectors while columns correspond to variables.}
+\item{x}{numeric matrix which rows are realizations of independent 
+identically distributed random vectors while columns correspond to
+variables.}
 
 \item{pol_degrees}{non-negative integer vector of polynomial degrees.}
 
@@ -48,17 +49,20 @@ Note that \code{x0=c(pol_coefficients[-1], mean, sd)}. For
 \code{pol_coefficients}, \code{mean} and \code{sd} documentation 
 see \code{\link[hpa]{dhpa}} function.}
 
-\item{cov_type}{string value determinign the type of covariance matrix to be
+\item{cov_type}{string value determining the type of covariance matrix to be
 returned and used for summary. If \code{cov_type = "hessian"} then negative
-inverse of hessian matrix will be applied. If \code{cov_type = "gop"} then
-inverse of jacobian outer products will be applied.
+inverse of Hessian matrix will be applied. If \code{cov_type = "gop"} then
+inverse of Jacobian outer products will be used.
 If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
-with \code{boot_iter} iterations will be applied.
+with \code{boot_iter} iterations will be used.
 If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
-accurate but computationally demanding finite difference hessian
-approximation will be calculated for the inverse hessian and sandwich
-estimators correspondingly.}
+accurate but computationally demanding central difference Hessian
+approximation will be calculated for the inverse Hessian and sandwich
+estimators correspondingly. Central differences are computed via
+analytically provided gradient. This Hessian matrix estimation approach
+seems to be less accurate then BFGS approximation if polynomial order
+is high (usually greater then 5).}
 
 \item{boot_iter}{the number of bootstrap iterations
 for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
@@ -92,7 +96,7 @@ If \code{opt_type = "GA"} then it is the list containing
 \item \code{tr_right} - the same as \code{tr_right} input parameter.
 \item \code{omit_ind }- the same as \code{omit_ind} input parameter.
 \item \code{given_ind} - the same as \code{given_ind} input parameter.
-\item \code{cov_matrix} - estimated parameters covariance matrix estimate.
+\item \code{cov_mat} - covariance matrix estimate.
 \item \code{results} - numeric matrix representing estimation results.
 \item \code{log-likelihood} - value of Log-Likelihood function.
 \item \code{AIC} - AIC value.
@@ -105,26 +109,31 @@ This function performs semi-nonparametric maximum likelihood estimation
 via hermite polynomial densities approximation.
 }
 \details{
-Semi-nonparametric (SNP) approach has been implemented via densities
-hermite polynomial approximation
+Semi-nonparametric (SNP) approach has been implemented via
+densities hermite polynomial approximation
 
-Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
-The main idea is to approximate unknown distribution density with hermite polynomial of degree \code{pol_degree}. 
-In this framework hermite polynomial represents adjusted (to insure integration to 1) product of squared polynomial and normal distribution densities.
-Parameters \code{mean} and \code{sd} determine means and standard deviations of normal distribution density functions
-which are parts of this polynomial.
+Densities hermite polynomial approximation approach has been
+proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
+approximate unknown distribution density with hermite polynomial of  
+degree \code{pol_degree}. In this framework hermite polynomial represents
+adjusted (to insure integration to 1) product of squared polynomial and 
+normal distribution densities. Parameters \code{mean} and \code{sd} 
+determine means and standard deviations of normal distribution density
+functions which are parts of this polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind}, \code{omit_ind}
-should have the same length as \code{pol_degrees} parameter.
+Parameters \code{mean}, \code{sd}, \code{given_ind},
+\code{omit_ind} should have the same length as \code{pol_degrees} 
+parameter.
 
-The first polynomial coefficient (zero powers) set to identity constant
-for identification reasons.
+The first polynomial coefficient (zero powers) 
+set to 1 for identification reasons.
 
-The function calculates standard errors via sandwich estimator and significance 
-levels are reported taking into account quasi maximum likelihood estimator (QMLE) 
-asymptotic normality. If ones wants to switch from QMLE to semi-nonparametric estimator (SNPE) during
-hypothesis testing then covariance matrix should be reestimated using bootstrap.
+The function calculates standard errors via sandwich estimator
+and significance levels are reported taking into account quasi maximum
+likelihood estimator (QMLE) asymptotic normality. If ones wants to switch
+from QMLE to semi-nonparametric estimator (SNPE) during hypothesis testing
+then covariance matrix should be estimated again using bootstrap.
 
 This function maximizes (quasi) log-likelihood function 
 via \code{\link[stats]{optim}} function setting it's \code{method} 
@@ -147,8 +156,9 @@ If \code{opt_type = "GA"} then \code{opt_control} should be the
 list containing the values to be passed to \code{\link[GA]{ga}}
 function. It is possible to pass arguments \code{lower}, \code{upper},
 \code{popSize}, \code{pcrossover}, \code{pmutation}, \code{elitism},
-\code{maxiter}, \code{suggestions}, \code{optim}, \code{optimArgs} and
-\code{seed}. Note that it is possible to set \code{population},
+\code{maxiter}, \code{suggestions}, \code{optim}, \code{optimArgs},
+\code{seed} and \code{monitor}. 
+Note that it is possible to set \code{population},
 \code{selection}, \code{crossover} and \code{mutation} arguments changing
 \code{\link[GA]{ga}} default parameters via \code{\link[GA]{gaControl}} 
 function. These arguments information reported in \code{\link[GA]{ga}}.
@@ -191,8 +201,11 @@ estimated polynomial coefficients
 \donttest{
 ## Approximate student (t) distribution
 
+# Set seed for reproducibility
+set.seed(123)
+
 # Simulate 5000 realizations of student distribution with 5 degrees of freedom
-n <- 5000
+ n <- 5000
 df <- 5
 x <- matrix(rt(n, df), ncol = 1)
 pol_degrees <- c(4)
@@ -204,42 +217,60 @@ summary(ml_result)
 # Get predicted probabilites (density values) approximations
 predict(ml_result)
 
+# Plot density approximation
+plot(ml_result)
+
 ## Approximate chi-squared distribution
 
+# Set seed for reproducibility
+set.seed(123)
+
 # Simulate 5000 realizations of chi-squared distribution with 5 degrees of freedom
-# Let's set lower truncation point at sample minimum realization
+
 n <- 5000
 df <- 5
 x <- matrix(rchisq(n, df), ncol = 1)
-pol_degrees <- c(1)
-tr_left <- as.vector(min(x))
-tr_right <- as.vector(max(x))
+pol_degrees <- c(5)
 
 # Apply pseudo maximum likelihood routine
-ml_result <- hpa::hpaML(x = x, pol_degrees = as.vector(pol_degrees), 
-				tr_left = as.vector(tr_left),
-				tr_right = as.vector(tr_right))
+ml_result <- hpaML(x = x, pol_degrees = as.vector(pol_degrees), 
+				tr_left = 0)
 summary(ml_result)
 
 # Get predicted probabilites (density values) approximations
 predict(ml_result)
 
+# Plot density approximation
+plot(ml_result)
+
 ## Approximate multivariate student (t) distribution
 ## Note that calculations may take up to a minute
 
+# Set seed for reproducibility
+set.seed(123)
+
 # Simulate 5000 realizations of three dimensional student distribution with 5 degrees of freedom
 library("mvtnorm")
-cov_mat <- matrix(c(1, 0.25, -0.25, 0.25, 1, 0.25, -0.25, 0.25, 1), ncol = 3)
+cov_mat <- matrix(c(1, 0.5, -0.5, 0.5, 1, 0.5, -0.5, 0.5, 1), ncol = 3)
 x <- rmvt(n = 5000, sigma = cov_mat, df = 5)
 
 # Estimate approximating joint distribution parameters
-model <- hpaML(x = x, pol_degrees = c(1,1,1))
+ml_result <- hpaML(x = x, pol_degrees = c(1, 1, 1))
 
 # Get summary
-summary(model)
+summary(ml_result)
 
 # Get predicted values for joint density function
-predict(model)
+predict(ml_result)
+
+# Plot density approximation for the
+# second random variable
+plot(ml_result, ind = 2)
+
+# Plot density approximation for the
+# second random variable conditioning
+# on x1 = 1
+plot(ml_result, ind = 2, given = c(1, NA, NA))
 
 ## Approximate student (t) distribution and plot densities approximated
 ## under different hermite polynomial degrees against 
@@ -293,7 +324,7 @@ ggplot(h, aes(values, predictions)) + geom_point(aes(color = Density)) +
   guides(colour = guide_legend(override.aes = list(size=10))
   )
 
-# Get informative estimates summary for K=4 (minimal AIC)
+# Get informative estimates summary for K=4
 summary(ml_result[[4]])
 }
 \dontshow{
@@ -312,6 +343,9 @@ ml_result <- hpa::hpaML(x = x, pol_degrees = pol_degrees)
 
 # Get predicted probabilites (density values) approximations
 predict(ml_result)
+
+# Plot the results
+plot(ml_result)
 }
 }
 \references{

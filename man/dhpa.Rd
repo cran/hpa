@@ -12,12 +12,14 @@ dhpa(
   omit_ind = logical(0),
   mean = numeric(0),
   sd = numeric(0),
-  is_parallel = FALSE
+  is_parallel = FALSE,
+  is_log = FALSE
 )
 }
 \arguments{
 \item{x}{numeric matrix of density function arguments.
-Note that \code{x} rows are observations while variables are columns.}
+Note that \code{x} rows are observations while variables 
+are columns.}
 
 \item{pol_coefficients}{numeric vector of polynomial coefficients.}
 
@@ -36,6 +38,9 @@ component is omitted. By default it is a logical vector of FALSE values.}
 \item{is_parallel}{if TRUE then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
+
+\item{is_log}{logical; if TRUE then probabilities p are given as log(p)
+or derivatives will be given respect to log(p)}
 }
 \value{
 This function returns density function hermite polynomial approximation at point \code{x}.
@@ -44,25 +49,30 @@ This function returns density function hermite polynomial approximation at point
 This function calculates density function hermite polynomial approximation.
 }
 \details{
-Densities hermite polynomial approximation approach has been proposed by A. Gallant and D. W. Nychka in 1987.
-The main idea is to approximate unknown distribution density with hermite polynomial of degree \code{pol_degree}. 
-In this framework hermite polynomial represents adjusted (to insure integration to 1) product of squared polynomial and normal distribution densities.
-Parameters \code{mean} and \code{sd} determine means and standard deviations of normal distribution density functions
-which are parts of this polynomial.
+Densities hermite polynomial approximation approach has been
+proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
+approximate unknown distribution density with hermite polynomial of  
+degree \code{pol_degree}. In this framework hermite polynomial represents
+adjusted (to insure integration to 1) product of squared polynomial and 
+normal distribution densities. Parameters \code{mean} and \code{sd} 
+determine means and standard deviations of normal distribution density
+functions which are parts of this polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind}, \code{omit_ind}
-should have the same length as \code{pol_degrees} parameter.
+Parameters \code{mean}, \code{sd}, \code{given_ind},
+\code{omit_ind} should have the same length as \code{pol_degrees} 
+parameter.
 }
 \examples{
 ## Let's approximate some three random variables joint density function
-## at point (0,1, 0.2, 0.3) with hermite polynomial of (1,2,3) degrees which polynomial
-## coefficients equals 1 except coefficient related to x1*(x^3) polynomial element
-## which equals 2. Also suppose that normal density related mean vector
-## equals (1.1, 1.2, 1.3) while standard deviations vector is (2.1, 2.2, 2.3).
+## at point (0,1, 0.2, 0.3) with hermite polynomial of (1,2,3) degrees 
+## which polynomial coefficients equals 1 except coefficient related 
+## to x1*(x^3) polynomial element which equals 2. Also suppose that normal 
+## density related mean vector equals (1.1, 1.2, 1.3) while standard deviations 
+## vector is (2.1, 2.2, 2.3).
 
 # Prepare initial values
-x <- matrix(c(0.1, 0.2, 0.3), nrow=1)
+x <- matrix(c(0.1, 0.2, 0.3), nrow = 1)
 mean <- c(1.1, 1.2, 1.3)
 sd <- c(2.1, 2.2, 2.3)
 pol_degrees <- c(1, 2, 3)
@@ -74,9 +84,10 @@ pol_coefficients <- rep(1, ncol(pol_ind))
 pol_degrees_n <- length(pol_degrees)
 
 # Assign coefficient 2 to the polynomial element(x1 ^ 1)*(x2 ^ 0)*(x3 ^ 2)
-pol_coefficients[which(colSums(pol_ind == c(1, 0, 2)) == pol_degrees_n)] <- 2
+pol_coefficients[apply(pol_ind, 2, function(x) all(x == c(1, 0, 2)))] <- 2
 
-# Visualize correspondence between polynomial elements and their coefficients
+# Visualize correspondence between polynomial 
+# elements and their coefficients
 as.data.frame(rbind(pol_ind, pol_coefficients),
 	row.names = c("x1 power", "x2 power", "x3 power", "coefficients"),
 	optional = TRUE)
@@ -95,9 +106,9 @@ given_ind <- c(FALSE, TRUE, FALSE)
 
 # Calculate conditional (on x2=0.5) density approximation at point x
 dhpa(x = x,
-	pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
-	mean = mean, sd = sd,
-	given_ind = given_ind)
+     pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
+     mean = mean, sd = sd,
+     given_ind = given_ind)
 	
 # Consider third component marginal distribution
 # conditioned on the second component 0.5 value
@@ -107,9 +118,9 @@ omit_ind <- c(TRUE, FALSE, FALSE)
 # Calculate conditional (on x2=0.5) marginal (for x3) density approximation
 # at point x
 dhpa(x = x,
-	pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
-	mean = mean, sd = sd,
-	given_ind = given_ind, omit_ind = omit_ind)
+     pol_coefficients = pol_coefficients, pol_degrees = pol_degrees,
+     mean = mean, sd = sd,
+     given_ind = given_ind, omit_ind = omit_ind)
 }
 \references{
 A. Gallant and D. W. Nychka (1987) <doi:10.2307/1913241>

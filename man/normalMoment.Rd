@@ -10,7 +10,8 @@ normalMoment(
   sd = 1,
   return_all_moments = FALSE,
   is_validation = TRUE,
-  is_central = FALSE
+  is_central = FALSE,
+  diff_type = "NO"
 )
 }
 \arguments{
@@ -21,14 +22,21 @@ normalMoment(
 \item{sd}{positive numeric standard deviation.}
 
 \item{return_all_moments}{logical; if \code{TRUE}, function returns (k+1)-dimensional numeric
-vector of moments of normaly distributed random variable with mean = \code{mean}
+vector of moments of normally distributed random variable with mean = \code{mean}
 and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
 to the (i-1)-th moment.}
 
-\item{is_validation}{bool value indicating whether function input arguments should be validated. 
-Set it to FALSE for slight perfomance boost (default value is TRUE).}
+\item{is_validation}{logical value indicating whether function input 
+arguments should be validated.  Set it to FALSE for slight
+performance boost (default value is TRUE).}
 
 \item{is_central}{logical; if \code{TRUE}, then central moments will be calculated.}
+
+\item{diff_type}{string indicating the type of the argument
+the moment should be differentiated respect to before return.
+Default value is \code{"NO"} so the moments itself will be returned. 
+Alternative values are \code{"mean"}, \code{"sd"}, \code{x_lower} and
+\code{x_upper}.}
 }
 \value{
 This function returns \code{k}-th order moment of
@@ -37,15 +45,16 @@ If \code{return_all_moments} is \code{TRUE} then see this argument description a
 output details.
 }
 \description{
-This function iteratively calculates k-th order moment of normal distribution.
+This function recursively calculates k-th order moment of normal distribution.
 }
 \details{
 This function estimates \code{k}-th order moment of
 normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd}.\cr
 
-Note that parameter \code{k} value automatically converts to integer.
-So passing non-integer \code{k} value will not cause any errors but the calculations will be
-performed for rounded \code{k} value only.
+Note that parameter \code{k} value automatically converts 
+to integer. So passing non-integer \code{k} value will not cause 
+any errors but the calculations will be performed for rounded 
+\code{k} value only.
 }
 \examples{
 ## Calculate 5-th order moment of normal random variable which
@@ -56,5 +65,11 @@ normalMoment(k = 5, mean = 3, sd = 5)
 
 # (0-5)-th moments
 normalMoment(k = 5, mean = 3, sd = 5, return_all_moments = TRUE)
+
+# 5-th moment derivative respect to mean
+normalMoment(k = 5, mean = 3, sd = 5, diff_type = "mean")
+
+# 5-th moment derivative respect to sd
+normalMoment(k = 5, mean = 3, sd = 5, diff_type = "sd")
 
 }

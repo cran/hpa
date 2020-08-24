@@ -22,7 +22,8 @@ iterate through the columns of polynomial indexes matrix in order to access poly
 being aware of their powers.
 }
 \examples{
-## Get polynomial indexes matrix for the polynomial which degrees are (1, 3, 5)
+## Get polynomial indexes matrix for the polynomial 
+## which degrees are (1, 3, 5)
 
 polynomialIndex(c(1, 3, 5))
 
@@ -49,6 +50,6 @@ for (i in 1:pol_matrix_length)
 	  powers_sum <- powers_sum + 5
 	}
 }
-#powers_sum value will be 21
+# powers_sum value will be 21
 }
 }

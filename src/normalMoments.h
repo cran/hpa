@@ -8,7 +8,8 @@ using namespace RcppArmadillo;
 
 Rcpp::NumericVector normalMoment(int k, double mean , double sd, 
 								 bool return_all_moments, bool is_validation,
-								 bool is_central);
+								 bool is_central,
+								 Rcpp::String diff_type);
 
 Rcpp::NumericMatrix truncatedNormalMoment(int,
 	Rcpp::NumericVector lower,
@@ -21,6 +22,7 @@ Rcpp::NumericMatrix truncatedNormalMoment(int,
 	Rcpp::NumericVector cdf_difference,
 	bool return_all_moments,
 	bool is_validation,
-	bool is_parallel);
+	bool is_parallel,
+	String diff_type);
 
 #endif

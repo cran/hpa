@@ -23,7 +23,7 @@ and variables which power is zero. Output may contain long coefficients represen
 are not rounded.
 }
 \examples{
-##Let's represent polynomial 0.3+0.5x2-x2^2+2x1+1.5x1x2+x1x2^2
+## Let's represent polynomial 0.3+0.5x2-x2^2+2x1+1.5x1x2+x1x2^2
 
 pol_degrees <- c(1, 2)
 pol_coefficients <- c(0.3, 0.5, -1, 2, 1.5, 1)

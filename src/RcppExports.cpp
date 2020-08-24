@@ -216,8 +216,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dhpa
-NumericVector dhpa(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel);
-RcppExport SEXP _hpa_dhpa(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP) {
+NumericVector dhpa(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool is_log);
+RcppExport SEXP _hpa_dhpa(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP is_logSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -229,13 +229,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(dhpa(x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel));
+    Rcpp::traits::input_parameter< bool >::type is_log(is_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(dhpa(x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log));
     return rcpp_result_gen;
 END_RCPP
 }
 // phpa
-NumericVector phpa(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel);
-RcppExport SEXP _hpa_phpa(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP) {
+NumericVector phpa(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool is_log);
+RcppExport SEXP _hpa_phpa(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP is_logSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -247,13 +248,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(phpa(x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel));
+    Rcpp::traits::input_parameter< bool >::type is_log(is_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(phpa(x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log));
     return rcpp_result_gen;
 END_RCPP
 }
 // ihpa
-NumericVector ihpa(NumericMatrix x_lower, NumericMatrix x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel);
-RcppExport SEXP _hpa_ihpa(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP) {
+NumericVector ihpa(NumericMatrix x_lower, NumericMatrix x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool is_log);
+RcppExport SEXP _hpa_ihpa(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP is_logSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -266,7 +268,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(ihpa(x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel));
+    Rcpp::traits::input_parameter< bool >::type is_log(is_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(ihpa(x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -308,8 +311,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // dtrhpa
-NumericVector dtrhpa(NumericMatrix x, NumericMatrix tr_left, NumericMatrix tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel);
-RcppExport SEXP _hpa_dtrhpa(SEXP xSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP) {
+NumericVector dtrhpa(NumericMatrix x, NumericMatrix tr_left, NumericMatrix tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool is_log);
+RcppExport SEXP _hpa_dtrhpa(SEXP xSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP is_logSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -323,13 +326,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(dtrhpa(x, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel));
+    Rcpp::traits::input_parameter< bool >::type is_log(is_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(dtrhpa(x, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log));
     return rcpp_result_gen;
 END_RCPP
 }
 // itrhpa
-NumericVector itrhpa(NumericMatrix x_lower, NumericMatrix x_upper, NumericMatrix tr_left, NumericMatrix tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel);
-RcppExport SEXP _hpa_itrhpa(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP) {
+NumericVector itrhpa(NumericMatrix x_lower, NumericMatrix x_upper, NumericMatrix tr_left, NumericMatrix tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool is_log);
+RcppExport SEXP _hpa_itrhpa(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP is_logSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -344,13 +348,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(itrhpa(x_lower, x_upper, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel));
+    Rcpp::traits::input_parameter< bool >::type is_log(is_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(itrhpa(x_lower, x_upper, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, is_log));
     return rcpp_result_gen;
 END_RCPP
 }
 // dhpaDiff
-NumericMatrix dhpaDiff(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel);
-RcppExport SEXP _hpa_dhpaDiff(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP typeSEXP, SEXP is_parallelSEXP) {
+NumericMatrix dhpaDiff(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel, bool is_log);
+RcppExport SEXP _hpa_dhpaDiff(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP typeSEXP, SEXP is_parallelSEXP, SEXP is_logSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -363,13 +368,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< String >::type type(typeSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(dhpaDiff(x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel));
+    Rcpp::traits::input_parameter< bool >::type is_log(is_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(dhpaDiff(x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel, is_log));
     return rcpp_result_gen;
 END_RCPP
 }
 // ihpaDiff
-NumericMatrix ihpaDiff(NumericMatrix x_lower, NumericMatrix x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel);
-RcppExport SEXP _hpa_ihpaDiff(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP typeSEXP, SEXP is_parallelSEXP) {
+NumericMatrix ihpaDiff(NumericMatrix x_lower, NumericMatrix x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel, bool is_log);
+RcppExport SEXP _hpa_ihpaDiff(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP typeSEXP, SEXP is_parallelSEXP, SEXP is_logSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -383,13 +389,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< String >::type type(typeSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(ihpaDiff(x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel));
+    Rcpp::traits::input_parameter< bool >::type is_log(is_logSEXP);
+    rcpp_result_gen = Rcpp::wrap(ihpaDiff(x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel, is_log));
     return rcpp_result_gen;
 END_RCPP
 }
 // hpaSelection
-Rcpp::List hpaSelection(Rcpp::Formula selection, Rcpp::Formula outcome, DataFrame data, int z_K, int y_K, int pol_elements, bool is_Newey, NumericVector x0, bool is_Newey_loocv, double z_sd_fixed, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control);
-RcppExport SEXP _hpa_hpaSelection(SEXP selectionSEXP, SEXP outcomeSEXP, SEXP dataSEXP, SEXP z_KSEXP, SEXP y_KSEXP, SEXP pol_elementsSEXP, SEXP is_NeweySEXP, SEXP x0SEXP, SEXP is_Newey_loocvSEXP, SEXP z_sd_fixedSEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP) {
+Rcpp::List hpaSelection(Rcpp::Formula selection, Rcpp::Formula outcome, DataFrame data, int z_K, int y_K, int pol_elements, bool is_Newey, NumericVector x0, bool is_Newey_loocv, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control);
+RcppExport SEXP _hpa_hpaSelection(SEXP selectionSEXP, SEXP outcomeSEXP, SEXP dataSEXP, SEXP z_KSEXP, SEXP y_KSEXP, SEXP pol_elementsSEXP, SEXP is_NeweySEXP, SEXP x0SEXP, SEXP is_Newey_loocvSEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -402,13 +409,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type is_Newey(is_NeweySEXP);
     Rcpp::traits::input_parameter< NumericVector >::type x0(x0SEXP);
     Rcpp::traits::input_parameter< bool >::type is_Newey_loocv(is_Newey_loocvSEXP);
-    Rcpp::traits::input_parameter< double >::type z_sd_fixed(z_sd_fixedSEXP);
     Rcpp::traits::input_parameter< String >::type cov_type(cov_typeSEXP);
     Rcpp::traits::input_parameter< int >::type boot_iter(boot_iterSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
     Rcpp::traits::input_parameter< String >::type opt_type(opt_typeSEXP);
     Rcpp::traits::input_parameter< List >::type opt_control(opt_controlSEXP);
-    rcpp_result_gen = Rcpp::wrap(hpaSelection(selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, z_sd_fixed, cov_type, boot_iter, is_parallel, opt_type, opt_control));
+    rcpp_result_gen = Rcpp::wrap(hpaSelection(selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, cov_type, boot_iter, is_parallel, opt_type, opt_control));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -484,8 +490,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // normalMoment
-NumericVector normalMoment(int k, double mean, double sd, bool return_all_moments, bool is_validation, bool is_central);
-RcppExport SEXP _hpa_normalMoment(SEXP kSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP return_all_momentsSEXP, SEXP is_validationSEXP, SEXP is_centralSEXP) {
+NumericVector normalMoment(int k, double mean, double sd, bool return_all_moments, bool is_validation, bool is_central, String diff_type);
+RcppExport SEXP _hpa_normalMoment(SEXP kSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP return_all_momentsSEXP, SEXP is_validationSEXP, SEXP is_centralSEXP, SEXP diff_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -495,13 +501,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type return_all_moments(return_all_momentsSEXP);
     Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
     Rcpp::traits::input_parameter< bool >::type is_central(is_centralSEXP);
-    rcpp_result_gen = Rcpp::wrap(normalMoment(k, mean, sd, return_all_moments, is_validation, is_central));
+    Rcpp::traits::input_parameter< String >::type diff_type(diff_typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(normalMoment(k, mean, sd, return_all_moments, is_validation, is_central, diff_type));
     return rcpp_result_gen;
 END_RCPP
 }
 // truncatedNormalMoment
-NumericMatrix truncatedNormalMoment(int k, NumericVector x_lower, NumericVector x_upper, double mean, double sd, NumericVector pdf_lower, NumericVector cdf_lower, NumericVector pdf_upper, NumericVector cdf_upper, NumericVector cdf_difference, bool return_all_moments, bool is_validation, bool is_parallel);
-RcppExport SEXP _hpa_truncatedNormalMoment(SEXP kSEXP, SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP pdf_lowerSEXP, SEXP cdf_lowerSEXP, SEXP pdf_upperSEXP, SEXP cdf_upperSEXP, SEXP cdf_differenceSEXP, SEXP return_all_momentsSEXP, SEXP is_validationSEXP, SEXP is_parallelSEXP) {
+NumericMatrix truncatedNormalMoment(int k, NumericVector x_lower, NumericVector x_upper, double mean, double sd, NumericVector pdf_lower, NumericVector cdf_lower, NumericVector pdf_upper, NumericVector cdf_upper, NumericVector cdf_difference, bool return_all_moments, bool is_validation, bool is_parallel, String diff_type);
+RcppExport SEXP _hpa_truncatedNormalMoment(SEXP kSEXP, SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP pdf_lowerSEXP, SEXP cdf_lowerSEXP, SEXP pdf_upperSEXP, SEXP cdf_upperSEXP, SEXP cdf_differenceSEXP, SEXP return_all_momentsSEXP, SEXP is_validationSEXP, SEXP is_parallelSEXP, SEXP diff_typeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -518,7 +525,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type return_all_moments(return_all_momentsSEXP);
     Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
-    rcpp_result_gen = Rcpp::wrap(truncatedNormalMoment(k, x_lower, x_upper, mean, sd, pdf_lower, cdf_lower, pdf_upper, cdf_upper, cdf_difference, return_all_moments, is_validation, is_parallel));
+    Rcpp::traits::input_parameter< String >::type diff_type(diff_typeSEXP);
+    rcpp_result_gen = Rcpp::wrap(truncatedNormalMoment(k, x_lower, x_upper, mean, sd, pdf_lower, cdf_lower, pdf_upper, cdf_upper, cdf_difference, return_all_moments, is_validation, is_parallel, diff_type));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -563,24 +571,24 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hpa_AIC_hpaML", (DL_FUNC) &_hpa_AIC_hpaML, 2},
     {"_hpa_logLik_hpaML", (DL_FUNC) &_hpa_logLik_hpaML, 1},
     {"_hpa_mecdf", (DL_FUNC) &_hpa_mecdf, 1},
-    {"_hpa_dhpa", (DL_FUNC) &_hpa_dhpa, 8},
-    {"_hpa_phpa", (DL_FUNC) &_hpa_phpa, 8},
-    {"_hpa_ihpa", (DL_FUNC) &_hpa_ihpa, 9},
+    {"_hpa_dhpa", (DL_FUNC) &_hpa_dhpa, 9},
+    {"_hpa_phpa", (DL_FUNC) &_hpa_phpa, 9},
+    {"_hpa_ihpa", (DL_FUNC) &_hpa_ihpa, 10},
     {"_hpa_ehpa", (DL_FUNC) &_hpa_ehpa, 9},
     {"_hpa_etrhpa", (DL_FUNC) &_hpa_etrhpa, 8},
-    {"_hpa_dtrhpa", (DL_FUNC) &_hpa_dtrhpa, 10},
-    {"_hpa_itrhpa", (DL_FUNC) &_hpa_itrhpa, 11},
-    {"_hpa_dhpaDiff", (DL_FUNC) &_hpa_dhpaDiff, 9},
-    {"_hpa_ihpaDiff", (DL_FUNC) &_hpa_ihpaDiff, 10},
-    {"_hpa_hpaSelection", (DL_FUNC) &_hpa_hpaSelection, 15},
+    {"_hpa_dtrhpa", (DL_FUNC) &_hpa_dtrhpa, 11},
+    {"_hpa_itrhpa", (DL_FUNC) &_hpa_itrhpa, 12},
+    {"_hpa_dhpaDiff", (DL_FUNC) &_hpa_dhpaDiff, 10},
+    {"_hpa_ihpaDiff", (DL_FUNC) &_hpa_ihpaDiff, 11},
+    {"_hpa_hpaSelection", (DL_FUNC) &_hpa_hpaSelection, 14},
     {"_hpa_predict_hpaSelection", (DL_FUNC) &_hpa_predict_hpaSelection, 5},
     {"_hpa_summary_hpaSelection", (DL_FUNC) &_hpa_summary_hpaSelection, 1},
     {"_hpa_print_summary_hpaSelection", (DL_FUNC) &_hpa_print_summary_hpaSelection, 1},
     {"_hpa_plot_hpaSelection", (DL_FUNC) &_hpa_plot_hpaSelection, 2},
     {"_hpa_AIC_hpaSelection", (DL_FUNC) &_hpa_AIC_hpaSelection, 2},
     {"_hpa_logLik_hpaSelection", (DL_FUNC) &_hpa_logLik_hpaSelection, 1},
-    {"_hpa_normalMoment", (DL_FUNC) &_hpa_normalMoment, 6},
-    {"_hpa_truncatedNormalMoment", (DL_FUNC) &_hpa_truncatedNormalMoment, 13},
+    {"_hpa_normalMoment", (DL_FUNC) &_hpa_normalMoment, 7},
+    {"_hpa_truncatedNormalMoment", (DL_FUNC) &_hpa_truncatedNormalMoment, 14},
     {"_hpa_polynomialIndex", (DL_FUNC) &_hpa_polynomialIndex, 1},
     {"_hpa_printPolynomial", (DL_FUNC) &_hpa_printPolynomial, 2},
     {NULL, NULL, 0}
