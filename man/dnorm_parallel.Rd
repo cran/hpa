@@ -7,13 +7,13 @@
 dnorm_parallel(x, mean = 0, sd = 1, is_parallel = FALSE)
 }
 \arguments{
-\item{x}{vector of quantiles: should be numeric vector, not just double value.}
+\item{x}{numeric vector of quantiles.}
 
 \item{mean}{double value.}
 
 \item{sd}{double positive value.}
 
-\item{is_parallel}{if TRUE then multiple cores will be
+\item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
 }
@@ -24,7 +24,7 @@ mean equal to \code{mean} and standard deviation equal to \code{sd}.
 }
 \examples{
 ## Consider normal distribution with mean 3 and standard deviation 5.
-## Calculate it's density function at points 2 and 3.
+## Calculate its density function at points 2 and 3.
 
 # Create vector of points
 my_points <- c(2, 3)

@@ -16,7 +16,8 @@ hpaML(
   boot_iter = 100L,
   is_parallel = FALSE,
   opt_type = "optim",
-  opt_control = NULL
+  opt_control = NULL,
+  is_validation = TRUE
 )
 }
 \arguments{
@@ -24,32 +25,29 @@ hpaML(
 identically distributed random vectors while columns correspond to
 variables.}
 
-\item{pol_degrees}{non-negative integer vector of polynomial degrees.}
+\item{pol_degrees}{non-negative integer vector of polynomial 
+degrees (orders).}
 
-\item{tr_left}{numeric matrix of left (lower) truncation limits.
-Note that \code{tr_right} rows are observations while variables are columns.
-If \code{tr_left} or \code{tr_right} is single row matrix then the same 
-truncation limits would be applied to all observations that are determined 
-by the first rows of these matrices.}
+\item{tr_left}{numeric vector of left (lower) truncation limits.}
 
-\item{tr_right}{numeric matrix of right (upper) truncation limits.
-Note that \code{tr_right} rows are observations while variables are columns.
-If \code{tr_left} or \code{tr_right} is single row matrix then the same 
-truncation limits would be applied to all observations that are determined 
-by the first rows of these matrices.}
+\item{tr_right}{numeric vector of right (upper) truncation limits.}
 
-\item{given_ind}{logical vector indicating wheather corresponding
-component is conditioned. By default it is a logical vector of FALSE values.}
+\item{given_ind}{logical vector indicating whether corresponding random
+vector component is conditioned. By default it is a logical 
+vector of \code{FALSE} values. If \code{give_ind[i]} is \code{TRUE}
+then \code{i}-th column of \code{x} matrix will contain conditional values.}
 
-\item{omit_ind}{logical vector indicating wheather corresponding
-component is omitted. By default it is a logical vector of FALSE values.}
+\item{omit_ind}{logical vector indicating whether corresponding
+component is omitted. By default it is a logical vector 
+of \code{FALSE} values. If \code{omit_ind[i]} is \code{TRUE} then values in
+\code{i}-th column of \code{x} matrix will be ignored.}
 
 \item{x0}{numeric vector of optimization routine initial values.
 Note that \code{x0=c(pol_coefficients[-1], mean, sd)}. For 
 \code{pol_coefficients}, \code{mean} and \code{sd} documentation 
 see \code{\link[hpa]{dhpa}} function.}
 
-\item{cov_type}{string value determining the type of covariance matrix to be
+\item{cov_type}{character determining the type of covariance matrix to be
 returned and used for summary. If \code{cov_type = "hessian"} then negative
 inverse of Hessian matrix will be applied. If \code{cov_type = "gop"} then
 inverse of Jacobian outer products will be used.
@@ -57,22 +55,22 @@ If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
 with \code{boot_iter} iterations will be used.
 If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
-accurate but computationally demanding central difference Hessian
-approximation will be calculated for the inverse Hessian and sandwich
-estimators correspondingly. Central differences are computed via
+(probably) more accurate but computationally demanding central difference 
+Hessian approximation will be calculated for the inverse Hessian and 
+sandwich estimators correspondingly. Central differences are computed via
 analytically provided gradient. This Hessian matrix estimation approach
-seems to be less accurate then BFGS approximation if polynomial order
+seems to be less accurate than BFGS approximation if polynomial order
 is high (usually greater then 5).}
 
 \item{boot_iter}{the number of bootstrap iterations
 for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
 
-\item{is_parallel}{if TRUE then multiple cores will be
+\item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
 
 \item{opt_type}{string value determining the type of the optimization
-routine to be applied. The default is "optim" meaning that BFGS method
+routine to be applied. The default is \code{"optim"} meaning that BFGS method
 from the \code{\link[stats]{optim}} function will be applied.
 If \code{opt_type = "GA"} then \code{\link[GA]{ga}} function will be
 additionally applied.}
@@ -80,6 +78,10 @@ additionally applied.}
 \item{opt_control}{a list containing arguments to be passed to the
 optimization routine depending on \code{opt_type} argument value.
 Please see details to get additional information.}
+
+\item{is_validation}{logical value indicating whether function input 
+arguments should be validated.  Set it to \code{FALSE} for slight
+performance boost (default value is \code{TRUE}).}
 }
 \value{
 This function returns an object of class "hpaML".\cr \cr
@@ -105,49 +107,61 @@ If \code{opt_type = "GA"} then it is the list containing
 \item \code{bootstrap} - list where bootstrap estimation results are stored.}
 }
 \description{
-This function performs semi-nonparametric maximum likelihood estimation
-via hermite polynomial densities approximation.
+This function performs semi-nonparametric (SNP)
+maximum likelihood estimation of unknown (possibly truncated) multivariate  
+density using Hermite polynomial based approximating function proposed by 
+Gallant and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details' 
+section to get more information concerning this approximating function.
 }
 \details{
-Semi-nonparametric (SNP) approach has been implemented via
-densities hermite polynomial approximation
-
-Densities hermite polynomial approximation approach has been
+Densities Hermite polynomial approximation approach has been
 proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
-approximate unknown distribution density with hermite polynomial of  
-degree \code{pol_degree}. In this framework hermite polynomial represents
-adjusted (to insure integration to 1) product of squared polynomial and 
-normal distribution densities. Parameters \code{mean} and \code{sd} 
-determine means and standard deviations of normal distribution density
-functions which are parts of this polynomial.
+approximate unknown distribution density with scaled Hermite polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind},
-\code{omit_ind} should have the same length as \code{pol_degrees} 
-parameter.
+Let's use notations introduced in \code{\link[hpa]{dhpa}} 'Details' 
+section. Function \code{\link[hpa]{hpaML}} maximizes the following
+quasi log-likelihood function:
+\deqn{\ln L(\alpha, \mu, \sigma; x) = \sum\limits_{i=1}^{n} 
+\ln\left(f_{\xi}(x_{i};\alpha, \mu, \sigma)\right),}
+
+where (in addition to previously defined notations):
+
+\eqn{x_{i}} - are observations i.e. \code{x} matrix rows.
+
+\eqn{n} - is sample size i.e. the number of \code{x} matrix rows.
+
+Arguments \code{pol_degrees}, \code{tr_left}, \code{tr_right},
+\code{given_ind} and \code{omit_ind} affect the form of 
+\eqn{f_{\xi}\left(x_{i};\alpha, \mu, \sigma)\right)} in a way described in 
+\code{\link[hpa]{dhpa}} 'Details' section. Note that change of
+\code{given_ind} and \code{omit_ind} values may result in estimator which
+statistical properties has not been rigorously investigated yet.
 
 The first polynomial coefficient (zero powers) 
-set to 1 for identification reasons.
+set to 1 for identification purposes i.e. \eqn{\alpha_{(0,...,0)}=1}.
+
+All \code{NA} and \code{NaN} values will be removed from \code{x} matrix.
 
 The function calculates standard errors via sandwich estimator
 and significance levels are reported taking into account quasi maximum
-likelihood estimator (QMLE) asymptotic normality. If ones wants to switch
+likelihood estimator (QMLE) asymptotic normality. If one wants to switch
 from QMLE to semi-nonparametric estimator (SNPE) during hypothesis testing
 then covariance matrix should be estimated again using bootstrap.
 
 This function maximizes (quasi) log-likelihood function 
-via \code{\link[stats]{optim}} function setting it's \code{method} 
+via \code{\link[stats]{optim}} function setting its \code{method} 
 argument to "BFGS". If \code{opt_type = "GA"} then genetic
 algorithm from \code{\link[GA]{ga}} function
-will be additionally (after \code{\link[stats]{optim}} putting it's
-solution (\code{par}) to \code{suggestions} matrix) applied in order to 
+will be additionally (after \code{\link[stats]{optim}} putting its
+solution (\code{par}) into \code{suggestions} matrix) applied in order to 
 perform global optimization. Note that global optimization takes
 much more time (usually minutes but sometimes hours or even days). 
 The number of iterations and population size of the genetic algorithm
 will grow linearly along with the number of estimated parameters. 
-If it is seems that global maximum has not been found than it
+If it seems that global maximum has not been found then it
 is possible to continue the search restarting the function setting 
-it's input argument \code{x0} to \code{x1} output value. Note that
+its input argument \code{x0} to \code{x1} output value. Note that
 if \code{cov_type = "bootstrap"} then \code{\link[GA]{ga}}
 function will not be used for bootstrap iterations since it
 may be extremely time consuming.
@@ -164,18 +178,18 @@ Note that it is possible to set \code{population},
 function. These arguments information reported in \code{\link[GA]{ga}}.
 In order to provide manual values for \code{lower} and \code{upper} bounds
 please follow parameters ordering mentioned above for the
-\code{x0} argument. If these bonds are not provided manually then
+\code{x0} argument. If these bounds are not provided manually then
 they (except those related to the polynomial coefficients)
 will depend on the estimates obtained
 by local optimization via \code{\link[stats]{optim}} function
 (this estimates will be in the middle
 between \code{lower} and \code{upper}).
 Specifically for each sd parameter \code{lower} (\code{upper}) bound
-is 5 times lower (higher) then this
+is 5 times lower (higher) than this
 parameter \code{\link[stats]{optim}} estimate.
-For each mean and regression coefficient parameter it's lower and upper
-bounds deviate from corresponding \code{\link[stats]{optim}} estimate
-by two absolute value of this estimate.
+For each mean and regression coefficient parameter its lower and 
+upper bounds deviate from corresponding \code{\link[stats]{optim}} estimate
+by two absolute values of this estimate.
 Finally, lower and upper bounds for each polynomial
 coefficient are \code{-10} and \code{10} correspondingly (do not depend
 on their \code{\link[stats]{optim}} estimates).
@@ -192,19 +206,20 @@ list("method" = "Nelder-Mead", "poptim" = 0.2, "pressel" = 0.5)},
 
 The arguments \code{popSize} and \code{maxiter} of
 \code{\link[GA]{ga}} function have been set proportional to the number of
-estimated polynomial coefficients
+estimated polynomial coefficients:
 \itemize{
 \item \code{popSize = 10 + (prod(pol_degrees + 1) - 1) * 2}.
 \item \code{maxiter = 50 * (prod(pol_degrees + 1))}}
 }
 \examples{
 \donttest{
-## Approximate student (t) distribution
+## Approximate Student (t) distribution
 
 # Set seed for reproducibility
 set.seed(123)
 
-# Simulate 5000 realizations of student distribution with 5 degrees of freedom
+# Simulate 5000 realizations of Student distribution 
+# with 5 degrees of freedom
  n <- 5000
 df <- 5
 x <- matrix(rt(n, df), ncol = 1)
@@ -225,7 +240,8 @@ plot(ml_result)
 # Set seed for reproducibility
 set.seed(123)
 
-# Simulate 5000 realizations of chi-squared distribution with 5 degrees of freedom
+# Simulate 5000 realizations of chi-squared distribution 
+# with 5 degrees of freedom
 
 n <- 5000
 df <- 5
@@ -243,13 +259,14 @@ predict(ml_result)
 # Plot density approximation
 plot(ml_result)
 
-## Approximate multivariate student (t) distribution
+## Approximate multivariate Student (t) distribution
 ## Note that calculations may take up to a minute
 
 # Set seed for reproducibility
 set.seed(123)
 
-# Simulate 5000 realizations of three dimensional student distribution with 5 degrees of freedom
+# Simulate 5000 realizations of three dimensional Student distribution 
+# with 5 degrees of freedom
 library("mvtnorm")
 cov_mat <- matrix(c(1, 0.5, -0.5, 0.5, 1, 0.5, -0.5, 0.5, 1), ncol = 3)
 x <- rmvt(n = 5000, sigma = cov_mat, df = 5)
@@ -272,9 +289,9 @@ plot(ml_result, ind = 2)
 # on x1 = 1
 plot(ml_result, ind = 2, given = c(1, NA, NA))
 
-## Approximate student (t) distribution and plot densities approximated
+## Approximate Student (t) distribution and plot densities approximated
 ## under different hermite polynomial degrees against 
-## true density (of student distribution)
+## true density (of Student distribution)
 
 # Simulate 5000 realizations of t-distribution with 5 degrees of freedom
 n <- 5000
@@ -296,7 +313,8 @@ n0 <- length(test_values)
 # t-distribution density function at test values points
 true_pred <- dt(test_values, df)
 
-# Create matrix of lists where i-th element contains densities predictions for K=i
+# Create matrix of lists where i-th element contains 
+# densities predictions for K=i
 PGN_pred <- matrix(list(), 4, 1)
 for(i in 1:4)
 {
@@ -319,8 +337,10 @@ h <- data.frame("values" = rep(test_values,5),
                   
 # build the plot
 ggplot(h, aes(values, predictions)) + geom_point(aes(color = Density)) +
-  theme_minimal() + theme(legend.position = "top", text = element_text(size=26),
-                         legend.title=element_text(size=20), legend.text=element_text(size=28)) +
+  theme_minimal() + theme(legend.position = "top", 
+                          text = element_text(size=26),
+                          legend.title=element_text(size=20), 
+                          legend.text=element_text(size=28)) +
   guides(colour = guide_legend(override.aes = list(size=10))
   )
 
@@ -328,9 +348,10 @@ ggplot(h, aes(values, predictions)) + geom_point(aes(color = Density)) +
 summary(ml_result[[4]])
 }
 \dontshow{
-## Approximate student (t) distribution
+## Approximate Student (t) distribution
 
-# Simulate 250 realizations of student distribution with 5 degrees of freedom
+# Simulate 250 realizations of Student distribution 
+# with 5 degrees of freedom
  set.seed(2)
  n <- 250
 df <- 5
@@ -352,5 +373,6 @@ plot(ml_result)
 A. Gallant and D. W. Nychka (1987) <doi:10.2307/1913241>
 }
 \seealso{
-\link[hpa]{summary.hpaML}, \link[hpa]{predict.hpaML}, \link[hpa]{AIC.hpaML}, \link[hpa]{logLik.hpaML}
+\link[hpa]{summary.hpaML}, \link[hpa]{predict.hpaML}, 
+\link[hpa]{logLik.hpaML}, \link[hpa]{plot.hpaML}
 }

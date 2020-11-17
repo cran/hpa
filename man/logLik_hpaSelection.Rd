@@ -10,5 +10,6 @@ logLik_hpaSelection(object)
 \item{object}{Object of class "hpaSelection"}
 }
 \description{
-This function calculates log-likelihood for "hpaSelection" object
+This function calculates log-likelihood for 
+"hpaSelection" object
 }

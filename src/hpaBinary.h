@@ -20,7 +20,8 @@ Rcpp::List hpaBinary(Rcpp::Formula formula,
 	int boot_iter,
 	bool is_parallel,
 	String opt_type,
-	Rcpp::List opt_control);
+	Rcpp::List opt_control,
+	bool is_validation);
 
 List hpaBinaryLnLOptim_List(Rcpp::NumericVector x0, Rcpp::List hpaBinary_args);
 
@@ -45,8 +46,6 @@ Rcpp::List summary_hpaBinary(Rcpp::List object);
 void print_summary_hpaBinary(Rcpp::List x);
 
 void plot_hpaBinary(Rcpp::List x);
-
-double AIC_hpaBinary(Rcpp::List object, double k);
 
 double logLik_hpaBinary(Rcpp::List object);
 

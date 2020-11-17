@@ -17,7 +17,7 @@ predict.hpaSelection <- function (object,  ...,
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(predict_hpaSelection(object, newdata, 
                        method, is_cond, 
@@ -29,12 +29,12 @@ predict.hpaSelection <- function (object,  ...,
 #' @param object Object of class "hpaSelection"
 #' @template elipsis_Template
 #' @return This function returns the same list as \code{\link[hpa]{hpaSelection}} 
-#' function changing it's class to "summary.hpaSelection".
+#' function changing its class to "summary.hpaSelection".
 summary.hpaSelection <- function (object, ...) 
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(summary_hpaSelection(object))
 }
@@ -46,7 +46,7 @@ print.summary.hpaSelection <- function (x, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(print_summary_hpaSelection(x))
 }
@@ -57,35 +57,22 @@ print.summary.hpaSelection <- function (x, ...)
 #' @param is_outcome logical; if TRUE then function plots the graph for outcome equation random errors. 
 #' Otherwise plot for selection equation random errors will be plotted.
 #' @template elipsis_Template
-#' @return This function returns the list containing random error's expected value \code{errors_exp}
+#' @return This function returns the list containing random error expected value \code{errors_exp}
 #' and variance \code{errors_var} estimates for selection (if \code{is_outcome = TRUE}) or outcome
 #' (if \code{is_outcome = FALSE}) equation.
 plot.hpaSelection <- function (x, y = NULL, ..., is_outcome = TRUE) 
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   if (!is.null(y))
   {
-    warnings("Note that y parameter currently ignored\n")   
+    warning("Note that y parameter currently ignored.")   
   }
   return(plot_hpaSelection(x, is_outcome))
 }
-###
-#' Calculates AIC for "hpaSelection" object
-#' @description This function calculates AIC for "hpaSelection" object
-#' @param object Object of class "hpaSelection"
-#' @template AIC_Template
-#' @template elipsis_Template
-AIC.hpaSelection <- function (object, ..., k = 2) 
-{
-  if (length(list(...)) > 0)
-  {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
-  }
-  return(AIC_hpaSelection(object, k))
-}
+
 ###
 #' Calculates log-likelihood for "hpaSelection" object
 #' @description This function calculates log-likelihood for "hpaSelection" object
@@ -96,7 +83,7 @@ logLik.hpaSelection <- function (object, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   
   lnL <- logLik_hpaSelection(object)
@@ -113,7 +100,7 @@ print.hpaSelection <- function (x, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   cat(paste("It is the object of class",class(x),"\n"))
   cat("It contains the following elements:\n")

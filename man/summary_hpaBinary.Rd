@@ -10,7 +10,9 @@ summary_hpaBinary(object)
 \item{object}{Object of class "hpaBinary"}
 }
 \value{
-This function returns the same list as \code{\link[hpa]{hpaBinary}} function changing it's class to "summary.hpaBinary".
+This function returns the same list as 
+\code{\link[hpa]{hpaBinary}} function changing 
+its class to "summary.hpaBinary".
 }
 \description{
 Summarizing hpaBinary Fits

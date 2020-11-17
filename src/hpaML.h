@@ -5,18 +5,19 @@
 using namespace Rcpp;
 using namespace RcppArmadillo;
 
-Rcpp::List hpaML(Rcpp::NumericMatrix x,
-	Rcpp::NumericVector pol_degrees,
-	Rcpp::NumericVector tr_left,
-	Rcpp::NumericVector tr_right,
-	Rcpp::LogicalVector given_ind,
-	Rcpp::LogicalVector omit_ind,
-	Rcpp::NumericVector x0,
-	Rcpp::String cov_type,
+List hpaML(NumericMatrix x,
+	NumericVector pol_degrees,
+	NumericVector tr_left,
+	NumericVector tr_right,
+	LogicalVector given_ind,
+	LogicalVector omit_ind,
+	NumericVector x0,
+	String cov_type,
 	int bootstrap,
 	bool is_parallel,
-	Rcpp::String opt_type,
-	Rcpp::List opt_control);
+	String opt_type,
+	List opt_control,
+	bool is_validation);
 
 List hpaLnLOptim_List(Rcpp::NumericVector x0, Rcpp::List hpaML_args);
 
@@ -40,8 +41,6 @@ Rcpp::NumericVector mecdf(NumericMatrix x);
 void print_summary_hpaML(Rcpp::List x);
 
 Rcpp::List summary_hpaML(Rcpp::List model);
-
-double AIC_hpaML(Rcpp::List model, double k);
 
 double logLik_hpaML(Rcpp::List model);
 

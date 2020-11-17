@@ -23,7 +23,8 @@ List hpaMain(
 	NumericMatrix cdf_difference,
 	String grad_type,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 NumericVector dhpa(
 	NumericMatrix x,
@@ -34,7 +35,8 @@ NumericVector dhpa(
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 NumericVector phpa(
 	NumericMatrix x,
@@ -45,7 +47,8 @@ NumericVector phpa(
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 NumericVector ihpa(
 	NumericMatrix x_lower,
@@ -57,7 +60,8 @@ NumericVector ihpa(
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 NumericVector ehpa(NumericMatrix x,
 	NumericVector pol_coefficients,
@@ -67,7 +71,8 @@ NumericVector ehpa(NumericMatrix x,
 	NumericVector mean,
 	NumericVector sd,
 	NumericVector expectation_powers,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_validation);
 
 //Truncated distribution
 
@@ -79,7 +84,8 @@ NumericVector etrhpa(
 	NumericVector mean,
 	NumericVector sd,
 	NumericVector expectation_powers,
-	bool is_parallel);
+	bool is_parallel,
+	bool is_validation);
 
 NumericVector dtrhpa(
 	NumericMatrix x,
@@ -92,7 +98,8 @@ NumericVector dtrhpa(
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 NumericVector itrhpa(
 	NumericMatrix x_lower,
@@ -106,7 +113,8 @@ NumericVector itrhpa(
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 NumericMatrix dhpaDiff(
 	NumericMatrix x,
@@ -118,7 +126,8 @@ NumericMatrix dhpaDiff(
 	NumericVector sd,
 	String type,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 NumericMatrix ihpaDiff(
 	NumericMatrix x_lower,
@@ -131,6 +140,7 @@ NumericMatrix ihpaDiff(
 	NumericVector sd,
 	String type,
 	bool is_parallel,
-	bool is_log);
+	bool log,
+	bool is_validation);
 
 #endif

@@ -12,13 +12,16 @@ predict_hpaBinary(object, newdata = NULL, is_prob = TRUE)
 \item{newdata}{An optional data frame (for \link[hpa]{hpaBinary} and
 \link[hpa]{hpaSelection}) or numeric matrix (for \link[hpa]{hpaML})
 in which to look for variables with which to predict. If omitted,
-the original dataframe (matrix) used.}
+the original data frame (matrix) used.}
 
-\item{is_prob}{logical; if TRUE (default) then function returns predicted probabilities. Otherwise latent variable
+\item{is_prob}{logical; if TRUE (default) 
+then function returns predicted probabilities. 
+Otherwise latent variable
 (single index) estimates will be returned.}
 }
 \value{
-This function returns predicted probabilities based on \code{\link[hpa]{hpaBinary}} estimation results.
+This function returns predicted probabilities 
+based on \code{\link[hpa]{hpaBinary}} estimation results.
 }
 \description{
 Predict method for hpaBinary

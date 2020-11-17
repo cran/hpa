@@ -13,15 +13,15 @@
 
 \item{...}{further arguments (currently ignored)}
 
-\item{ind}{= index of random variable for which
+\item{ind}{index of random variable for which
 approximation to marginal density should be plotted}
 
-\item{given}{= numeric vector of the same length as given_ind
+\item{given}{numeric vector of the same length as given_ind
 from \code{x}. Determines conditional values for the corresponding
 components. \code{NA} values in \code{given} vector indicate that
 corresponding random variable is not conditioned. By default all
 \code{given} components are \code{NA} so unconditional marginal
-density will be plotted for the \code{ind}-the random variable.}
+density will be plotted for the \code{ind}-th random variable.}
 }
 \description{
 Plot approximated marginal density using hpaML output

@@ -37,7 +37,7 @@ density functions with mean \code{mean} and standard deviation \code{sd} at
 points given by \code{x_lower}.}
 
 \item{cdf_lower}{non-negative numeric matrix of 
-precalculated normal cumulative distribution functions 
+precalculated normal cumulative distribution functions
 with mean \code{mean} and standard deviation 
 \code{sd} at points given by \code{x_lower}.}
 
@@ -45,67 +45,75 @@ with mean \code{mean} and standard deviation
 density functions with mean \code{mean} and standard deviation \code{sd} at
 points given by \code{x_upper}.}
 
-\item{cdf_upper}{non-negative numeric matrix of 
-precalculated normal cumulative distribution functions 
-with mean \code{mean} and standard deviation 
+\item{cdf_upper}{non-negative numeric matrix of
+precalculated normal cumulative distribution functions
+with mean \code{mean} and standard deviation
 \code{sd} at points given by \code{x_upper}.}
 
 \item{cdf_difference}{non-negative numeric matrix of 
 precalculated \code{cdf_upper-cdf_lower} values.}
 
-\item{return_all_moments}{logical; if \code{TRUE}, function returns the matrix of
-moments of normaly distributed random variable with mean = \code{mean}
-and standard deviation = \code{sd} under lower and upper truncation points
-\code{x_lower} and \code{x_upper} correspondingly. Note that element in i-th row and
-j-th column of this matrix corresponds to the i-th observation (j-1)-th
-order moment.}
+\item{return_all_moments}{logical; if \code{TRUE}, function returns the 
+matrix of moments of normally distributed random variable with 
+mean = \code{mean} and standard deviation = \code{sd} under lower and upper 
+truncation points \code{x_lower} and \code{x_upper} correspondingly. 
+Note that element in i-th row and j-th column of this matrix corresponds to 
+the i-th observation (j-1)-th order moment.}
 
 \item{is_validation}{logical value indicating whether function input 
-arguments should be validated.  Set it to FALSE for slight
-performance boost (default value is TRUE).}
+arguments should be validated.  Set it to \code{FALSE} for slight
+performance boost (default value is \code{TRUE}).}
 
-\item{is_parallel}{if TRUE then multiple cores will be
+\item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
 
-\item{diff_type}{string indicating the type of the argument
-the moment should be differentiated respect to before return.
+\item{diff_type}{string value indicating the type of the argument
+the moment should be differentiated respect to.
 Default value is \code{"NO"} so the moments itself will be returned. 
-Alternative values are \code{"mean"}, \code{"sd"}, \code{x_lower} and
-\code{x_upper}.}
+Alternative values are \code{"mean"} and \code{"sd"}. Also 
+\code{"x_lower"} and \code{"x_upper"} values are available for 
+\code{\link[hpa]{truncatedNormalMoment}}.}
 }
 \value{
-This function returns vector of k-th order moments for normaly distributed random variable
-with mean = \code{mean} and standard deviation = \code{sd} under x_lower
-and x_upper truncation points \code{x_lower} and \code{x_upper} correspondingly.
-If \code{return_all_moments} is \code{TRUE} then see this argument description above for
-output details.
+This function returns vector of k-th order moments for normally 
+distributed random variable with mean = \code{mean} and standard 
+deviation = \code{sd} under \code{x_lower} and \code{x_upper} truncation 
+points \code{x_lower} and \code{x_upper} correspondingly. 
+If \code{return_all_moments} is \code{TRUE} then see this argument 
+description above for output details.
 }
 \description{
-This function recursively calculates k-th order moment of truncated normal distribution.
+This function recursively calculates k-th order moment of 
+truncated normal distribution.
 }
 \details{
 This function estimates \code{k}-th order moment of
-normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd} truncated
-at points given by \code{x_lower} and \code{x_upper}. Note that the function is vectorized so you can provide
-\code{x_lower} and \code{x_upper} as vectors of equal size. If vectors values for \code{x_lower} and \code{x_upper} are not
-provided then their default values will be set to \code{-(.Machine$double.xmin * 0.99)} and \code{(.Machine$double.xmax * 0.99)} correspondingly.
+normal distribution which mean equals to \code{mean} and standard deviation 
+equals to \code{sd} truncated at points given by \code{x_lower} and 
+\code{x_upper}. Note that the function is vectorized so you can provide
+\code{x_lower} and \code{x_upper} as vectors of equal size. If vectors values 
+for \code{x_lower} and \code{x_upper} are not provided then their default 
+values will be set to \code{-(.Machine$double.xmin * 0.99)} and 
+\code{(.Machine$double.xmax * 0.99)} correspondingly.
 
 Note that parameter \code{k} value automatically converts 
 to integer. So passing non-integer \code{k} value will not cause 
 any errors but the calculations will be performed for rounded 
 \code{k} value only.
 
-If you have precaulculated density or cumulative distribution
+If there is precalculated density or cumulative distribution
 functions at standardized truncation points (subtract \code{mean} 
-and then divide by \code{sd}) then provide them through \code{pdf_lower},
-\code{pdf_upper}, \code{cdf_lower} and \code{cdf_upper} arguments in
+and then divide by \code{sd}) then it is possible to provide
+them through \code{pdf_lower}, \code{pdf_upper}, 
+\code{cdf_lower} and \code{cdf_upper} arguments in
 order to decrease number of calculations.
 }
 \examples{
-## Calculate 5-th order moment of three truncated normal random variables (x1,x2,x3) 
-## which mean is 5 and standard deviation is 3. 
-## These random variables truncation points are given as follows:-1<x1<1, 0<x2<2, 1<x3<3.
+## Calculate 5-th order moment of three truncated normal random  
+## variables (x1, x2, x3) which mean is 5 and standard deviation is 3. 
+## These random variables truncation points are given 
+## as follows:-1<x1<1, 0<x2<2, 1<x3<3.
 k <- 3
 x_lower <- c(-1, 0, 1, -Inf, -Inf)
 x_upper <- c(1, 2 , 3, 2, Inf)
@@ -116,12 +124,18 @@ sd <- 5
 truncatedNormalMoment(k, x_lower, x_upper, mean, sd)
 
 # get matrix of (0-5)-th moments (columns) for each variable (rows)
-truncatedNormalMoment(k, x_lower, x_upper, mean, sd, return_all_moments = TRUE)
+truncatedNormalMoment(k, x_lower, x_upper, 
+                      mean, sd, 
+                      return_all_moments = TRUE)
 
 # get the moments derivatives respect to mean
-truncatedNormalMoment(k, x_lower, x_upper, mean, sd, diff_type = "mean")
+truncatedNormalMoment(k, x_lower, x_upper, 
+                      mean, sd, 
+                      diff_type = "mean")
 
 # get the moments derivatives respect to standard deviation
-truncatedNormalMoment(k, x_lower, x_upper, mean, sd, diff_type = "sd")
+truncatedNormalMoment(k, x_lower, x_upper, 
+                      mean, sd, 
+                      diff_type = "sd")
 
 }

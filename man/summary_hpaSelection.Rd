@@ -7,11 +7,13 @@
 summary_hpaSelection(object)
 }
 \arguments{
-\item{object}{Object of class "hpaSelection"}
+\item{object}{Object of class "hpaSelection".}
 }
 \value{
-This function returns the same list as \code{\link[hpa]{hpaSelection}} function changing it's class to "summary.hpaSelection".
+This function returns the same list as 
+\code{\link[hpa]{hpaSelection}} function changing its class 
+to "summary.hpaSelection".
 }
 \description{
-This function summarizing hpaSelection Fits
+This function summarizing hpaSelection Fits.
 }

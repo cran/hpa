@@ -8,7 +8,7 @@ predict.hpaML <- function (object, ..., newdata = matrix(c(0)))
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(predict_hpaML(object, as.matrix(newdata)))
 }
@@ -17,12 +17,12 @@ predict.hpaML <- function (object, ..., newdata = matrix(c(0)))
 #' @param object Object of class "hpaML"
 #' @template elipsis_Template
 #' @return This function returns the same list as \code{\link[hpa]{hpaML}} 
-#' function changing it's class to "summary.hpaML".
+#' function changing its class to "summary.hpaML".
 summary.hpaML <- function (object, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(summary_hpaML(object))
 }
@@ -34,24 +34,11 @@ print.summary.hpaML <- function (x, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(print_summary_hpaML(x))
 }
-###
-#' Calculates AIC for "hpaML" object
-#' @description This function calculates AIC for "hpaML" object
-#' @param object Object of class "hpaML"
-#' @template elipsis_Template
-#' @template AIC_template
-AIC.hpaML <- function (object, ..., k = 2)
-{
-  if (length(list(...)) > 0)
-  {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
-  }
-  return(AIC_hpaML(object))
-}
+
 ###
 #' Calculates log-likelihood for "hpaML" object
 #' @description This function calculates log-likelihood for "hpaML" object
@@ -62,7 +49,7 @@ logLik.hpaML <- function (object, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   
   lnL <- logLik_hpaML(object)
@@ -79,7 +66,7 @@ print.hpaML <- function (x, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   cat(paste("It is the object of class",class(x),"\n"))
   cat("It contains the following elements:\n")
@@ -97,24 +84,25 @@ print.hpaML <- function (x, ...)
 #' Plot approximated marginal density using hpaML output
 #' @param x Object of class "hpaML"
 #' @param y this parameter currently ignored
-#' @param ind = index of random variable for which
+#' @param ind index of random variable for which
 #' approximation to marginal density should be plotted
-#' @param given = numeric vector of the same length as given_ind
+#' @param given numeric vector of the same length as given_ind
 #' from \code{x}. Determines conditional values for the corresponding
 #' components. \code{NA} values in \code{given} vector indicate that
 #' corresponding random variable is not conditioned. By default all
 #' \code{given} components are \code{NA} so unconditional marginal
-#' density will be plotted for the \code{ind}-the random variable.
+#' density will be plotted for the \code{ind}-th random variable.
 #' @template elipsis_Template
 plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL) 
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
+
   if (!is.null(y))
   {
-    warnings("Note that y parameter currently ignored\n")   
+    warning("Note that y parameter currently ignored.")   
   }
   
   # Get the data
@@ -130,7 +118,7 @@ plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL)
 
   if ((ind < 0) | (ind > data_col))
   {
-    stop("data_col argument should be positive integer not greater then number of columns in data\n")   
+    stop("data_col argument should be positive integer not greater then number of columns in data.")   
   }
   
   if(is.null(given))
@@ -139,7 +127,7 @@ plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL)
   } else {
     if (length(given) != data_col)
     {
-      stop("given argument length should be the same as then number of columns in data\n")   
+      stop("given argument length should be the same as then number of columns in data.")   
     }
   }
   
@@ -174,7 +162,10 @@ plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL)
   n <- 10000;
   precise <- (plot_max - plot_min) / n;
 
-  x_vec <- matrix(seq(from = plot_min, by = precise, to = plot_max), ncol = 1)
+  x_vec <- matrix(seq(from = plot_min, 
+                      by = precise, 
+                      to = plot_max), 
+                  ncol = 1)
   
   for (i in 1:data_col)
   {
@@ -189,7 +180,7 @@ plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL)
     }
   }
 
-  # Assign conditional and marginal indeces
+  # Assign conditional and marginal indexes
   given_ind_new <- !is.na(given)
   
   omit_ind_new <- rep(TRUE, data_col)
@@ -198,6 +189,11 @@ plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL)
 
   den <- NULL
   
+  if(class(x_vec)[1] != "matrix")
+  {
+    x_vec <- matrix(x_vec, ncol = 1)
+  }
+
   # Calculate density values
   if (any(is.na(x$tr_left)) | any(is.na(x$tr_right)))
   {
@@ -206,7 +202,8 @@ plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL)
                 pol_degrees = x$pol_degrees,
                 given_ind = given_ind_new,
                 omit_ind = omit_ind_new,
-                mean = x$mean, sd = x$sd)
+                mean = x$mean, sd = x$sd,
+                is_validation = FALSE)
   } else {
     den <- dtrhpa(x = x_vec,
                   pol_coefficients = x$pol_coefficients, 
@@ -215,7 +212,8 @@ plot.hpaML <- function (x, y = NULL, ..., ind = 1, given = NULL)
                   omit_ind = omit_ind_new,
                   mean = x$mean, sd = x$sd,
                   tr_left = x$tr_left,
-                  tr_right = x$tr_right)
+                  tr_right = x$tr_right,
+                  is_validation = FALSE)
   }
 
   # Plot the result

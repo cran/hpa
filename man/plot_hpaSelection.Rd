@@ -9,13 +9,16 @@ plot_hpaSelection(x, is_outcome = TRUE)
 \arguments{
 \item{x}{Object of class "hpaSelection"}
 
-\item{is_outcome}{logical; if TRUE then function plots the graph for outcome equation random errors. 
+\item{is_outcome}{logical; if TRUE then function plots the graph for 
+outcome equation random errors. 
 Otherwise plot for selection equation random errors will be plotted.}
 }
 \value{
-This function returns the list containing random error's expected value \code{errors_exp}
-and variance \code{errors_var} estimates for selection (if \code{is_outcome = TRUE}) or outcome
-(if \code{is_outcome = FALSE}) equation.
+This function returns the list containing random error 
+expected value \code{errors_exp}
+and variance \code{errors_var} estimates for selection 
+(if \code{is_outcome = TRUE}) or outcome (if \code{is_outcome = FALSE}) 
+equation.
 }
 \description{
 Plot hpaSelection random errors approximated density

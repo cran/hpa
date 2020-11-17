@@ -3,6 +3,7 @@
 #include "hpaSelection.h"
 #include "hpaBinary.h"
 #include "polynomialIndex.h"
+#include "hpaValidation.h"
 
 #include <RcppArmadillo.h>
 
@@ -10,93 +11,135 @@ using namespace RcppArmadillo;
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
-
 //' Perform semi-nonparametric selection model estimation
-//' @description This function performs semi-nonparametric selection model estimation
-//' via hermite polynomial densities approximation.
-//' @param selection an object of class "formula" (or one that can be coerced to that class): 
-//' a symbolic description of the selection equation form. All variables in \code{selection}
-//' should be numeric vectors of the same length.
-//' @param outcome an object of class "formula" (or one that can be coerced to that class): 
-//' a symbolic description of the outcome equation form. All variables in \code{outcome}
-//' should be numeric vectors of the same length.
+//' @description This function performs semi-nonparametric (SNP) maximum 
+//' likelihood estimation of sample selection model 
+//' using Hermite polynomial based approximating function proposed by Gallant 
+//' and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details' section to 
+//' get more information concerning this approximating function.
+//' @param selection an object of class "formula" 
+//' (or one that can be coerced to that class): a symbolic description of the 
+//' selection equation form. All variables in \code{selection} should be numeric 
+//' vectors of the same length.
+//' @param outcome an object of class "formula" (or one that can be coerced 
+//' to that class): a symbolic description of the outcome equation form. 
+//' All variables in \code{outcome} should be numeric vectors of the 
+//' same length.
 //' @template data_Template
 //' @template z_K_Template
 //' @template y_K_Template
-//' @param pol_elements number of conditional expectation approximating terms for Newey's method. If \code{is_Newey_loocv} is \code{TRUE}
-//' then determines maximum number of these terms during leave-one-out cross-validation.
-//' @param is_Newey logical; if TRUE then returns only Newey's method estimation results (default value is FALSE).
-//' @param is_Newey_loocv logical; if TRUE then number of conditional expectation approximating terms for Newey's method will be selected
-//' based on leave-one-out cross-validation criteria iterating througt 0 to pol_elements number of these terms.
+//' @param pol_elements number of conditional expectation approximating terms 
+//' for Newey's method. If \code{is_Newey_loocv} is \code{TRUE} then determines 
+//' maximum number of these terms during leave-one-out cross-validation.
+//' @param is_Newey logical; if TRUE then returns only Newey's method 
+//' estimation results (default value is FALSE).
+//' @param is_Newey_loocv logical; if TRUE then number of conditional 
+//' expectation approximating terms for Newey's method will be selected
+//' based on leave-one-out cross-validation criteria iterating through 0 
+//' to pol_elements number of these terms.
 //' @template x0_selection_Template
 //' @template cov_type_Template
 //' @template boot_iter_Template
 //' @template is_parallel_Template
 //' @template opt_type_Template
 //' @template opt_control_Template
-//' @template hpa_likelihood_details_Template
+//' @template is_validation_Template
 //' @template GN_details_Template
-//' @template first_coef_Template
+//' @template hpaSelection_formula_Template
 //' @details Note that coefficient for the first
-//' independent variable in \code{selection} will be fixed to 1.
+//' independent variable in \code{selection} will be fixed
+//' to 1 i.e. \eqn{\gamma_{1}=1}.
 //' @template is_numeric_selection_Template
 //' @template parametric_paradigm_Template
 //' @template Newey_details_Template
-//' @details Note that selection equation dependent variables should have exactly two levels (0 and 1) where "0" states for the selection results 
-//' which leads to unobservable values of dependent variable in outcome equation.
+//' @details Note that selection equation dependent variables should have 
+//' exactly two levels (0 and 1) where "0" states for the selection results 
+//' which leads to unobservable values of dependent variable in 
+//' outcome equation.
 //' @template Mroz_reference_Template
 //' @template optim_details_Template
 //' @template opt_control_details_Template
 //' @template opt_control_details_hpaSelection_Template
 //' @return This function returns an object of class "hpaSelection".\cr \cr
-//' An object of class "hpaSelection" is a list containing the following components:
+//' An object of class "hpaSelection" is a list containing the 
+//' following components:
 //' \itemize{
 //' \item \code{optim} - \code{\link[stats]{optim}} function output. 
 //' If \code{opt_type = "GA"} then it is the list containing 
 //' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 //' \item \code{x1} - numeric vector of distribution parameters estimates.
-//' \item \code{Newey} - list containing information concerning Newey's method estimation results.
-//' \item \code{z_mean} - estimate of the hermite polynomial mean parameter related to selection equation random error marginal distribution.
-//' \item \code{y_mean} - estimate of the hermite polynomial mean parameter related to outcome equation random error marginal distribution.
-//' \item \code{z_sd} - estimate of sd parameter related to selection equation random error marginal distribution.
-//' \item \code{y_sd} - estimate of the hermite polynomial sd parameter related to outcome equation random error marginal distribution.
+//' \item \code{Newey} - list containing information concerning Newey's 
+//' method estimation results.
+//' \item \code{z_mean} - estimate of the hermite polynomial mean parameter 
+//' related to selection equation random error marginal distribution.
+//' \item \code{y_mean} - estimate of the hermite polynomial mean parameter 
+//' related to outcome equation random error marginal distribution.
+//' \item \code{z_sd} - estimate of sd parameter related to selection equation 
+//' random error marginal distribution.
+//' \item \code{y_sd} - estimate of the hermite polynomial sd parameter related 
+//' to outcome equation random error marginal distribution.
 //' \item \code{pol_coefficients} - polynomial coefficients estimates.
-//' \item \code{pol_degrees} - numeric vector which first element is \code{z_K} and the second is \code{y_K}.
+//' \item \code{pol_degrees} - numeric vector which first element is \code{z_K} 
+//' and the second is \code{y_K}.
 //' \item \code{z_coef} - selection equation regression coefficients estimates.
 //' \item \code{y_coef} - outcome equation regression coefficients estimates.
 //' \item \code{cov_mat} - covariance matrix estimate.
 //' \item \code{results} - numeric matrix representing estimation results.
 //' \item \code{log-likelihood} - value of Log-Likelihood function.
-//' \item \code{re_moments} - list which contains information about random errors expectations, variances and correlation.
-//' \item \code{data_List} - list containing model variables and their partiotion according to outcome and selection equations.
+//' \item \code{re_moments} - list which contains information about random 
+//' errors expectations, variances and correlation.
+//' \item \code{data_List} - list containing model variables and their 
+//' partition according to outcome and selection equations.
 //' \item \code{n_obs} - number of observations.
-//' \item \code{ind_List} - list which contains information about parameters indexes in \code{x1}.
-//' \item \code{selection_formula} - the same as \code{selection} input parameter.
+//' \item \code{ind_List} - list which contains information about parameters 
+//' indexes in \code{x1}.
+//' \item \code{selection_formula} - the same as \code{selection} 
+//' input parameter.
 //' \item \code{outcome_formula} - the same as \code{outcome} input parameter.}
-//' Abovementioned list \code{Newey} has class "hpaNewey" and contains the following components:
+//' Abovementioned list \code{Newey} has class "hpaNewey" and contains 
+//' the following components:
 //' \itemize{
-//' \item \code{y_coef} - regression coefficients estimates (except constant term which is part of conditional expectation approximating polynomial).
-//' \item \code{z_coef} - regression coefficients estimates related to selection equation.
+//' \item \code{y_coef} - regression coefficients estimates (except 
+//' constant term which is part of conditional expectation 
+//' approximating polynomial).
+//' \item \code{z_coef} - regression coefficients estimates related 
+//' to selection equation.
 //' \item \code{constant_biased} - biased estimate of constant term.
-//' \item \code{inv_mills} - inverse mills rations estimates and their powers (including constant).
+//' \item \code{inv_mills} - inverse mills ratios estimates and their 
+//' powers (including constant).
 //' \item \code{inv_mills_coef} - coefficients related to \code{inv_mills}.
-//' \item \code{pol_elements} - the same as \code{pol_elements} input parameter. However if \code{is_Newey_loocv} is \code{TRUE}
-//' then it will equal to the number of conditional expectation approximating terms for Newey's method which
-//' minimize leave-one-out cross-validation criteria.
-//' \item \code{outcome_exp_cond} - dependend variable conditional expectation estimates.
-//' \item \code{selection_exp} - selection equation random error expectation estimate.
-//' \item \code{selection_var} - selection equation random error variance estimate.
-//' \item \code{hpaBinaryModel} - object of class "hpaBinary" which contains selection equation estimation results.}
+//' \item \code{pol_elements} - the same as \code{pol_elements} 
+//' input parameter. However if \code{is_Newey_loocv} is \code{TRUE}
+//' then it will equal to the number of conditional expectation 
+//' approximating terms for Newey's method which minimize leave-one-out 
+//' cross-validation criteria.
+//' \item \code{outcome_exp_cond} - dependent variable conditional 
+//' expectation estimates.
+//' \item \code{selection_exp} - selection equation random error 
+//' expectation estimate.
+//' \item \code{selection_var} - selection equation random error 
+//' variance estimate.
+//' \item \code{hpaBinaryModel} - object of class "hpaBinary" which 
+//' contains selection equation estimation results.}
 //' Abovementioned list \code{re_moments} contains the following components:
 //' \itemize{
-//' \item \code{selection_exp} - selection equation random errors expectation estimate.
-//' \item \code{selection_var} - selection equation random errors variance estimate.
-//' \item \code{outcome_exp} - outcome equation random errors expectation estimate.
-//' \item \code{outcome_var} - outcome equation random errors variance estimate.
-//' \item \code{errors_covariance} - outcome and selection equation random errors covariance estimate.
-//' \item \code{rho} - outcome and selection equation random errors correlation estimate.
-//' \item \code{rho_std} - outcome and selection equation random errors correlation estimator standard error estimate.}
-//' @seealso \link[hpa]{summary.hpaSelection}, \link[hpa]{predict.hpaSelection}, \link[hpa]{plot.hpaSelection}, \link[hpa]{AIC.hpaSelection}, \link[hpa]{logLik.hpaSelection}
+//' \item \code{selection_exp} - selection equation random errors 
+//' expectation estimate.
+//' \item \code{selection_var} - selection equation random errors 
+//' variance estimate.
+//' \item \code{outcome_exp} - outcome equation random errors 
+//' expectation estimate.
+//' \item \code{outcome_var} - outcome equation random errors 
+//' variance estimate.
+//' \item \code{errors_covariance} - outcome and selection equation 
+//' random errors covariance estimate.
+//' \item \code{rho} - outcome and selection equation random errors 
+//' correlation estimate.
+//' \item \code{rho_std} - outcome and selection equation random 
+//' errors correlation estimator standard error estimate.}
+//' @seealso \link[hpa]{summary.hpaSelection}, 
+//' \link[hpa]{predict.hpaSelection}, \link[hpa]{plot.hpaSelection}, 
+//' \link[hpa]{logLik.hpaSelection}
 //' @template hpaSelection_examples_Template
 //' @export	
 // [[Rcpp::export]]
@@ -113,28 +156,35 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
   int boot_iter = 100,
   bool is_parallel = false,
   String opt_type = "optim",
-  List opt_control = R_NilValue) 
+  List opt_control = R_NilValue,
+  bool is_validation = true) 
 {
   // Validation
   
-    // Check covariance matrix type
-  if((cov_type != "sandwich") & (cov_type != "sandwichFD") &
-     (cov_type != "bootstrap") & (cov_type != "gop") & 
-     (cov_type != "hessian") & (cov_type != "hessianFD"))
+  if (is_validation)
   {
-    stop("Incorrect cov_type argument value.");
-  }
-  
-    // Check opt_type
-  if((opt_type != "optim") & (opt_type != "GA"))
-  {
-    stop("Incorrect opt_type argument value.");
-  }
-  
-    // Warning concerning large number of bootstrap iterations
-  if(boot_iter > 1000)
-  {
-    warning("Since boot_iter is large estimation may take lot's of time.");
+      // Check covariance matrix type
+    if ((cov_type != "sandwich") & (cov_type != "sandwichFD") &
+        (cov_type != "bootstrap") & (cov_type != "gop") & 
+        (cov_type != "hessian") & (cov_type != "hessianFD"))
+    {
+      stop("Incorrect cov_type argument value.");
+    }
+
+      // Check opt_type
+    if ((opt_type != "optim") & (opt_type != "GA"))
+    {
+      stop("Incorrect opt_type argument value.");
+    }
+    
+      // Warning concerning large number of bootstrap iterations
+    if (boot_iter > 1000)
+    {
+      warning("Since boot_iter is large estimation may take lots of time.");
+    }
+    
+     // Validate polynomial degrees
+     pol_Validate(NumericVector::create(z_K, y_K), NumericVector(0));
   }
   
 	// Load additional environments
@@ -181,13 +231,14 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	}
 
 	// Initialize polynomial structure related values
-	int pol_coefficients_n = (z_K + 1) * (y_K + 1) - 1; // -1 because of restriction a(0...0) = 1
-	NumericVector pol_degrees = {(double)z_K, (double)y_K};
-	NumericMatrix polIndex_mat = polynomialIndex(pol_degrees);
+	int pol_coefficients_n = (z_K + 1) * (y_K + 1) - 1;      // -1 because of 
+	NumericVector pol_degrees = {(double)z_K, (double)y_K};  // restriction a(0...0) = 1
+	NumericMatrix polIndex_mat = polynomialIndex(pol_degrees, 
+                                               false);
 
 	// Working with Data
 
-		// Extract dataframe from formula
+		// Extract data frame from formula
 	DataFrame z_df = model_frame(Rcpp::_["formula"] = selection, 
                                Rcpp::_["data"] = data, 
                                Rcpp::_["na.action"] = na_pass);
@@ -203,7 +254,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	NumericVector z_temporal = z_y_df[0];
 	LogicalVector is_y_unobs = (z_temporal == 0);
 
-	LogicalVector df_cond = is_z_y_df_complete | (is_z_df_complete & is_y_unobs);
+	LogicalVector df_cond = is_z_y_df_complete | 
+	                        (is_z_df_complete & is_y_unobs);
 
 	z_df = subset_R(Rcpp::_["x"] = z_df, 
                   Rcpp::_["subset"] = df_cond);
@@ -247,8 +299,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	if (x0.size() == 0)
 	{
 		x0_given = false;
-		x0 = NumericVector(pol_coefficients_n + 3 + z_d_col + y_d_col); //+2 for mean and sd
-	}
+		x0 = NumericVector(pol_coefficients_n + 3 + z_d_col + y_d_col); // +2 for mean 
+	}                                                                 // and sd
 
 	// Assign indexes
 
@@ -329,9 +381,9 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 				data, z_K,
 				NA_REAL, NA_REAL, 0,
 				true, true, false, NumericVector(0), 
-				"sandwich", 100, is_parallel, "optim", R_NilValue);
+				"sandwich", 100, is_parallel, "optim", R_NilValue, false);
 		} catch (std::exception &ex) {
-			warning("Warning: can't get initial values from semi-nonparametric binary choice model");
+			warning("Can't get initial values from semi-nonparametric binary choice model");
 			forward_exception_to_r(ex);
 		}
 
@@ -356,15 +408,16 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 
 		  // store coefficients
 		NumericVector z_coef_temporal = modelBinary["coefficients"];
-		NumericVector z_coef_ind_temporal = z_coef_temporal[Rcpp::Range(1, z_d_col - 1)];
+		NumericVector z_coef_ind_temporal = z_coef_temporal[Rcpp::Range(
+		                                                    1, z_d_col - 1)];
 		x0[z_coef_ind] = z_coef_ind_temporal;
-		int z_coef_n = z_coef_temporal.size();
 
 		  // get latent variable value
 		NumericVector z_latent = wrap(z_d_arma * as<arma::vec>(z_coef_temporal));
 		double z_exp = modelBinary["errors_exp"];
 		double z_var = modelBinary["errors_var"];
-		NumericVector z_latent_std = (z_latent + z_exp) / sqrt(z_var); // standardize for mills ratio
+		NumericVector z_latent_std = (z_latent + z_exp) / sqrt(z_var); // standardize for
+		                                                               // mills ratio
 
 		  // separate latent variable values depending on the outcome
 		NumericVector z_latent_1 = z_latent[z == 1];
@@ -382,7 +435,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 			z_mills(_, i) = pow(z_mills_base, i);
 		}
 
-		// Newey method with pol_elements approximating polynomial elements
+		// Newey method with pol_elements 
+		// approximating polynomial elements
 		int pol_elements_i = pol_elements;
 
 		if (is_Newey_loocv)
@@ -414,13 +468,18 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 			}
 
 			  // Estimate hat matrix
-			NumericMatrix hat_Newey_cycle = wrap(y_d_1_Newey * inv(y_d_1_Newey.t() * y_d_1_Newey) * y_d_1_Newey.t());
+			NumericMatrix hat_Newey_cycle = wrap(y_d_1_Newey * 
+			                                inv(y_d_1_Newey.t() * y_d_1_Newey) * 
+			                                y_d_1_Newey.t());
 
 			  // Estimate coefficients
-			NumericVector y_coef_Newey_cycle = wrap(inv(y_d_1_Newey.t() * y_d_1_Newey) * y_d_1_Newey.t() * y_1);
+			NumericVector y_coef_Newey_cycle = wrap(inv(y_d_1_Newey.t() * 
+			                                            y_d_1_Newey) * 
+			                                            y_d_1_Newey.t() * y_1);
 
 			  // Estimate loocv
-			NumericVector residuals_ls_cycle = wrap(y_d_1_Newey * as<arma::vec>(y_coef_Newey_cycle) - y_1);
+			NumericVector residuals_ls_cycle = wrap(
+			  y_d_1_Newey * as<arma::vec>(y_coef_Newey_cycle) - y_1);
 
 			float loocv = 0.0;
 
@@ -447,7 +506,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		// Assign values from the cycle
 
 		  // Assign coefficients to x0
-		NumericVector y_coef_Newey_temporal = y_coef_Newey[Rcpp::Range(0, y_d_col - 1)];
+		NumericVector y_coef_Newey_temporal = y_coef_Newey[Rcpp::Range(
+		                                                   0, y_d_col - 1)];
 		x0[y_coef_ind] = y_coef_Newey_temporal;
 		x0[y_mean_ind] = y_coef_Newey[y_d_col];
 
@@ -457,8 +517,11 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		x0[y_sd_ind] = accu(sqrt(residuals_squared / (n_1 - 1 - y_d_col)));
 
 		  // Get additional values for inverse mills ratios
-		arma::mat y_d_1_Newey = arma::mat(n_1, y_d_col + pol_elements_best + 1, arma::fill::ones);
-		NumericVector y_coef_Newey_mills = y_coef_Newey[Rcpp::Range(y_d_col, y_d_col + pol_elements_best)];
+		arma::mat y_d_1_Newey = arma::mat(n_1, y_d_col + pol_elements_best + 
+		                                       1, arma::fill::ones);
+		NumericVector y_coef_Newey_mills = y_coef_Newey[Rcpp::Range(
+		                                                y_d_col, y_d_col + 
+		                                                pol_elements_best)];
 		NumericVector z_expect = NumericVector(n_1);
 
 		for (int i = 0; i < (pol_elements_best + 1); i++)
@@ -472,7 +535,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		Newey = List::create(Named("y_coef") = y_coef_Newey_temporal,
 			Named("z_coef") = z_coef_ind_temporal,
 			Named("constant_biased") = x0[y_mean_ind], 
-			Named("sd_biased") = x0[y_sd_ind], // substitute for cov_mat in future
+			Named("sd_biased") = x0[y_sd_ind],  // substitute for cov_mat in future
 			Named("inv_mills") = z_mills,
 			Named("inv_mills_coef") = y_coef_Newey_mills,
 			Named("pol_elements") = pol_elements_best,
@@ -493,11 +556,13 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		}
 	}
 
-	// Create list for some variables because unfortunately optim function has limitation for the
-	// parameters number (parameters itself not estimated)
+	// Create list for some variables because unfortunately optim 
+	// function has limitation for the parameters number 
+	// (parameters itself not estimated)
 	
-	  // Collect some values to lists since there are limited number of objects could be
-	  // stored in the list in Rcpp
+	  // Collect some values to lists since there are 
+	  // limited number of objects could be stored in 
+	  // the list in Rcpp
 	List ind_List = List::create(
 	  Named("pol_coefficients_ind") = pol_coefficients_ind,
 		Named("z_mean_ind") = z_mean_ind,
@@ -554,7 +619,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	  NumericMatrix ga_suggestions;
 	  if(opt_control.containsElementNamed("suggestions"))
 	  {
-	    ga_suggestions = Rcpp::as<Rcpp::NumericMatrix>(opt_control["suggestions"]);
+	    ga_suggestions = Rcpp::as<Rcpp::NumericMatrix>(
+	      opt_control["suggestions"]);
 	  } else {
 	    ga_suggestions= NumericMatrix(1, x1_n);
 	    ga_suggestions(0,_) = x1;
@@ -741,7 +807,6 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 
 		// calculate log-likelihood, AIC and BIC
 	double lnL = optim_results["value"];
-	double AIC = 2 * (x1_n - lnL);
 
 		// get polynomial coefficients
 	NumericVector pol_coefficients = NumericVector(pol_coefficients_n);
@@ -772,9 +837,11 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	arma::mat J_part;
 	
 	// Estimate jacobian for inner part
-	if ((cov_type == "gop") | (cov_type == "sandwich") | (cov_type == "sandwichFD"))
+	if ((cov_type == "gop") | (cov_type == "sandwich") | 
+      (cov_type == "sandwichFD"))
 	{
-	  NumericMatrix my_jacobian = hpaSelectionLnLOptim_grad_ind(x1, hpaSelection_args);
+	  NumericMatrix my_jacobian = hpaSelectionLnLOptim_grad_ind(
+	    x1, hpaSelection_args);
 	  
 	  J_part = as<arma::mat>(my_jacobian);
 	}
@@ -796,7 +863,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    my_hessian = hpaSelectionLnLOptim_hessian(x1, hpaSelection_args);
 
 	  } catch (std::exception &ex) {
-	    warning("Can't calculate hessian via first difference method. Hessian from the optim function will be used instead.");
+	    warning("Can't calculate Hessian via first difference method. Hessian from the optim function will be used instead.");
 	    forward_exception_to_r(ex);
 	  }
 	  
@@ -869,14 +936,18 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    arma::vec z_1_boot = as<arma::vec>(z_boot[z_boot == 1]);
 	    arma::vec y_1_boot = as<arma::vec>(y_boot[z_boot == 1]);
 	    
-	    arma::mat z_d_1_boot = (as<arma::mat>(z_d_boot)).rows(arma::find(z_arma_boot == 1));
-	    arma::mat y_d_1_boot = (as<arma::mat>(y_d_boot)).rows(arma::find(z_arma_boot == 1));
+	    arma::mat z_d_1_boot = (as<arma::mat>(z_d_boot)).rows(
+	      arma::find(z_arma_boot == 1));
+	    arma::mat y_d_1_boot = (as<arma::mat>(y_d_boot)).rows(
+	      arma::find(z_arma_boot == 1));
 	    
 	    arma::vec z_0_boot = as<arma::vec>(z_boot[z_boot == 0]);
 	    arma::vec y_0_boot = as<arma::vec>(y_boot[z_boot == 0]);
 	    
-	    arma::mat z_d_0_boot = (as<arma::mat>(z_d_boot)).rows(arma::find(z_arma_boot == 0));
-	    arma::mat y_d_0_boot = (as<arma::mat>(y_d_boot)).rows(arma::find(z_arma_boot == 0));
+	    arma::mat z_d_0_boot = (as<arma::mat>(z_d_boot)).rows(
+	      arma::find(z_arma_boot == 0));
+	    arma::mat y_d_0_boot = (as<arma::mat>(y_d_boot)).rows(
+	      arma::find(z_arma_boot == 0));
 	    
 	    // Prepare arguments for bootstrap List
 	    List hpaSelection_args_boot = hpaSelection_args;
@@ -919,7 +990,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 
 	NumericMatrix results(x1_n, 4);
 
-	StringVector results_cols = StringVector::create("Estimate", "Std. Error", "z value", "P(>|z|)");
+	StringVector results_cols = StringVector::create("Estimate", "Std. Error", 
+                                                   "z value", "P(>|z|)");
 	StringVector results_rows(x1_n);
 
 	// polIndex_mat
@@ -929,7 +1001,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	NumericVector F_z_stat;
 	for (int i = 1; i <= pol_coefficients_n; i++)
 	{
-		results_rows[(i - 1)] = "a_" + std::to_string((int)polIndex_mat(0, i)) + "_" + std::to_string((int)polIndex_mat(1, i));
+		results_rows[(i - 1)] = "a_" + std::to_string((int)polIndex_mat(0, i)) + 
+		                        "_" + std::to_string((int)polIndex_mat(1, i));
 		results((i - 1), 0) = pol_coefficients[(i - 1) + 1];
 		results((i - 1), 1) = sqrt(cov_mat((i - 1), (i - 1)));
 		z_stat = results((i - 1), 0) / results((i - 1), 1);
@@ -1019,27 +1092,27 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	NumericVector z_e = ehpa(NumericMatrix(1, 1), pol_coefficients, pol_degrees,
 		LogicalVector{false, false}, LogicalVector{false, false},
 		NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd),
-		NumericVector::create(1, 0), is_parallel);
+		NumericVector::create(1, 0), is_parallel, false);
 
 	NumericVector z_e_2 = ehpa(NumericMatrix(1, 1), pol_coefficients, pol_degrees,
 		LogicalVector{false, false}, LogicalVector{false, false},
 		NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd),
-		NumericVector::create(2, 0), is_parallel);
+		NumericVector::create(2, 0), is_parallel, false);
 
 	NumericVector y_e = ehpa(NumericMatrix(1, 1), pol_coefficients, pol_degrees,
 		LogicalVector{false, false}, LogicalVector{false, false},
 		NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd),
-		NumericVector::create(0, 1), is_parallel);
+		NumericVector::create(0, 1), is_parallel, false);
 
 	NumericVector y_e_2 = ehpa(NumericMatrix(1, 1), pol_coefficients, pol_degrees,
 		LogicalVector{false, false}, LogicalVector{false, false},
 		NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd),
-		NumericVector::create(0, 2), is_parallel);
+		NumericVector::create(0, 2), is_parallel, false);
 
 	NumericVector z_y_e = ehpa(NumericMatrix(1, 1), pol_coefficients, pol_degrees,
 		LogicalVector{false, false}, LogicalVector{false, false},
 		NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd),
-		NumericVector::create(1, 1), is_parallel);
+		NumericVector::create(1, 1), is_parallel, false);
 
 	double z_v = z_e_2[0] - z_e[0] * z_e[0];
 	double y_v = y_e_2[0] - y_e[0] * y_e[0];
@@ -1066,35 +1139,59 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
     NumericVector pol_coefficients_eps = x1_eps[pol_coefficients_ind];
     pol_coefficients_eps.push_front(1);
     
-    NumericVector z_e_eps = ehpa(NumericMatrix(1, 1), pol_coefficients_eps, pol_degrees,
-                             LogicalVector{false, false}, LogicalVector{false, false},
-                             NumericVector::create(x1_eps[z_mean_ind], x1_eps[y_mean_ind]), 
-                             NumericVector::create(z_sd, x1_eps[y_sd_ind]),
-                             NumericVector::create(1, 0), is_parallel);
+    NumericVector z_e_eps = ehpa(NumericMatrix(1, 1), pol_coefficients_eps, 
+                                 pol_degrees,
+                                 LogicalVector{false, false}, 
+                                 LogicalVector{false, false},
+                                 NumericVector::create(x1_eps[z_mean_ind], 
+                                                       x1_eps[y_mean_ind]), 
+                                 NumericVector::create(z_sd, x1_eps[y_sd_ind]),
+                                 NumericVector::create(1, 0), 
+                                 is_parallel, false);
     
-    NumericVector z_e_2_eps = ehpa(NumericMatrix(1, 1), pol_coefficients_eps, pol_degrees,
-                               LogicalVector{false, false}, LogicalVector{false, false},
-                               NumericVector::create(x1_eps[z_mean_ind], x1_eps[y_mean_ind]), 
-                               NumericVector::create(z_sd, x1_eps[y_sd_ind]),
-                               NumericVector::create(2, 0), is_parallel);
+    NumericVector z_e_2_eps = ehpa(NumericMatrix(1, 1), 
+                                   pol_coefficients_eps, pol_degrees,
+                                   LogicalVector{false, false}, 
+                                   LogicalVector{false, false},
+                                   NumericVector::create(x1_eps[z_mean_ind], 
+                                                         x1_eps[y_mean_ind]), 
+                                   NumericVector::create(z_sd, 
+                                                         x1_eps[y_sd_ind]),
+                                   NumericVector::create(2, 0), 
+                                   is_parallel, false);
     
-    NumericVector y_e_eps = ehpa(NumericMatrix(1, 1), pol_coefficients_eps, pol_degrees,
-                             LogicalVector{false, false}, LogicalVector{false, false},
-                             NumericVector::create(x1_eps[z_mean_ind], x1_eps[y_mean_ind]), 
-                             NumericVector::create(z_sd, x1_eps[y_sd_ind]),
-                             NumericVector::create(0, 1), is_parallel);
+    NumericVector y_e_eps = ehpa(NumericMatrix(1, 1), 
+                                 pol_coefficients_eps, pol_degrees,
+                                 LogicalVector{false, false}, 
+                                 LogicalVector{false, false},
+                                 NumericVector::create(x1_eps[z_mean_ind], 
+                                                       x1_eps[y_mean_ind]), 
+                                 NumericVector::create(z_sd, 
+                                                       x1_eps[y_sd_ind]),
+                                 NumericVector::create(0, 1), 
+                                 is_parallel, false);
     
-    NumericVector y_e_2_eps = ehpa(NumericMatrix(1, 1), pol_coefficients_eps, pol_degrees,
-                               LogicalVector{false, false}, LogicalVector{false, false},
-                               NumericVector::create(x1_eps[z_mean_ind], x1_eps[y_mean_ind]), 
-                               NumericVector::create(z_sd, x1_eps[y_sd_ind]),
-                               NumericVector::create(0, 2), is_parallel);
+    NumericVector y_e_2_eps = ehpa(NumericMatrix(1, 1), 
+                                   pol_coefficients_eps, pol_degrees,
+                                   LogicalVector{false, false}, 
+                                   LogicalVector{false, false},
+                                   NumericVector::create(x1_eps[z_mean_ind], 
+                                                         x1_eps[y_mean_ind]), 
+                                   NumericVector::create(z_sd, 
+                                                         x1_eps[y_sd_ind]),
+                                   NumericVector::create(0, 2),
+                                   is_parallel, false);
     
-    NumericVector z_y_e_eps = ehpa(NumericMatrix(1, 1), pol_coefficients_eps, pol_degrees,
-                               LogicalVector{false, false}, LogicalVector{false, false},
-                               NumericVector::create(x1_eps[z_mean_ind], x1_eps[y_mean_ind]), 
-                               NumericVector::create(z_sd, x1_eps[y_sd_ind]),
-                               NumericVector::create(1, 1), is_parallel);
+    NumericVector z_y_e_eps = ehpa(NumericMatrix(1, 1), 
+                                   pol_coefficients_eps, pol_degrees,
+                                   LogicalVector{false, false}, 
+                                   LogicalVector{false, false},
+                                   NumericVector::create(x1_eps[z_mean_ind], 
+                                                         x1_eps[y_mean_ind]), 
+                                   NumericVector::create(z_sd, 
+                                                         x1_eps[y_sd_ind]),
+                                   NumericVector::create(1, 1), 
+                                   is_parallel, false);
     
     double z_v_eps = z_e_2_eps[0] - z_e_eps[0] * z_e_eps[0];
     double y_v_eps = y_e_2_eps[0] - y_e_eps[0] * y_e_eps[0];
@@ -1109,7 +1206,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
   arma::mat rho_grad_arma = as<arma::vec>(rho_grad);
   arma::mat cov_mat_arma = as<arma::mat>(cov_mat);
   
-  NumericVector rho_var = wrap(rho_grad_arma.t() * cov_mat_arma * rho_grad_arma);
+  NumericVector rho_var = wrap(rho_grad_arma.t() * 
+                               cov_mat_arma * rho_grad_arma);
   
   // store moments information
 
@@ -1238,7 +1336,6 @@ List hpaSelectionLnLOptim_List(NumericVector x0, List hpaSelection_args)
   // get number of observations with 0 and 1 values
   int n_obs_0 = z_h_0.size();
   int n_obs_1 = z_h_1.size();
-  int n_obs = n_obs_0 + n_obs_1;
   
   // lower tail negative infinity matrix
   NumericMatrix inf_y_vec_1 = NumericMatrix(n_obs_1, 2);
@@ -1253,33 +1350,34 @@ List hpaSelectionLnLOptim_List(NumericVector x0, List hpaSelection_args)
                                LogicalVector{false, false}, 
                                LogicalVector{true, false},
                                mean, sd,
-                               is_parallel, true);
+                               is_parallel, true, false);
   
   NumericVector lnL_z_y_1 = ihpa(z_y_1, inf_y_vec_1,
                                  pol_coefficients, pol_degrees,
                                  LogicalVector{false, true}, 
                                  LogicalVector{false, false},
                                  mean, sd,
-                                 is_parallel, true);
+                                 is_parallel, true, false);
   
   NumericVector lnL_z_y_0 = ihpa(neg_inf_vec_0, z_y_0,
                                  pol_coefficients, pol_degrees,
                                  LogicalVector{false, false}, 
                                  LogicalVector{false, true},
                                  mean, sd,
-                                 is_parallel, true);
+                                 is_parallel, true, false);
 
   // Initialize list to store calculation results
   double aggregate_y_1 = 0.0;
   double aggregate_z_y_1 = 0.0;
   double aggregate_z_y_0 = 0.0;
   
-  List return_List = List::create(Named("individual_y_1") = NumericVector::create(0.0),
-                                  Named("individual_z_y_1") = NumericVector::create(0.0),
-                                  Named("individual_z_y_0") = NumericVector::create(0.0),
-                                  Named("aggregate_y_1") = aggregate_y_1,
-                                  Named("aggregate_z_y_1") = aggregate_z_y_1,
-                                  Named("aggregate_z_y_0") = aggregate_z_y_0);
+  List return_List = List::create(
+    Named("individual_y_1") = NumericVector::create(0.0),
+    Named("individual_z_y_1") = NumericVector::create(0.0),
+    Named("individual_z_y_0") = NumericVector::create(0.0),
+    Named("aggregate_y_1") = aggregate_y_1,
+    Named("aggregate_z_y_1") = aggregate_z_y_1,
+    Named("aggregate_z_y_0") = aggregate_z_y_0);
   
   // Store calculation results
   return_List["individual_y_1"] = lnL_y_1;
@@ -1316,7 +1414,8 @@ double hpaSelectionLnLOptim(NumericVector x0, List hpaSelection_args)
 }
 
 // Perform log-likelihood function estimation for selection model
-NumericVector hpaSelectionLnLOptim_ind(NumericVector x0, List hpaSelection_args)
+NumericVector hpaSelectionLnLOptim_ind(NumericVector x0, 
+                                       List hpaSelection_args)
 {
   List return_List = hpaSelectionLnLOptim_List(x0, hpaSelection_args);
   
@@ -1438,7 +1537,7 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
                                     LogicalVector{true, false},
                                     mean, sd,
                                     "all",
-                                    is_parallel, true);
+                                    is_parallel, true, false);
   
   NumericMatrix grad_z_y_1 = ihpaDiff(z_y_1, inf_y_vec_1,
                                       pol_coefficients, pol_degrees,
@@ -1446,7 +1545,7 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
                                       LogicalVector{false, false},
                                       mean, sd,
                                       "all",
-                                      is_parallel, true);
+                                      is_parallel, true, false);
   
   NumericMatrix grad_z_y_0 = ihpaDiff(neg_inf_vec_0, z_y_0,
                                       pol_coefficients, pol_degrees,
@@ -1454,7 +1553,7 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
                                       LogicalVector{false, true},
                                       mean, sd,
                                       "all",
-                                      is_parallel, true);
+                                      is_parallel, true, false);
   
   // Store gradients respect to
   
@@ -1512,7 +1611,8 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
 }
 
 // Gradient of likelihood function
-NumericVector hpaSelectionLnLOptim_grad(NumericVector x0, List hpaSelection_args)
+NumericVector hpaSelectionLnLOptim_grad(NumericVector x0,
+                                        List hpaSelection_args)
 {
   List return_List = hpaSelectionLnLOptim_grad_List(x0, hpaSelection_args);
   
@@ -1523,25 +1623,17 @@ NumericVector hpaSelectionLnLOptim_grad(NumericVector x0, List hpaSelection_args
 
 // Perform log-likelihood function hessian estimation 
 // for Phillips-Gallant-Nychka distribution at point
-NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, List hpaSelection_args)
+NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, 
+                                           List hpaSelection_args)
 {
   // Get values from the hpaSelection_args list
   List ind_List = Rcpp::as<Rcpp::List>(hpaSelection_args["ind_List"]);
-  arma::vec z_0 = hpaSelection_args["z_0"];
-  arma::vec z_1 = hpaSelection_args["z_1"];
-  arma::vec y_0 = hpaSelection_args["y_0"];
-  arma::vec y_1 = hpaSelection_args["y_1"];
-  arma::mat z_d_0 = hpaSelection_args["z_d_0"];
-  arma::mat z_d_1 = hpaSelection_args["z_d_1"];
-  arma::mat y_d_0 = hpaSelection_args["y_d_0"];
-  arma::mat y_d_1 = hpaSelection_args["y_d_1"];
   NumericVector pol_degrees = hpaSelection_args["pol_degrees"];
-  bool is_parallel = hpaSelection_args["is_parallel"];
   
   // Get parameters number
   int n_param = x0.size();
   
-  // Initialize vector to store hessian values
+  // Initialize vector to store Hessian values
   NumericMatrix my_hessian = NumericMatrix(n_param, n_param);
   
   // Get values from the list
@@ -1630,9 +1722,11 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0, List hpaSelection_a
 }
 
 // Gradient of likelihood function
-NumericMatrix hpaSelectionLnLOptim_grad_ind(NumericVector x0, List hpaSelection_args)
+NumericMatrix hpaSelectionLnLOptim_grad_ind(NumericVector x0, 
+                                            List hpaSelection_args)
 {
-  List return_List = hpaSelectionLnLOptim_grad_List(x0, hpaSelection_args);
+  List return_List = hpaSelectionLnLOptim_grad_List(x0, 
+                                                    hpaSelection_args);
   
   NumericMatrix return_individual = return_List["individual"];
   
@@ -1640,19 +1734,28 @@ NumericMatrix hpaSelectionLnLOptim_grad_ind(NumericVector x0, List hpaSelection_
 }
 
 //' Predict outcome and selection equation values from hpaSelection model
-//' @description This function predicts outcome and selection equation values from hpaSelection model.
+//' @description This function predicts outcome and selection equation 
+//' values from hpaSelection model.
 //' @param object Object of class "hpaSelection"
-//' @param method string value indicating prediction method based on hermite polynomial approximation "HPA" or Newey method "Newey".
+//' @param method string value indicating prediction method based on hermite 
+//' polynomial approximation "HPA" or Newey method "Newey".
 //' @template newdata_Template
-//' @param is_cond logical; if \code{TRUE} (default) then conditional predictions will be estimated. Otherwise unconditional predictions will be returned.
-//' @param is_outcome logical; if \code{TRUE} (default) then predictions for selection equation will be estimated using "HPA" method.
+//' @param is_cond logical; if \code{TRUE} (default) then conditional 
+//' predictions will be estimated. Otherwise unconditional predictions 
+//' will be returned.
+//' @param is_outcome logical; if \code{TRUE} (default) then predictions 
+//' for selection equation will be estimated using "HPA" method.
 //' Otherwise selection equation predictions (probabilities) will be returned.
-//' @details Note that Newey method can't predict conditional outcomes for zero selection equation value. Conditional probabilities for selection equation
-//' could be estimated only when dependent variable from outcome equation is observable.
-//' @return This function returns the list which structure depends on \code{method}, \code{is_probit} and \code{is_outcome} values.
+//' @details Note that Newey method can't predict conditional outcomes for 
+//' zero selection equation value. Conditional probabilities for 
+//' selection equation could be estimated only when dependent variable from 
+//' outcome equation is observable.
+//' @return This function returns the list which structure depends 
+//' on \code{method}, \code{is_probit} and \code{is_outcome} values.
 //' @export
 // [[Rcpp::export]]
-List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::string method = "HPA", 
+List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, 
+                          std::string method = "HPA", 
 	bool is_cond = true, bool is_outcome = true)
 {
 	List model = object;
@@ -1677,7 +1780,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 	NumericVector pol_degrees = model["pol_degrees"];
 	NumericVector pol_coefficients = model["pol_coefficients"];
 
-		// Check whether new dataframe has been supplied
+		// Check whether new data frame has been supplied
 	Rcpp::Formula selection = model["selection_formula"];
 	Rcpp::Formula outcome = model["outcome_formula"];
 
@@ -1691,9 +1794,13 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 
 	data = newdata;
 
-	// Extract dataframe from formula
-	DataFrame z_df = model_frame(Rcpp::_["formula"] = selection, Rcpp::_["data"] = newdata, Rcpp::_["na.action"] = na_pass);
-	DataFrame y_df = model_frame(Rcpp::_["formula"] = outcome, Rcpp::_["data"] = newdata, Rcpp::_["na.action"] = na_pass);
+	// Extract data frame from formula
+	DataFrame z_df = model_frame(Rcpp::_["formula"] = selection, 
+                               Rcpp::_["data"] = newdata, 
+                               Rcpp::_["na.action"] = na_pass);
+	DataFrame y_df = model_frame(Rcpp::_["formula"] = outcome, 
+                               Rcpp::_["data"] = newdata, 
+                               Rcpp::_["na.action"] = na_pass);
 
 	CharacterVector z_df_names = z_df.names();
 	CharacterVector y_df_names = y_df.names();
@@ -1702,14 +1809,14 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 	int y_df_n = y_df.size();
 
 	// Extract dependent variables
-	NumericVector z = z_df[0]; //it is reference
-	NumericVector y = y_df[0]; //it is reference
+	NumericVector z = z_df[0];       // it is reference
+	NumericVector y = y_df[0];       // it is reference
 
 	int n = z.size();
 
 	// Extract independent variable
-	NumericMatrix z_d(n, z_df_n - 1);//-1 because there is no constant term
-	NumericMatrix y_d(n, y_df_n - 1);//-1 because there is no constant term
+	NumericMatrix z_d(n, z_df_n - 1); // -1 because there is no constant term
+	NumericMatrix y_d(n, y_df_n - 1); // -1 because there is no constant term
 
 	int z_d_col = z_d.ncol();
 	int y_d_col = y_d.ncol();
@@ -1779,16 +1886,18 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 			NumericVector z_prob = 1 - phpa(z_y, pol_coefficients,
 				pol_degrees,
 				LogicalVector::create(false, true), LogicalVector::create(false, false),
-				NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd), 
-				false, false);
+				NumericVector::create(z_mean, y_mean), 
+				                      NumericVector::create(z_sd, y_sd), 
+				false, false, false);
 
 			return(List::create(Named("prob") = z_prob));
 		} else {
 			NumericVector z_prob = 1 - phpa(z_y, pol_coefficients,
 				pol_degrees,
 				LogicalVector::create(false, false), LogicalVector::create(false, true),
-				NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, y_sd), 
-				false, false);
+				NumericVector::create(z_mean, y_mean), NumericVector::create(z_sd, 
+                                                                     y_sd), 
+				false, false, false);
 		  
 			return(List::create(Named("prob") = z_prob));
 		}
@@ -1804,7 +1913,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 				LogicalVector::create(false, false),
 				NumericVector::create(z_mean, y_mean), 
 				NumericVector::create(y_mean, y_sd),
-				NumericVector::create(0, 1), false);
+				NumericVector::create(0, 1), false, false);
 			double errors_exp = errors_exp_vec[0];
 
 			return(List::create(Named("y") = y_uncond + errors_exp));
@@ -1829,7 +1938,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 			pol_coefficients, pol_degrees,
 			NumericVector::create(z_mean, y_mean),
 			NumericVector::create(z_sd, y_sd),
-			NumericVector::create(0, 1), false);
+			NumericVector::create(0, 1), false, false);
 
 		NumericVector y_cond_1 = y_uncond + e_tr_1;
 
@@ -1846,7 +1955,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 			pol_coefficients, pol_degrees,
 			NumericVector::create(z_mean, y_mean),
 			NumericVector::create(z_sd, y_sd),
-			NumericVector::create(0, 1), false);
+			NumericVector::create(0, 1), false, false);
 
 		NumericVector y_cond_0 = y_uncond + e_tr_0;
 
@@ -1890,9 +1999,11 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue, std::stri
 }
 
 //' Summarizing hpaSelection Fits
-//' @description This function summarizing hpaSelection Fits
-//' @param object Object of class "hpaSelection"
-//' @return This function returns the same list as \code{\link[hpa]{hpaSelection}} function changing it's class to "summary.hpaSelection".
+//' @description This function summarizing hpaSelection Fits.
+//' @param object Object of class "hpaSelection".
+//' @return This function returns the same list as 
+//' \code{\link[hpa]{hpaSelection}} function changing its class 
+//' to "summary.hpaSelection".
 //' @export
 // [[Rcpp::export]]
 List summary_hpaSelection(List object) 
@@ -1960,15 +2071,19 @@ void print_summary_hpaSelection(List x) {
 	int df = x1.size();
 
 	double lnL = model["log-likelihood"];
-	double AIC = AIC_hpaSelection(x, 2);
+	double AIC = 2 * (df - lnL);
 	double n_obs_double = n_obs * 1.0;
 	double BIC = log(n_obs_double) * x1.size() - 2 * lnL;
 
 	std::string lnL_string = "Log-Likelihood: " + std::to_string(lnL) + "\n";
 	std::string AIC_string = "AIC: " + std::to_string(AIC) + "\n";
 	std::string BIC_string = "BIC: " + std::to_string(BIC) + "\n";
-	std::string n_obs_string = "Observations: " + std::to_string(n_obs) + " (" + std::to_string(n_censored) + " observed)"+ "\n";
-	std::string df_string = std::to_string(df) + " free parameters (df = " + std::to_string(n_obs - df) + ")" + "\n";
+	std::string n_obs_string = "Observations: " + std::to_string(n_obs) + 
+	                           " (" + std::to_string(n_censored) + 
+	                           " observed)"+ "\n";
+	std::string df_string = std::to_string(df) + 
+	                        " free parameters (df = " + 
+	                        std::to_string(n_obs - df) + ")" + "\n";
 
 	cat_R("--------------------------------------------------------------\n");
 
@@ -2006,10 +2121,12 @@ void print_summary_hpaSelection(List x) {
 	int distr_first = 0;
 	int distr_last = df - z_coef_ind.size() - y_coef_ind.size() - 1;
 	NumericMatrix distr_results = results(Range(distr_first, distr_last), _);
-	StringVector distr_rownames = results_rownames[Range(distr_first, distr_last)];
+	StringVector distr_rownames = results_rownames[Range(distr_first, 
+                                                       distr_last)];
 	rownames(distr_results) = distr_rownames;
 	colnames(distr_results) = results_colnames;
-	print_R(as_table(cbind(distr_results, stars[Range(distr_first, distr_last)])));
+	print_R(as_table(cbind(distr_results, stars[Range(distr_first, 
+                                                    distr_last)])));
 
 	cat_R("---\n");
 
@@ -2033,7 +2150,8 @@ void print_summary_hpaSelection(List x) {
 	double rho_p_value = std::min(rho_F_z_stat[0], 1 - rho_F_z_stat[0]);
 	std::string new_str_rho = "Correlation between random errors (rho) is: \n Estimate: " +
 	                          std::to_string(rho) +
-	                          "\n Standard Error (delta method): " + std::to_string(rho_std) +
+	                          "\n Standard Error (delta method): " + 
+	                          std::to_string(rho_std) +
 	                          "\n p-value (H0: rho = 0): " + 
 	                          std::to_string(rho_p_value) + "\n";
 	cat_R(new_str_rho.c_str());
@@ -2047,11 +2165,14 @@ void print_summary_hpaSelection(List x) {
 
 //' Plot hpaSelection random errors approximated density
 //' @param x Object of class "hpaSelection"
-//' @param is_outcome logical; if TRUE then function plots the graph for outcome equation random errors. 
+//' @param is_outcome logical; if TRUE then function plots the graph for 
+//' outcome equation random errors. 
 //' Otherwise plot for selection equation random errors will be plotted.
-//' @return This function returns the list containing random error's expected value \code{errors_exp}
-//' and variance \code{errors_var} estimates for selection (if \code{is_outcome = TRUE}) or outcome
-//' (if \code{is_outcome = FALSE}) equation.
+//' @return This function returns the list containing random error 
+//' expected value \code{errors_exp}
+//' and variance \code{errors_var} estimates for selection 
+//' (if \code{is_outcome = TRUE}) or outcome (if \code{is_outcome = FALSE}) 
+//' equation.
 //' @export
 // [[Rcpp::export]]
 List plot_hpaSelection(List x, bool is_outcome = true) {
@@ -2096,7 +2217,7 @@ List plot_hpaSelection(List x, bool is_outcome = true) {
 			LogicalVector::create(false, false), 
 			LogicalVector::create(false, false),
 			mean, sd,
-			NumericVector::create(1 - eq_ind, eq_ind), false);
+			NumericVector::create(1 - eq_ind, eq_ind), false, false);
 		double errors_exp = errors_exp_vec[0];
 
 		NumericVector errors_exp_2_vec = ehpa(NumericMatrix(1, 1), 
@@ -2104,7 +2225,7 @@ List plot_hpaSelection(List x, bool is_outcome = true) {
 			LogicalVector::create(false, false), 
 			LogicalVector::create(false, false),
 			mean, sd,
-			NumericVector::create(2 * (1 - eq_ind), 2 * eq_ind), false);
+			NumericVector::create(2 * (1 - eq_ind), 2 * eq_ind), false, false);
 		double errors_exp_2 = errors_exp_2_vec[0];
 
 		double errors_var = errors_exp_2 - (errors_exp * errors_exp);
@@ -2133,7 +2254,7 @@ List plot_hpaSelection(List x, bool is_outcome = true) {
 		pol_coefficients, pol_degrees,
 		LogicalVector::create(false, false),
 		LogicalVector::create(is_outcome, !is_outcome),
-		mean, sd, false, false);
+		mean, sd, false, false, false);
 
 	double den_min = min(den);
 	double den_max = max(den);
@@ -2156,32 +2277,9 @@ List plot_hpaSelection(List x, bool is_outcome = true) {
 	return(moments);
 }
 
-//' Calculates AIC for "hpaSelection" object
-//' @description This function calculates AIC for "hpaSelection" object
-//' @param object Object of class "hpaSelection"
-//' @template AIC_Template
-//' @export
-// [[Rcpp::export]]
-double AIC_hpaSelection(List object, double k = 2) 
-{
-
-  NumericVector x1 = object["x1"];
-  
-	double AIC = 2 * (x1.size() - 
-                    logLik_hpaSelection(object));
-
-	if (k == 2)
-	{
-		return(AIC);
-	}
-
-	AIC += (k - 2) * x1.size();
-
-	return(AIC);
-}
-
 //' Calculates log-likelihood for "hpaSelection" object
-//' @description This function calculates log-likelihood for "hpaSelection" object
+//' @description This function calculates log-likelihood for 
+//' "hpaSelection" object
 //' @param object Object of class "hpaSelection"
 //' @export
 // [[Rcpp::export]]

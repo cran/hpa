@@ -17,7 +17,7 @@
 Otherwise plot for selection equation random errors will be plotted.}
 }
 \value{
-This function returns the list containing random error's expected value \code{errors_exp}
+This function returns the list containing random error expected value \code{errors_exp}
 and variance \code{errors_var} estimates for selection (if \code{is_outcome = TRUE}) or outcome
 (if \code{is_outcome = FALSE}) equation.
 }

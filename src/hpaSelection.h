@@ -15,7 +15,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	Rcpp::NumericVector x0,
 	bool is_Newey_loocv,
 	double z_sd_fixed,
-	bool is_parallel);
+	bool is_parallel,
+  bool is_validation);
 
 Rcpp::List hpaSelectionLnLOptim_List(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
 
@@ -36,8 +37,6 @@ Rcpp::List predict_hpaSelection(Rcpp::List object,
 	std::string method, 
 	bool is_cond,
 	bool is_outcome);
-
-double AIC_hpaSelection(Rcpp::List model, double k);
 
 double logLik_hpaSelection(Rcpp::List model);
 

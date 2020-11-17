@@ -2,7 +2,7 @@
 % Please edit documentation in R/RcppExports.R
 \name{hpaBinary}
 \alias{hpaBinary}
-\title{Perform semi-nonparametric binary choice model estimation}
+\title{Semi-nonparametric single index binary choice model estimation}
 \usage{
 hpaBinary(
   formula,
@@ -19,7 +19,8 @@ hpaBinary(
   boot_iter = 100L,
   is_parallel = FALSE,
   opt_type = "optim",
-  opt_control = NULL
+  opt_control = NULL,
+  is_validation = TRUE
 )
 }
 \arguments{
@@ -31,24 +32,24 @@ vectors of the same length.}
 
 \item{data}{data frame containing the variables in the model.}
 
-\item{K}{non-negative integer representing polynomial degree.}
+\item{K}{non-negative integer representing polynomial degree (order).}
 
 \item{z_mean_fixed}{numeric value for binary choice 
 equation random error density mean parameter. 
-Set it to NA (default) if this parameter should be 
-estimated rather then fixed.}
+Set it to \code{NA} (default) if this parameter should be 
+estimated rather than fixed.}
 
 \item{z_sd_fixed}{numeric value for binary choice equation random error
-density \code{sd} parameter. Set it to NA (default) if this parameter
-should be estimated rather then fixed.}
+density \code{sd} parameter. Set it to \code{NA} (default) if this parameter
+should be estimated rather than fixed.}
 
 \item{z_constant_fixed}{numeric value for binary choice 
-equation constant parameter. Set it to NA (default) if this 
-parameter should be estimated rather then fixed.}
+equation constant parameter. Set it to \code{NA} (default) if this 
+parameter should be estimated rather than fixed.}
 
-\item{is_z_coef_first_fixed}{bool value indicating weather binary 
-equation first independent variable
-coefficient should be fixed (TRUE) or estimated (FALSE).}
+\item{is_z_coef_first_fixed}{logical value indicating whether binary 
+equation first independent variable coefficient should be fixed 
+(\code{TRUE}) or estimated (\code{FALSE}).}
 
 \item{is_x0_probit}{logical; if \code{TRUE} (default) then initial
 points for optimization routine will be
@@ -60,9 +61,9 @@ previous step. In this case function will return the list of models where
 i-th list element correspond to model calculated under K=(i-1).}
 
 \item{x0}{numeric vector of optimization routine initial values.
-Note that \code{x0=c(pol_coefficients[-1], mean, sd, coefficients)}.}
+Note that \code{x0 = c(pol_coefficients[-1], mean, sd, coefficients)}.}
 
-\item{cov_type}{string value determining the type of covariance matrix to be
+\item{cov_type}{character determining the type of covariance matrix to be
 returned and used for summary. If \code{cov_type = "hessian"} then negative
 inverse of Hessian matrix will be applied. If \code{cov_type = "gop"} then
 inverse of Jacobian outer products will be used.
@@ -70,22 +71,22 @@ If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
 with \code{boot_iter} iterations will be used.
 If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
-accurate but computationally demanding central difference Hessian
-approximation will be calculated for the inverse Hessian and sandwich
-estimators correspondingly. Central differences are computed via
+(probably) more accurate but computationally demanding central difference 
+Hessian approximation will be calculated for the inverse Hessian and 
+sandwich estimators correspondingly. Central differences are computed via
 analytically provided gradient. This Hessian matrix estimation approach
-seems to be less accurate then BFGS approximation if polynomial order
+seems to be less accurate than BFGS approximation if polynomial order
 is high (usually greater then 5).}
 
 \item{boot_iter}{the number of bootstrap iterations
 for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
 
-\item{is_parallel}{if TRUE then multiple cores will be
+\item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
 
 \item{opt_type}{string value determining the type of the optimization
-routine to be applied. The default is "optim" meaning that BFGS method
+routine to be applied. The default is \code{"optim"} meaning that BFGS method
 from the \code{\link[stats]{optim}} function will be applied.
 If \code{opt_type = "GA"} then \code{\link[GA]{ga}} function will be
 additionally applied.}
@@ -93,6 +94,10 @@ additionally applied.}
 \item{opt_control}{a list containing arguments to be passed to the
 optimization routine depending on \code{opt_type} argument value.
 Please see details to get additional information.}
+
+\item{is_validation}{logical value indicating whether function input 
+arguments should be validated.  Set it to \code{FALSE} for slight
+performance boost (default value is \code{TRUE}).}
 }
 \value{
 This function returns an object of class "hpaBinary".\cr \cr
@@ -117,71 +122,94 @@ variables and rows are observations.
 \item \code{AIC} - AIC value.
 \item \code{errors_exp} - random error expectation estimate.
 \item \code{errors_var} - random error variance estimate.
-\item \code{dataframe} - dataframe containing variables mentioned in 
+\item \code{dataframe} - data frame containing variables mentioned in 
 \code{formula} without \code{NA} values.
 \item \code{model_Lists} - lists containing information about 
 fixed parameters and parameters indexes in \code{x1}.
 \item \code{n_obs} - number of observations.
-\item \code{z_latent} - latent variable (signle index) estimates.
+\item \code{z_latent} - latent variable (single index) estimates.
 \item \code{z_prob} - probabilities of positive 
 outcome (i.e. 1) estimates.}
 }
 \description{
-This function performs semi-nonparametric single 
-index binary choice model estimation
-via hermite polynomial densities approximation.
+This function performs semi-nonparametric (SNP) maximum 
+likelihood estimation of single index binary choice model 
+using Hermite polynomial based approximating function proposed by Gallant 
+and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details' section to 
+get more information concerning this approximating function.
 }
 \details{
-Semi-nonparametric (SNP) approach has been implemented via
-densities hermite polynomial approximation
-
-Densities hermite polynomial approximation approach has been
+Densities Hermite polynomial approximation approach has been
 proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
-approximate unknown distribution density with hermite polynomial of  
-degree \code{pol_degree}. In this framework hermite polynomial represents
-adjusted (to insure integration to 1) product of squared polynomial and 
-normal distribution densities. Parameters \code{mean} and \code{sd} 
-determine means and standard deviations of normal distribution density
-functions which are parts of this polynomial.
+approximate unknown distribution density with scaled Hermite polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind},
-\code{omit_ind} should have the same length as \code{pol_degrees} 
-parameter.
+Let's use notations introduced in \code{\link[hpa]{dhpa}} 'Details' 
+section. Function \code{\link[hpa]{hpaBinary}} maximizes the following
+quasi log-likelihood function:
+\deqn{\ln L(\gamma_{0}, \gamma, \alpha, \mu, \sigma; x) = 
+\sum\limits_{i:z_{i}=1} 
+\ln\left(\overline{F}_{\xi}
+(-(\gamma_{0}+\gamma x_{i}), \infty;\alpha, \mu, \sigma)\right) +}
+\deqn{
++\sum\limits_{i:z_{i}=0} 
+\ln\left(\overline{F}_{\xi}
+(-\infty, -(\gamma_{0} + x_{i}\gamma);\alpha, \mu, \sigma)\right),}
+
+where (in addition to previously defined notations):
+
+\eqn{x_{i}} - is row vector of regressors derived from \code{data} 
+according to \code{formula}.
+
+\eqn{\gamma} - is column vector of regression coefficients.
+
+\eqn{\gamma_{0}} - constant.
+
+\eqn{z_{i}} - binary (0 or 1) dependent variable defined in \code{formula}.
+
+Note that \eqn{\xi} is one dimensional and \code{K} corresponds
+to \eqn{K=K_{1}}.
 
 The first polynomial coefficient (zero powers) 
-set to 1 for identification reasons.
+set to 1 for identification purposes i.e. \eqn{\alpha_{0}=1}.
 
-Note that if \code{is_z_coef_first_fixed} value is TRUE
-then the coefficient for the first
-independent variable in \code{formula} will be fixed to 1.
+If \code{is_z_coef_first_fixed} is \code{TRUE} then the coefficient for the 
+first independent variable in \code{formula} will be fixed to 1 i.e.
+\eqn{\gamma_{1}=1}.
 
-If \code{is_x0_probit = TRUE} then parameter \code{sd} will be
-scale adjusted in order to provide better initial point for optimization
-routine. Please, extract \code{sd} adjusted value from this function's
-output list.
+If \code{z_mean_fixed} is not \code{NA} then \eqn{\mu}=\code{z_mean_fixed}
+fixed.
+
+If \code{z_sd_fixed} is not \code{NA} then \eqn{\sigma}=\code{z_mean_fixed}
+fixed. However if \code{is_x0_probit = TRUE} then parameter \eqn{\sigma} will 
+be scale adjusted in order to provide better initial point for optimization 
+routine. Please, extract \eqn{\sigma} adjusted value from the function's 
+output list. The same is for \code{z_mean_fixed}.
+
+Rows in \code{data} corresponding to variables mentioned in \code{formula}
+which have at least one \code{NA} value will be ignored.
 
 All variables mentioned in \code{formula} should be numeric vectors.
 
 The function calculates standard errors via sandwich estimator
 and significance levels are reported taking into account quasi maximum
-likelihood estimator (QMLE) asymptotic normality. If ones wants to switch
+likelihood estimator (QMLE) asymptotic normality. If one wants to switch
 from QMLE to semi-nonparametric estimator (SNPE) during hypothesis testing
 then covariance matrix should be estimated again using bootstrap.
 
 This function maximizes (quasi) log-likelihood function 
-via \code{\link[stats]{optim}} function setting it's \code{method} 
+via \code{\link[stats]{optim}} function setting its \code{method} 
 argument to "BFGS". If \code{opt_type = "GA"} then genetic
 algorithm from \code{\link[GA]{ga}} function
-will be additionally (after \code{\link[stats]{optim}} putting it's
-solution (\code{par}) to \code{suggestions} matrix) applied in order to 
+will be additionally (after \code{\link[stats]{optim}} putting its
+solution (\code{par}) into \code{suggestions} matrix) applied in order to 
 perform global optimization. Note that global optimization takes
 much more time (usually minutes but sometimes hours or even days). 
 The number of iterations and population size of the genetic algorithm
 will grow linearly along with the number of estimated parameters. 
-If it is seems that global maximum has not been found than it
+If it seems that global maximum has not been found then it
 is possible to continue the search restarting the function setting 
-it's input argument \code{x0} to \code{x1} output value. Note that
+its input argument \code{x0} to \code{x1} output value. Note that
 if \code{cov_type = "bootstrap"} then \code{\link[GA]{ga}}
 function will not be used for bootstrap iterations since it
 may be extremely time consuming.
@@ -198,18 +226,18 @@ Note that it is possible to set \code{population},
 function. These arguments information reported in \code{\link[GA]{ga}}.
 In order to provide manual values for \code{lower} and \code{upper} bounds
 please follow parameters ordering mentioned above for the
-\code{x0} argument. If these bonds are not provided manually then
+\code{x0} argument. If these bounds are not provided manually then
 they (except those related to the polynomial coefficients)
 will depend on the estimates obtained
 by local optimization via \code{\link[stats]{optim}} function
 (this estimates will be in the middle
 between \code{lower} and \code{upper}).
 Specifically for each sd parameter \code{lower} (\code{upper}) bound
-is 5 times lower (higher) then this
+is 5 times lower (higher) than this
 parameter \code{\link[stats]{optim}} estimate.
-For each mean and regression coefficient parameter it's lower and upper
-bounds deviate from corresponding \code{\link[stats]{optim}} estimate
-by two absolute value of this estimate.
+For each mean and regression coefficient parameter its lower and 
+upper bounds deviate from corresponding \code{\link[stats]{optim}} estimate
+by two absolute values of this estimate.
 Finally, lower and upper bounds for each polynomial
 coefficient are \code{-10} and \code{10} correspondingly (do not depend
 on their \code{\link[stats]{optim}} estimates).
@@ -225,7 +253,7 @@ list("method" = "Nelder-Mead", "poptim" = 0.2, "pressel" = 0.5)},
 \item \code{elitism = 2 + round(popSize * 0.1)}.}
 
 Let's denote by \code{n_reg} the number of regressors
-included to the \code{formula}.
+included into the \code{formula}.
 The arguments \code{popSize} and \code{maxiter} of
 \code{\link[GA]{ga}} function have been set proportional to the number of
 estimated polynomial coefficients and independent variables:
@@ -262,8 +290,10 @@ summary(model_hpa_1)
 pred_hpa_1 <- predict(model_hpa_1)
 
 # Calculate number of correct predictions
-hpa_1_correct_0 <- sum((pred_hpa_1 < 0.5) & (model_hpa_1$dataframe$survived == 0))
-hpa_1_correct_1 <- sum((pred_hpa_1 >= 0.5) & (model_hpa_1$dataframe$survived == 1))
+hpa_1_correct_0 <- sum((pred_hpa_1 < 0.5) & 
+                       (model_hpa_1$dataframe$survived == 0))
+hpa_1_correct_1 <- sum((pred_hpa_1 >= 0.5) & 
+                       (model_hpa_1$dataframe$survived == 1))
 hpa_1_correct <- hpa_1_correct_1 + hpa_1_correct_0
 
 # Plot random errors density approximation
@@ -271,7 +301,7 @@ plot(model_hpa_1)
 }
 
 \donttest{
-## Estimate parameters on data simulated from student distribution
+## Estimate parameters on data simulated from Student distribution
 
 library("mvtnorm")
 set.seed(123)
@@ -281,14 +311,14 @@ n <- 5000
 X <- rmvnorm(n=n, mean = c(0,0), 
 sigma = matrix(c(1,0.5,0.5,1), ncol=2))
 
-# Simulate random errors from student distribution
+# Simulate random errors from Student distribution
 epsilon <- rt(n, 5) * (3 / sqrt(5))
 
 # Calculate latent and observable variables values
 z_star <- 1 + X[, 1] + X[, 2] + epsilon
 z <- as.numeric((z_star > 0))
 
-# Store the results into dataframe
+# Store the results into data frame
 h <- as.data.frame(cbind(z,X))
 names(h) <- c("z", "x1", "x2")
 
@@ -296,7 +326,7 @@ names(h) <- c("z", "x1", "x2")
 model <- hpaBinary(formula = z ~ x1 + x2, data=h, K = 3)
 summary(model)
 
-# Get predicted probabibilities of 1 values
+# Get predicted probabilities of 1 values
 predict(model)
 
 # Plot density function approximation
@@ -304,21 +334,21 @@ plot(model)
 }
 
 \dontshow{
-## Estimate parameters on data simulated from student distribution
+## Estimate parameters on data simulated from Student distribution
 set.seed(777)
 
 # Simulate independent variables from uniform
 n <- 200
 X <- matrix(runif(2 * n, -2, 2), ncol = 2)
 
-# Simulate random errors from student distribution
+# Simulate random errors from Student distribution
 epsilon <- rt(n, 5) * (3 / sqrt(5))
 
 # Calculate latent and observable variables values
 z_star <- 1 + X[, 1] + X[, 2] + epsilon
 z <- as.numeric((z_star > 0))
 
-# Store the results into dataframe
+# Store the results into data frame
 h <- as.data.frame(cbind(z, X))
 names(h) <- c("z", "x1", "x2")
 
@@ -326,7 +356,7 @@ names(h) <- c("z", "x1", "x2")
 model <- hpaBinary(formula = z ~ x1 + x2, data=h, K = 3)
 summary(model)
 
-# Get predicted probabibilities of 1 values
+# Get predicted probabilities of 1 values
 predict(model)
 
 # Plot random errors density approximation
@@ -338,6 +368,6 @@ A. Gallant and D. W. Nychka (1987) <doi:10.2307/1913241>
 }
 \seealso{
 \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, 
-\link[hpa]{plot.hpaBinary}, \link[hpa]{AIC.hpaBinary}, 
+\link[hpa]{plot.hpaBinary},
 \link[hpa]{logLik.hpaBinary}
 }

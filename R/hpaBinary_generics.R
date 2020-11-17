@@ -13,7 +13,7 @@ predict.hpaBinary <- function (object, ...,
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+      warning("Additional arguments passed through ... are ignored.")   
   }
   return(predict_hpaBinary(object, newdata, is_prob))
 }
@@ -22,12 +22,12 @@ predict.hpaBinary <- function (object, ...,
 #' @param object Object of class "hpaBinary"
 #' @template elipsis_Template
 #' @return This function returns the same list as \code{\link[hpa]{hpaBinary}} 
-#' function changing it's class to "summary.hpaBinary".
+#' function changing its class to "summary.hpaBinary".
 summary.hpaBinary <- function (object, ...) 
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(summary_hpaBinary(object))
 }
@@ -39,7 +39,7 @@ print.summary.hpaBinary <- function (x, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   return(print_summary_hpaBinary(x))
 }
@@ -52,29 +52,16 @@ plot.hpaBinary <- function (x, y = NULL, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   if (!is.null(y))
   {
-    warnings("Note that y parameter currently ignored\n")   
+    warning("Note that y parameter currently ignored.")   
   }
 
   return(plot_hpaBinary(x))
 }
-###
-#' Calculates AIC for "hpaBinary" object
-#' @description This function calculates AIC for "hpaBinary" object
-#' @param object Object of class "hpaBinary"
-#' @template elipsis_Template
-#' @template AIC_Template
-AIC.hpaBinary <- function (object, ..., k = 2)
-{
-  if (length(list(...)) > 0)
-  {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
-  }
-  return(AIC_hpaBinary(object, k))
-}
+
 ###
 #' Calculates log-likelihood for "hpaBinary" object
 #' @description This function calculates log-likelihood for "hpaBinary" object
@@ -85,7 +72,7 @@ logLik.hpaBinary <- function (object, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   
   lnL <- logLik_hpaBinary(object)
@@ -102,7 +89,7 @@ print.hpaBinary <- function (x, ...)
 {
   if (length(list(...)) > 0)
   {
-    warnings("Additional arguments passed throught ... are ignored.\n")   
+    warning("Additional arguments passed through ... are ignored.")   
   }
   cat(paste("It is the object of class",class(x),"\n"))
   cat("It contains the following elements:\n")

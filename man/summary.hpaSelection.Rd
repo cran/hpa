@@ -13,7 +13,7 @@
 }
 \value{
 This function returns the same list as \code{\link[hpa]{hpaSelection}} 
-function changing it's class to "summary.hpaSelection".
+function changing its class to "summary.hpaSelection".
 }
 \description{
 This function summarizing hpaSelection Fits

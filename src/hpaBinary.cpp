@@ -2,6 +2,7 @@
 #include "hpaML.h"
 #include "hpaBinary.h"
 #include "polynomialIndex.h"
+#include "hpaValidation.h"
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
 
@@ -11,10 +12,12 @@ using namespace RcppParallel;
 
 // [[Rcpp::depends(RcppArmadillo)]]
 
-//' Perform semi-nonparametric binary choice model estimation
-//' @description This function performs semi-nonparametric single 
-//' index binary choice model estimation
-//' via hermite polynomial densities approximation.
+//' Semi-nonparametric single index binary choice model estimation
+//' @description This function performs semi-nonparametric (SNP) maximum 
+//' likelihood estimation of single index binary choice model 
+//' using Hermite polynomial based approximating function proposed by Gallant 
+//' and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details' section to 
+//' get more information concerning this approximating function.
 //' @template formula_Template
 //' @template data_Template
 //' @template K_Template
@@ -28,17 +31,13 @@ using namespace RcppParallel;
 //' @template is_parallel_Template
 //' @template opt_type_Template
 //' @template opt_control_Template
+//' @template is_validation_Template
 //' @param is_x0_probit logical; if \code{TRUE} (default) then initial
 //' points for optimization routine will be
 //' obtained by probit model estimated via \link[stats]{glm} function.
 //' @template is_sequence_Template
-//' @template hpa_likelihood_details_Template
 //' @template GN_details_Template
-//' @template first_coef_Template
-//' @details Note that if \code{is_z_coef_first_fixed} value is TRUE
-//' then the coefficient for the first
-//' independent variable in \code{formula} will be fixed to 1.
-//' @template sd_adjust_Template
+//' @template hpaBinary_formula_Template
 //' @template is_numeric_Template
 //' @template parametric_paradigm_Template
 //' @template optim_details_Template
@@ -66,16 +65,16 @@ using namespace RcppParallel;
 //' \item \code{AIC} - AIC value.
 //' \item \code{errors_exp} - random error expectation estimate.
 //' \item \code{errors_var} - random error variance estimate.
-//' \item \code{dataframe} - dataframe containing variables mentioned in 
+//' \item \code{dataframe} - data frame containing variables mentioned in 
 //' \code{formula} without \code{NA} values.
 //' \item \code{model_Lists} - lists containing information about 
 //' fixed parameters and parameters indexes in \code{x1}.
 //' \item \code{n_obs} - number of observations.
-//' \item \code{z_latent} - latent variable (signle index) estimates.
+//' \item \code{z_latent} - latent variable (single index) estimates.
 //' \item \code{z_prob} - probabilities of positive 
 //' outcome (i.e. 1) estimates.}
 //' @seealso \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, 
-//' \link[hpa]{plot.hpaBinary}, \link[hpa]{AIC.hpaBinary}, 
+//' \link[hpa]{plot.hpaBinary},
 //' \link[hpa]{logLik.hpaBinary}
 //' @template hpaBinary_examples_Template
 //' @export	
@@ -94,29 +93,36 @@ List hpaBinary(Rcpp::Formula formula,
 	int boot_iter = 100,
 	bool is_parallel = false,
 	String opt_type = "optim",
-	List opt_control = R_NilValue) 
+	List opt_control = R_NilValue,
+	bool is_validation = true)
 {
   // Validation
   
-    // Check covariance matrix type
-  if((cov_type != "sandwich") & (cov_type != "sandwichFD") &
-     (cov_type != "bootstrap") & (cov_type != "gop") & 
-     (cov_type != "hessian") & (cov_type != "hessianFD"))
+  if (is_validation)
   {
-    stop("Incorrect cov_type argument value.");
-  }
-  
-    // Check opt_type
-    if((opt_type != "optim") & (opt_type != "GA"))
+      // Check covariance matrix type
+    if ((cov_type != "sandwich") & (cov_type != "sandwichFD") &
+        (cov_type != "bootstrap") & (cov_type != "gop") & 
+        (cov_type != "hessian") & (cov_type != "hessianFD"))
     {
-      stop("Incorrect opt_type argument value.");
+      stop("Incorrect cov_type argument value.");
     }
     
-    // Warning concerning large number of bootstrap iterations
-    if(boot_iter > 1000)
-    {
-      warning("Since boot_iter is large estimation may take lot's of time.");
-    }
+      // Check opt_type
+      if ((opt_type != "optim") & (opt_type != "GA"))
+      {
+        stop("Incorrect opt_type argument value.");
+      }
+      
+      // Warning concerning large number of bootstrap iterations
+      if (boot_iter > 1000)
+      {
+        warning("Since boot_iter is large estimation may take lots of time.");
+      }
+      
+      // Validate polynomial degree
+      pol_Validate(NumericVector::create(K), NumericVector(0));
+  }
 
 	// Load additional environments
 	
@@ -170,7 +176,7 @@ List hpaBinary(Rcpp::Formula formula,
 
 	// Working with Data
 
-		// Extract dataframe from formula
+		// Extract data frame from formula
 	DataFrame z_df = model_frame(Rcpp::_["formula"] = formula, 
                                Rcpp::_["data"] = data,
                                Rcpp::_["na.action"] = na_pass);
@@ -185,8 +191,9 @@ List hpaBinary(Rcpp::Formula formula,
 	int n_obs = z.size();
 
 		// Extract independent variables (regressors)
-	NumericMatrix z_d(n_obs, (z_df_n - 1) + !is_z_constant_fixed); // -1 because of dependent variable
-	int z_d_col = z_d.ncol();                                      // number of independent variables (regressors)
+	NumericMatrix z_d(n_obs, (z_df_n - 1) + 
+	                  !is_z_constant_fixed); // -1 because of dependent variable
+	int z_d_col = z_d.ncol();                // number of independent variables
 
 	    // The constant located in last column of regressors matrix
 	if (!is_z_constant_fixed)
@@ -194,11 +201,11 @@ List hpaBinary(Rcpp::Formula formula,
 		z_d(_, z_d_col -  1) = (NumericVector(n_obs) + 1); // add constant
 	}
 
-	    // Provide variables from dataframe to regressors matrix
+	    // Provide variables from data frame to regressors matrix
 	for (int i = 0; i < (z_d_col - !is_z_constant_fixed); i++)
 	{
-		z_d(_, i) = as<NumericVector>(z_df[i + 1]); // +1 because of dependent variable
-	}
+		z_d(_, i) = as<NumericVector>(z_df[i + 1]); // +1 because of 
+	}                                             // dependent variable
 
 	// Sequential estimation
 	if (is_sequence)
@@ -209,10 +216,11 @@ List hpaBinary(Rcpp::Formula formula,
                          0, z_mean_fixed, z_sd_fixed, z_constant_fixed, 
                          is_z_coef_first_fixed, true, false, NumericVector(0), 
                          "sandwich", 100, is_parallel, 
-                         opt_type, opt_control);
+                         opt_type, opt_control, false);
 		List results_current = results[0];
 		NumericVector x1 = results_current["x1"];
-		int x0_n = x1.size() + 1; // add one more alpha parameter for the next estimation
+		int x0_n = x1.size() + 1; // add one more alpha parameter 
+		                          // for the next estimation
 		NumericVector x0 = NumericVector(x0_n);
 		for (int i = 1; i < x0_n; i++)
 		{
@@ -304,8 +312,8 @@ List hpaBinary(Rcpp::Formula formula,
 	
 		// for z coefficients
 		// Note that z_d_col may contain or not the constant term
-	int n_coef = z_d_col - is_z_coef_first_fixed; // number of estimated coefficients
-
+	int n_coef = z_d_col - is_z_coef_first_fixed; // number of 
+	                                              // estimated coefficients
 	NumericVector z_coef_ind(n_coef);
 
 	lower_ind = pol_coefficients_n + k;
@@ -336,15 +344,17 @@ List hpaBinary(Rcpp::Formula formula,
 	// Estimate intial values via probit model using glm function
 	if (is_x0_probit & !x0_given)
 	{
-	  // Calculate probit model
-		List model_probit = glm(Rcpp::_["formula"] = formula, Rcpp::_["data"] = data,
-			Rcpp::_["family"] = binomial(Rcpp::_["link"] = "probit"));
+	  // Calculate probit model via glm function
+		List model_probit = glm(Rcpp::_["formula"] = formula, 
+                            Rcpp::_["data"] = data,
+		                        Rcpp::_["family"] = binomial(
+		                          Rcpp::_["link"] = "probit"));
 	  
 	  // Extract probit model coefficients estimates
 		NumericVector glm_coef = model_probit["coefficients"];
 		
 		// Coefficient for the first regressor which under some
-		// Input parameters should be used for adjust purposes
+		// input parameters should be used for adjust purposes
 		double coef_adjust = std::abs(glm_coef[1]);
 		
 		if (is_z_coef_first_fixed)
@@ -368,35 +378,38 @@ List hpaBinary(Rcpp::Formula formula,
 		}
 		if (!is_z_constant_fixed)
 		{
-			x0[z_coef_ind[n_coef - 1]] = glm_coef[0]; // already adjusted because glm_coef = glm_coef / coef_adjust 
-		} else {
+			x0[z_coef_ind[n_coef - 1]] = glm_coef[0]; // already adjusted because 
+		} else {                                    // glm_coef = glm_coef / coef_adjust 
 			if (!is_z_mean_fixed)
 			{
-				x0[z_mean_ind] = glm_coef[0]; // already adjusted because glm_coef = glm_coef / coef_adjust 
-			} else {
+				x0[z_mean_ind] = glm_coef[0];           // already adjusted because 
+			} else {                                  // glm_coef = glm_coef / coef_adjust 
 				z_mean_fixed = glm_coef[0];
 			}
 		}
 		for (int i = 0; i < (n_coef - !is_z_constant_fixed); i++)
 		{
-			x0[z_coef_ind[i]] = glm_coef[i + 1 + is_z_coef_first_fixed]; // + 1 to omit constant assigned previously
+			x0[z_coef_ind[i]] = glm_coef[i + 1 +                // + 1 to omit constant 
+			                            is_z_coef_first_fixed]; // assigned previously
 		}
 	}
 
-	// Create list for some variables because unfortunately optim function has limitation for the
-	// parameters number (parameters itself not estimated)
+	// Create list for some variables because unfortunately in Rcpp optim function 
+	// has limitation for the input arguments number
 	
-	    // Collect some values to lists since there are limited number of objects could be
-	    // stored in the list in Rcpp
-	List is_List = List::create(Named("is_z_coef_first_fixed") = is_z_coef_first_fixed, 
+	    // Collect some values to lists since there are limited 
+	    // number of objects could be stored in the list in Rcpp
+	List is_List = List::create(
+	  Named("is_z_coef_first_fixed") = is_z_coef_first_fixed, 
 		Named("is_z_mean_fixed") = is_z_mean_fixed,
 		Named("is_z_sd_fixed") = is_z_sd_fixed,
 		Named("is_z_constant_fixed") = is_z_constant_fixed);
 	
-	List ind_List = List::create(Named("z_mean_ind") = z_mean_ind, 
-                               Named("z_sd_ind") = z_sd_ind,
-                               Named("z_coef_ind") = z_coef_ind,
-                               Named("pol_coefficients_ind") = pol_coefficients_ind);
+	List ind_List = List::create(
+	  Named("z_mean_ind") = z_mean_ind, 
+    Named("z_sd_ind") = z_sd_ind,
+    Named("z_coef_ind") = z_coef_ind,
+    Named("pol_coefficients_ind") = pol_coefficients_ind);
 
 	List fixed_List = List::create(
 	  Named("z_mean_fixed") = z_mean_fixed,
@@ -421,8 +434,10 @@ List hpaBinary(Rcpp::Formula formula,
 	List PGN_control = List::create(
 	     Named("maxit") = 10000000, 
        Named("fnscale") = -1.0,
-       Named("abstol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01,
-       Named("reltol") = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01);
+       Named("abstol") = std::sqrt(
+         std::numeric_limits<double>::epsilon()) * 0.01,
+       Named("reltol") = std::sqrt(
+         std::numeric_limits<double>::epsilon()) * 0.01);
 	
 	    // Perform the optimization
 	List optim_results = optim(
@@ -671,14 +686,15 @@ List hpaBinary(Rcpp::Formula formula,
 	arma::mat H_part;
 	arma::mat J_part;
 	
-	// Estimate jacobian for the inner part
-	if ((cov_type == "gop") | (cov_type == "sandwich") | (cov_type == "sandwichFD"))
+	// Estimate Jacobian for the inner part
+	if ((cov_type == "gop") | (cov_type == "sandwich") | 
+      (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_jacobian = hpaBinaryLnLOptim_grad_ind(x1, hpaBinary_args);
 	  J_part = as<arma::mat>(my_jacobian);
 	}
 
-	  // Estimate hessian
+	  // Estimate Hessian
 	if ((cov_type == "hessian") | (cov_type == "sandwich"))
 	{
 	  NumericMatrix my_hessian = optim_results["hessian"];
@@ -693,26 +709,26 @@ List hpaBinary(Rcpp::Formula formula,
 	  {
 	    my_hessian = hpaBinaryLnLOptim_hessian(x1, hpaBinary_args);
 	  } catch (std::exception &ex) {
-	    warning("Can't calculate hessian via first difference method. Hessian from the optim function will be used instead.");
+	    warning("Can't calculate Hessian via first difference method. Hessian from the optim function will be used instead.");
 	    forward_exception_to_r(ex);
 	  }
 	  
 	  H_part = as<arma::mat>(my_hessian).i();
 	}
 
-	  // Sandwich estimate
+	  // Sandwich Estimate
 	if ((cov_type == "sandwich") | (cov_type == "sandwichFD"))
 	{
 	  cov_mat = wrap(H_part * (J_part.t() * J_part) * H_part);
 	}
 
-	  // Inverse hessian estimate
+	  // Inverse Hessian estimate
 	if ((cov_type == "hessian") | (cov_type == "hessianFD"))
 	{
 	  cov_mat = wrap(-H_part);
 	}
 
-	  // Gradient outer product estimate
+	  // Gradient (Jacobian) outer product estimate
 	if (cov_type == "gop")
 	{
 	  cov_mat = wrap((J_part.t() * J_part).i());
@@ -754,10 +770,12 @@ List hpaBinary(Rcpp::Formula formula,
 	    
 	    // Divide into 0 and 1 samples
 	    arma::vec z_1_boot = as<arma::vec>(z_boot[z_boot == 1]);
-	    arma::mat z_d_1_boot = (as<arma::mat>(z_d_boot)).rows(arma::find(z_arma_boot == 1));
+	    arma::mat z_d_1_boot = (
+	      as<arma::mat>(z_d_boot)).rows(arma::find(z_arma_boot == 1));
 	    
 	    arma::vec z_0_boot = as<arma::vec>(z_boot[z_boot == 0]);
-	    arma::mat z_d_0_boot = (as<arma::mat>(z_d_boot)).rows(arma::find(z_arma_boot == 0));
+	    arma::mat z_d_0_boot = (
+	      as<arma::mat>(z_d_boot)).rows(arma::find(z_arma_boot == 0));
 	    
 	    // Prepare arguments for bootstrap List
 	    List hpaBinary_args_boot = hpaBinary_args;
@@ -795,10 +813,11 @@ List hpaBinary(Rcpp::Formula formula,
 	// Prepare beautifull results output
 	NumericMatrix results(x1_n, 4);
 	
-	StringVector results_cols = StringVector::create("Estimate", "Std. Error", "z value", "P(>|z|)");
+	StringVector results_cols = StringVector::create("Estimate", "Std. Error", 
+                                                   "z value", "P(>|z|)");
 	StringVector results_rows(x1_n);
 
-	NumericMatrix pol_ind = polynomialIndex(NumericVector::create(K));
+	NumericMatrix pol_ind = polynomialIndex(NumericVector::create(K), false);
 
 		// for alpha
 		for (int i = 0; i < K; i++)
@@ -852,7 +871,7 @@ List hpaBinary(Rcpp::Formula formula,
 		z_df_names.push_back("(Intercept)");
 	}
 	
-	// remove first regressors if it's coefficient is fixed
+	// remove first regressors if its coefficient is fixed
 	if (is_z_coef_first_fixed)
 	{
 	  z_df_names.erase(0);
@@ -861,9 +880,10 @@ List hpaBinary(Rcpp::Formula formula,
 	int coef_start = x1_n - n_coef;
 	for (int i = coef_start; i < x1_n; i++)
 	{
-		results_rows(i) = z_df_names[i - coef_start];//+1 because the first is dependend variable
-		results(i, 0) = z_coef[i - coef_start];
-		results(i, 1) = sqrt(cov_mat(z_coef_ind[i - coef_start], z_coef_ind[i - coef_start]));
+		results_rows(i) = z_df_names[i - coef_start]; // +1 because the first is 
+		results(i, 0) = z_coef[i - coef_start];       // dependent variable
+		results(i, 1) = sqrt(cov_mat(z_coef_ind[i - coef_start], 
+                                 z_coef_ind[i - coef_start]));
 		double z_stat = results(i, 0) / results(i, 1);
 		NumericVector F_z_stat = pnorm(NumericVector::create(z_stat));
 		results(i, 2) = 2 * std::min(F_z_stat[0], 1 - F_z_stat[0]);
@@ -871,15 +891,17 @@ List hpaBinary(Rcpp::Formula formula,
 	}
 
 		// for expectation and variance
-	NumericVector z_e = ehpa(NumericMatrix(1, 1), pol_coefficients, NumericVector::create(K),
+	NumericVector z_e = ehpa(NumericMatrix(1, 1), pol_coefficients, 
+                           NumericVector::create(K),
 		LogicalVector::create(false), LogicalVector::create(false),
 		z_mean, z_sd, 
-		NumericVector::create(1), false);
+		NumericVector::create(1), false, false);
 
-	NumericVector z_e_2 = ehpa(NumericMatrix(1, 1), pol_coefficients, NumericVector::create(K),
+	NumericVector z_e_2 = ehpa(NumericMatrix(1, 1), pol_coefficients, 
+                             NumericVector::create(K),
 		LogicalVector::create(0), LogicalVector::create(0),
 		z_mean, z_sd,
-		NumericVector::create(2), false);
+		NumericVector::create(2), false, false);
 
 		// assign names to the output
 	rownames(results) = results_rows;
@@ -923,7 +945,7 @@ List hpaBinary(Rcpp::Formula formula,
                               		LogicalVector::create(0), 
                               		LogicalVector::create(0),
                               		z_mean, z_sd,
-                              		is_parallel, false);
+                              		is_parallel, false, false);
 	
 	// Estimate marginal effects
 	NumericVector z_den = dhpa(-1.0 * z_latent, pol_coefficients,
@@ -931,7 +953,7 @@ List hpaBinary(Rcpp::Formula formula,
                              LogicalVector::create(0), 
                              LogicalVector::create(0),
                              z_mean, z_sd,
-                             is_parallel, false);
+                             is_parallel, false, false);
 
 	int n_coef_total = z_coef.size();
 	
@@ -986,7 +1008,8 @@ List hpaBinary(Rcpp::Formula formula,
 	return(return_result);
 }
 
-// Perform semi-nonparametric log-likelihood function estimation for binary choice model
+// Perform semi-nonparametric log-likelihood 
+// function estimation for binary choice model
 List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args) 
 {
   // Get values from the hpaBinary_args list
@@ -1084,22 +1107,23 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
                                pol_coefficients, pol_degrees,
                                LogicalVector{false}, LogicalVector{false},
                                z_mean, z_sd, 
-                               is_parallel, true);
+                               is_parallel, true, false);
 	
 	NumericVector lnL_z_0 = phpa(-1.0 * z_h_0,
                                pol_coefficients, pol_degrees,
                                LogicalVector{false}, LogicalVector{false},
                                z_mean, z_sd, 
-                               is_parallel, true);
+                               is_parallel, true, false);
 
 	// Initialize list to store calculation results
 	double aggregate_0 = 0.0;
 	double aggregate_1 = 0.0;
 	
-	List return_List = List::create(Named("individual_1") = NumericVector::create(0.0),
-                                  Named("individual_0") = NumericVector::create(0.0),
-                                  Named("aggregate_1") = aggregate_1,
-                                  Named("aggregate_0") = aggregate_0);
+	List return_List = List::create(
+	  Named("individual_1") = NumericVector::create(0.0),
+    Named("individual_0") = NumericVector::create(0.0),
+    Named("aggregate_1") = aggregate_1,
+    Named("aggregate_0") = aggregate_0);
 	
 	// Store calculation results
 	return_List["individual_1"] = lnL_z_1;
@@ -1113,7 +1137,8 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 	return(return_List);
 }
 
-// Perform semi-nonparametric log-likelihood function estimation for binary choice model
+// Perform semi-nonparametric log-likelihood 
+// function estimation for binary choice model
 double hpaBinaryLnLOptim(NumericVector x0, List hpaBinary_args) 
 {
   List return_List = hpaBinaryLnLOptim_List(x0, hpaBinary_args);
@@ -1130,7 +1155,8 @@ double hpaBinaryLnLOptim(NumericVector x0, List hpaBinary_args)
   return(return_aggregate);
 }
 
-// Perform semi-nonparametric log-likelihood function estimation for binary choice model
+// Perform semi-nonparametric log-likelihood 
+// function estimation for binary choice model
 NumericVector hpaBinaryLnLOptim_ind(NumericVector x0, List hpaBinary_args) 
 { 
    List return_List = hpaBinaryLnLOptim_List(x0, hpaBinary_args);
@@ -1268,17 +1294,19 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
 
   NumericMatrix all_grad_1 = ihpaDiff(-1.0 * z_h_1, inf_vec_1,
                                       pol_coefficients, pol_degrees,
-                                      LogicalVector{false}, LogicalVector{false},
+                                      LogicalVector{false}, 
+                                      LogicalVector{false},
                                       z_mean, z_sd,
                                       "all",
-                                      is_parallel, true);
+                                      is_parallel, true, false);
 
   NumericMatrix all_grad_0 = ihpaDiff(neg_inf_vec_0, -1.0 * z_h_0,
                                       pol_coefficients, pol_degrees,
-                                      LogicalVector{false}, LogicalVector{false},
+                                      LogicalVector{false}, 
+                                      LogicalVector{false},
                                       z_mean, z_sd,
                                       "all",
-                                      is_parallel, true);
+                                      is_parallel, true, false);
 
   // Store gradients respect to
   
@@ -1354,8 +1382,8 @@ NumericVector hpaBinaryLnLOptim_grad(NumericVector x0, List hpaBinary_args)
   return(return_aggregate);
 }
 
-NumericMatrix hpaBinaryLnLOptim_grad_ind(NumericVector x0, List hpaBinary_args) {
-  
+NumericMatrix hpaBinaryLnLOptim_grad_ind(NumericVector x0, List hpaBinary_args) 
+{
   List return_List = hpaBinaryLnLOptim_grad_List(x0, hpaBinary_args);
   
   NumericMatrix return_individual = return_List["individual"];
@@ -1376,7 +1404,6 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   arma::mat z_d_1 = hpaBinary_args["z_d_1"];
   arma::mat z_d_0 = hpaBinary_args["z_d_0"];
   double K = hpaBinary_args["K"];
-  bool is_parallel = hpaBinary_args["is_parallel"];
   
   // Get parameters number
   int n_param = x0.size();
@@ -1388,7 +1415,6 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   bool is_z_coef_first_fixed = is_List["is_z_coef_first_fixed"];
   bool is_z_mean_fixed = is_List["is_z_mean_fixed"];
   bool is_z_sd_fixed = is_List["is_z_sd_fixed"];
-  bool is_z_constant_fixed = is_List["is_z_constant_fixed"];
   
   // Get values from the ind_List
   double z_mean_ind = ind_List["z_mean_ind"];
@@ -1399,7 +1425,6 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   // Get values from the fixed_List
   double z_mean_fixed = fixed_List["z_mean_fixed"];
   double z_sd_fixed = fixed_List["z_sd_fixed"];
-  double z_constant_fixed = fixed_List["z_constant_fixed"];
   
   // Assign estimated parameters values to corresponding vectors
   
@@ -1483,7 +1508,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   }
   
   // Make hessian to be symmetric
-  for (int i = 0; i < n_param; i++) // for each parameter
+  for (int i = 0; i < n_param; i++)   // for each parameter
   {
     for (int j = i; j < n_param; j++) // for each parameter
     {
@@ -1500,14 +1525,17 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
 //' Predict method for hpaBinary
 //' @param object Object of class "hpaBinary"
 //' @template newdata_Template
-//' @param is_prob logical; if TRUE (default) then function returns predicted probabilities. Otherwise latent variable
+//' @param is_prob logical; if TRUE (default) 
+//' then function returns predicted probabilities. 
+//' Otherwise latent variable
 //' (single index) estimates will be returned.
-//' @return This function returns predicted probabilities based on \code{\link[hpa]{hpaBinary}} estimation results.
+//' @return This function returns predicted probabilities 
+//' based on \code{\link[hpa]{hpaBinary}} estimation results.
 //' @export
 // [[Rcpp::export]]
-NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, bool is_prob = true)
+NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, 
+                                bool is_prob = true)
 {
-
 	List model = object;
 
 	// Add additional environments
@@ -1538,7 +1566,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, boo
 		// extract polynomial coefficients
 	double K = pol_coefficients.size() - 1;
 
-	// Check wheather new dataframe has been supplied
+	// Check wheather new data frame has been supplied
 	DataFrame data = newdata;
 
 	if (newdata.size() == 0)
@@ -1552,9 +1580,10 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, boo
 
 	// Working with Data
 
-		// Extract dataframe from formula
+		// Extract data frame from formula
 	Formula formula = model["formula"];
-	DataFrame z_df = model_frame(Rcpp::_["formula"] = formula, Rcpp::_["data"] = data);
+	DataFrame z_df = model_frame(Rcpp::_["formula"] = formula, 
+                               Rcpp::_["data"] = data);
 	int z_df_n = z_df.size();
 
 	// Extract binary dependend variable
@@ -1563,8 +1592,9 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, boo
 	
 	// Extract independend variables
 	
-	NumericMatrix z_d(n_obs, (z_df_n - 1) + !is_z_constant_fixed); // -1 because of dependent variable
-	int z_d_col = z_d.ncol();
+	NumericMatrix z_d(n_obs, (z_df_n - 1) + 
+	                         !is_z_constant_fixed);      // -1 because of 
+	int z_d_col = z_d.ncol();                            // dependent variable
 	
 	  // the constant located in last column of regressors matrix
 	if (!is_z_constant_fixed)
@@ -1575,8 +1605,8 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, boo
 	
 	for (int i = 0; i < (z_d_col - !is_z_constant_fixed); i++)
 	{
-	  z_d(_, i) = as<NumericVector>(z_df[i + 1]); // +1 because of dependent variable
-	}
+	  z_d(_, i) = as<NumericVector>(z_df[i + 1]);        // +1 because of
+	}                                                    // dependent variable
 
 		// Convert to arma
 	arma::vec z_arma = as<arma::vec>(z);
@@ -1604,14 +1634,16 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue, boo
 	NumericVector z_prob = 1 - phpa((-1) * z_latent, pol_coefficients,
 		NumericVector::create(K),
 		LogicalVector::create(0), LogicalVector::create(0),
-		z_mean, z_sd, false, false);
+		z_mean, z_sd, false, false, false);
 
 	return(z_prob);
 }
 
 //' Summarizing hpaBinary Fits
 //' @param object Object of class "hpaBinary"
-//' @return This function returns the same list as \code{\link[hpa]{hpaBinary}} function changing it's class to "summary.hpaBinary".
+//' @return This function returns the same list as 
+//' \code{\link[hpa]{hpaBinary}} function changing 
+//' its class to "summary.hpaBinary".
 //' @export
 // [[Rcpp::export]]
 List summary_hpaBinary(List object)
@@ -1688,7 +1720,9 @@ void print_summary_hpaBinary(List x)
 	std::string AIC_string = "AIC: " + std::to_string(AIC) + "\n";
 	std::string BIC_string = "BIC: " + std::to_string(BIC) + "\n";
 	std::string n_obs_string = "Observations: " + std::to_string(n_obs) + "\n";
-	std::string df_string = std::to_string(df) + " free parameters (df = " + std::to_string(n_obs - df) + ")" + "\n";
+	std::string df_string = std::to_string(df) + 
+	                        " free parameters (df = " + 
+	                        std::to_string(n_obs - df) + ")" + "\n";
 
 	cat_R("--------------------------------------------------------------\n");
 	cat_R("Semi-nonparametric binary choice model estimation\n");
@@ -1722,7 +1756,8 @@ void print_summary_hpaBinary(List x)
 	
 	if (is_z_constant_fixed)
 	{
-		std::string new_str = "(Intercept) = " + std::to_string(z_constant_fixed) + "\n";
+		std::string new_str = "(Intercept) = " + 
+		                      std::to_string(z_constant_fixed) + "\n";
 	  cat_R(new_str.c_str());
 	}
 
@@ -1814,7 +1849,7 @@ void plot_hpaBinary(List x)
 		pol_coefficients, pol_degrees,
 		LogicalVector::create(false),
 		LogicalVector::create(false),
-		mean, sd, false, false);
+		mean, sd, false, false, false);
 
 	double den_min = min(den);
 	double den_max = max(den);
@@ -1829,27 +1864,6 @@ void plot_hpaBinary(List x)
 		Rcpp::_["main"] = "Random Errors Density Approximation Plot",
 		Rcpp::_["xlab"] = "value", 
 		Rcpp::_["ylab"] = "density");
-}
-
-//' Calculates AIC for "hpaBinary" object
-//' @description This function calculates AIC for "hpaBinary" object
-//' @param object Object of class "hpaBinary"
-//' @template AIC_Template
-//' @export	
-// [[Rcpp::export]]
-double AIC_hpaBinary(List object, double k = 2)
-{
-	double AIC = object["AIC"];
-
-	if (k == 2)
-	{
-		return(AIC);
-	}
-
-	NumericVector x1 = object["x1"];
-	AIC += (k - 2) * x1.size();
-
-	return(AIC);
 }
 
 //' Calculates log-likelihood for "hpaBinary" object

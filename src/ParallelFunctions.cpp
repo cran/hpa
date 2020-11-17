@@ -61,8 +61,11 @@ struct ParallelVectorPowStruct : public Worker
   int pow_type;
   
   // initialize with source and destination
-  ParallelVectorPowStruct(const NumericVector input, NumericVector input_powers, NumericVector output, int pow_type) 
-    : input(input), input_powers(input_powers), output(output), pow_type(pow_type) {}
+  ParallelVectorPowStruct(const NumericVector input, 
+                          NumericVector input_powers, 
+                          NumericVector output, int pow_type) 
+    : input(input), input_powers(input_powers), 
+      output(output), pow_type(pow_type) {}
   
   // take the powers of the range of elements requested
   void operator()(std::size_t begin, std::size_t end) {
@@ -130,7 +133,8 @@ NumericVector ParallelVectorPow(NumericVector x, double value = 1)
   std::fill(input_powers.begin(), input_powers.end(), value);
   
   // ParallelVectorPowStruct functor
-  ParallelVectorPowStruct parallelVectorPowStruct(x, input_powers, output, pow_type);
+  ParallelVectorPowStruct parallelVectorPowStruct(x, input_powers, 
+                                                  output, pow_type);
   
   // call parallelFor to do the work
   parallelFor(0, x.length(), parallelVectorPowStruct);
@@ -181,7 +185,7 @@ NumericVector ParallelVectorExp(NumericVector x)
 //' @description Calculate in parallel for each value from vector \code{x} 
 //' density function of normal distribution with 
 //' mean equal to \code{mean} and standard deviation equal to \code{sd}.
-//' @param x vector of quantiles: should be numeric vector, not just double value.
+//' @param x numeric vector of quantiles.
 //' @param mean double value.
 //' @param sd double positive value.
 //' @template is_parallel_Template
@@ -214,7 +218,8 @@ struct ParallelVectorNormalCDFStruct : public Worker
   RVector<double> output;
   
   // initialize with source and destination
-  ParallelVectorNormalCDFStruct(const NumericVector input, NumericVector output) 
+  ParallelVectorNormalCDFStruct(const NumericVector input, 
+                                NumericVector output) 
     : input(input), output(output) {}
   
   // take the normal cdfs of the range of elements requested
@@ -231,7 +236,8 @@ struct ParallelVectorNormalCDFStruct : public Worker
 //' @description Calculate in parallel for each value from vector \code{x} 
 //' distribution function of normal distribution with 
 //' mean equal to \code{mean} and standard deviation equal to \code{sd}.
-//' @param x vector of quantiles: should be numeric vector, not just double value.
+//' @param x vector of quantiles: should be numeric vector,
+//' not just double value.
 //' @param mean double value.
 //' @param sd double positive value.
 //' @template is_parallel_Template
@@ -249,7 +255,8 @@ NumericVector pnorm_parallel(NumericVector x, double mean = 0,
   NumericVector output(x.size());
   
   // ParallelVectorNormalCDFStruct functor
-  ParallelVectorNormalCDFStruct parallelVectorNormalCDFStruct((x - mean) / sd, output);
+  ParallelVectorNormalCDFStruct parallelVectorNormalCDFStruct((x - mean) / 
+                                                              sd, output);
   
   // call parallelFor to do the work
   parallelFor(0, x.length(), parallelVectorNormalCDFStruct);

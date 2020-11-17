@@ -18,17 +18,20 @@ hpaSelection(
   boot_iter = 100L,
   is_parallel = FALSE,
   opt_type = "optim",
-  opt_control = NULL
+  opt_control = NULL,
+  is_validation = TRUE
 )
 }
 \arguments{
-\item{selection}{an object of class "formula" (or one that can be coerced to that class): 
-a symbolic description of the selection equation form. All variables in \code{selection}
-should be numeric vectors of the same length.}
+\item{selection}{an object of class "formula" 
+(or one that can be coerced to that class): a symbolic description of the 
+selection equation form. All variables in \code{selection} should be numeric 
+vectors of the same length.}
 
-\item{outcome}{an object of class "formula" (or one that can be coerced to that class): 
-a symbolic description of the outcome equation form. All variables in \code{outcome}
-should be numeric vectors of the same length.}
+\item{outcome}{an object of class "formula" (or one that can be coerced 
+to that class): a symbolic description of the outcome equation form. 
+All variables in \code{outcome} should be numeric vectors of the 
+same length.}
 
 \item{data}{data frame containing the variables in the model.}
 
@@ -38,18 +41,22 @@ polynomial degree related to selection equation.}
 \item{y_K}{non-negative integer representing polynomial 
 degree related to outcome equation.}
 
-\item{pol_elements}{number of conditional expectation approximating terms for Newey's method. If \code{is_Newey_loocv} is \code{TRUE}
-then determines maximum number of these terms during leave-one-out cross-validation.}
+\item{pol_elements}{number of conditional expectation approximating terms 
+for Newey's method. If \code{is_Newey_loocv} is \code{TRUE} then determines 
+maximum number of these terms during leave-one-out cross-validation.}
 
-\item{is_Newey}{logical; if TRUE then returns only Newey's method estimation results (default value is FALSE).}
+\item{is_Newey}{logical; if TRUE then returns only Newey's method 
+estimation results (default value is FALSE).}
 
 \item{x0}{numeric vector of optimization routine initial values.
-Note that \code{x0=c(pol_coefficients[-1], mean, sd, z_coef, y_coef)}.}
+Note that \code{x0 = c(pol_coefficients[-1], mean, sd, z_coef, y_coef)}.}
 
-\item{is_Newey_loocv}{logical; if TRUE then number of conditional expectation approximating terms for Newey's method will be selected
-based on leave-one-out cross-validation criteria iterating througt 0 to pol_elements number of these terms.}
+\item{is_Newey_loocv}{logical; if TRUE then number of conditional 
+expectation approximating terms for Newey's method will be selected
+based on leave-one-out cross-validation criteria iterating through 0 
+to pol_elements number of these terms.}
 
-\item{cov_type}{string value determining the type of covariance matrix to be
+\item{cov_type}{character determining the type of covariance matrix to be
 returned and used for summary. If \code{cov_type = "hessian"} then negative
 inverse of Hessian matrix will be applied. If \code{cov_type = "gop"} then
 inverse of Jacobian outer products will be used.
@@ -57,22 +64,22 @@ If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
 with \code{boot_iter} iterations will be used.
 If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
-accurate but computationally demanding central difference Hessian
-approximation will be calculated for the inverse Hessian and sandwich
-estimators correspondingly. Central differences are computed via
+(probably) more accurate but computationally demanding central difference 
+Hessian approximation will be calculated for the inverse Hessian and 
+sandwich estimators correspondingly. Central differences are computed via
 analytically provided gradient. This Hessian matrix estimation approach
-seems to be less accurate then BFGS approximation if polynomial order
+seems to be less accurate than BFGS approximation if polynomial order
 is high (usually greater then 5).}
 
 \item{boot_iter}{the number of bootstrap iterations
 for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
 
-\item{is_parallel}{if TRUE then multiple cores will be
+\item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
 
 \item{opt_type}{string value determining the type of the optimization
-routine to be applied. The default is "optim" meaning that BFGS method
+routine to be applied. The default is \code{"optim"} meaning that BFGS method
 from the \code{\link[stats]{optim}} function will be applied.
 If \code{opt_type = "GA"} then \code{\link[GA]{ga}} function will be
 additionally applied.}
@@ -80,113 +87,184 @@ additionally applied.}
 \item{opt_control}{a list containing arguments to be passed to the
 optimization routine depending on \code{opt_type} argument value.
 Please see details to get additional information.}
+
+\item{is_validation}{logical value indicating whether function input 
+arguments should be validated.  Set it to \code{FALSE} for slight
+performance boost (default value is \code{TRUE}).}
 }
 \value{
 This function returns an object of class "hpaSelection".\cr \cr
-An object of class "hpaSelection" is a list containing the following components:
+An object of class "hpaSelection" is a list containing the 
+following components:
 \itemize{
 \item \code{optim} - \code{\link[stats]{optim}} function output. 
 If \code{opt_type = "GA"} then it is the list containing 
 \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 \item \code{x1} - numeric vector of distribution parameters estimates.
-\item \code{Newey} - list containing information concerning Newey's method estimation results.
-\item \code{z_mean} - estimate of the hermite polynomial mean parameter related to selection equation random error marginal distribution.
-\item \code{y_mean} - estimate of the hermite polynomial mean parameter related to outcome equation random error marginal distribution.
-\item \code{z_sd} - estimate of sd parameter related to selection equation random error marginal distribution.
-\item \code{y_sd} - estimate of the hermite polynomial sd parameter related to outcome equation random error marginal distribution.
+\item \code{Newey} - list containing information concerning Newey's 
+method estimation results.
+\item \code{z_mean} - estimate of the hermite polynomial mean parameter 
+related to selection equation random error marginal distribution.
+\item \code{y_mean} - estimate of the hermite polynomial mean parameter 
+related to outcome equation random error marginal distribution.
+\item \code{z_sd} - estimate of sd parameter related to selection equation 
+random error marginal distribution.
+\item \code{y_sd} - estimate of the hermite polynomial sd parameter related 
+to outcome equation random error marginal distribution.
 \item \code{pol_coefficients} - polynomial coefficients estimates.
-\item \code{pol_degrees} - numeric vector which first element is \code{z_K} and the second is \code{y_K}.
+\item \code{pol_degrees} - numeric vector which first element is \code{z_K} 
+and the second is \code{y_K}.
 \item \code{z_coef} - selection equation regression coefficients estimates.
 \item \code{y_coef} - outcome equation regression coefficients estimates.
 \item \code{cov_mat} - covariance matrix estimate.
 \item \code{results} - numeric matrix representing estimation results.
 \item \code{log-likelihood} - value of Log-Likelihood function.
-\item \code{re_moments} - list which contains information about random errors expectations, variances and correlation.
-\item \code{data_List} - list containing model variables and their partiotion according to outcome and selection equations.
+\item \code{re_moments} - list which contains information about random 
+errors expectations, variances and correlation.
+\item \code{data_List} - list containing model variables and their 
+partition according to outcome and selection equations.
 \item \code{n_obs} - number of observations.
-\item \code{ind_List} - list which contains information about parameters indexes in \code{x1}.
-\item \code{selection_formula} - the same as \code{selection} input parameter.
+\item \code{ind_List} - list which contains information about parameters 
+indexes in \code{x1}.
+\item \code{selection_formula} - the same as \code{selection} 
+input parameter.
 \item \code{outcome_formula} - the same as \code{outcome} input parameter.}
-Abovementioned list \code{Newey} has class "hpaNewey" and contains the following components:
+Abovementioned list \code{Newey} has class "hpaNewey" and contains 
+the following components:
 \itemize{
-\item \code{y_coef} - regression coefficients estimates (except constant term which is part of conditional expectation approximating polynomial).
-\item \code{z_coef} - regression coefficients estimates related to selection equation.
+\item \code{y_coef} - regression coefficients estimates (except 
+constant term which is part of conditional expectation 
+approximating polynomial).
+\item \code{z_coef} - regression coefficients estimates related 
+to selection equation.
 \item \code{constant_biased} - biased estimate of constant term.
-\item \code{inv_mills} - inverse mills rations estimates and their powers (including constant).
+\item \code{inv_mills} - inverse mills ratios estimates and their 
+powers (including constant).
 \item \code{inv_mills_coef} - coefficients related to \code{inv_mills}.
-\item \code{pol_elements} - the same as \code{pol_elements} input parameter. However if \code{is_Newey_loocv} is \code{TRUE}
-then it will equal to the number of conditional expectation approximating terms for Newey's method which
-minimize leave-one-out cross-validation criteria.
-\item \code{outcome_exp_cond} - dependend variable conditional expectation estimates.
-\item \code{selection_exp} - selection equation random error expectation estimate.
-\item \code{selection_var} - selection equation random error variance estimate.
-\item \code{hpaBinaryModel} - object of class "hpaBinary" which contains selection equation estimation results.}
+\item \code{pol_elements} - the same as \code{pol_elements} 
+input parameter. However if \code{is_Newey_loocv} is \code{TRUE}
+then it will equal to the number of conditional expectation 
+approximating terms for Newey's method which minimize leave-one-out 
+cross-validation criteria.
+\item \code{outcome_exp_cond} - dependent variable conditional 
+expectation estimates.
+\item \code{selection_exp} - selection equation random error 
+expectation estimate.
+\item \code{selection_var} - selection equation random error 
+variance estimate.
+\item \code{hpaBinaryModel} - object of class "hpaBinary" which 
+contains selection equation estimation results.}
 Abovementioned list \code{re_moments} contains the following components:
 \itemize{
-\item \code{selection_exp} - selection equation random errors expectation estimate.
-\item \code{selection_var} - selection equation random errors variance estimate.
-\item \code{outcome_exp} - outcome equation random errors expectation estimate.
-\item \code{outcome_var} - outcome equation random errors variance estimate.
-\item \code{errors_covariance} - outcome and selection equation random errors covariance estimate.
-\item \code{rho} - outcome and selection equation random errors correlation estimate.
-\item \code{rho_std} - outcome and selection equation random errors correlation estimator standard error estimate.}
+\item \code{selection_exp} - selection equation random errors 
+expectation estimate.
+\item \code{selection_var} - selection equation random errors 
+variance estimate.
+\item \code{outcome_exp} - outcome equation random errors 
+expectation estimate.
+\item \code{outcome_var} - outcome equation random errors 
+variance estimate.
+\item \code{errors_covariance} - outcome and selection equation 
+random errors covariance estimate.
+\item \code{rho} - outcome and selection equation random errors 
+correlation estimate.
+\item \code{rho_std} - outcome and selection equation random 
+errors correlation estimator standard error estimate.}
 }
 \description{
-This function performs semi-nonparametric selection model estimation
-via hermite polynomial densities approximation.
+This function performs semi-nonparametric (SNP) maximum 
+likelihood estimation of sample selection model 
+using Hermite polynomial based approximating function proposed by Gallant 
+and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details' section to 
+get more information concerning this approximating function.
 }
 \details{
-Semi-nonparametric (SNP) approach has been implemented via
-densities hermite polynomial approximation
-
-Densities hermite polynomial approximation approach has been
+Densities Hermite polynomial approximation approach has been
 proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
-approximate unknown distribution density with hermite polynomial of  
-degree \code{pol_degree}. In this framework hermite polynomial represents
-adjusted (to insure integration to 1) product of squared polynomial and 
-normal distribution densities. Parameters \code{mean} and \code{sd} 
-determine means and standard deviations of normal distribution density
-functions which are parts of this polynomial.
+approximate unknown distribution density with scaled Hermite polynomial.
 For more information please refer to the literature listed below.
 
-Parameters \code{mean}, \code{sd}, \code{given_ind},
-\code{omit_ind} should have the same length as \code{pol_degrees} 
-parameter.
+Let's use notations introduced in \code{\link[hpa]{dhpa}} 'Details' 
+section. Function \code{\link[hpa]{hpaSelection}} maximizes the following
+quasi log-likelihood function:
+\deqn{\ln L(\gamma, \beta, \alpha, \mu, \sigma; x) = 
+\sum\limits_{i:z_{i}=1} 
+\ln\left(\overline{F}_{\left(\xi_{1}|\xi_{2}=y_{i}-x_{i}^{o}\beta\right)}
+\left(-\gamma x_{i}^{s}, \infty;\alpha, \mu, \sigma\right)\right)
+f_{\xi_{2}}\left(y_{i}-x_{i}^{o}\beta\right)+}
+\deqn{
++\sum\limits_{i:z_{i}=0} 
+\ln\left(\overline{F}_{\xi}
+(-\infty, -x_{i}^{s}\gamma;\alpha, \mu, \sigma)\right),}
+
+where (in addition to previously defined notations):
+
+\eqn{x_{i}^{s}} - is row vector of selection equation regressors derived  
+from \code{data} according to \code{selection} formula.
+
+\eqn{x_{i}^{o}} - is row vector of outcome equation regressors derived  
+from \code{data} according to \code{outcome} formula.
+
+\eqn{\gamma} - is column vector of selection equation 
+regression coefficients (constant will not be added by default).
+
+\eqn{\beta} - is column vector of outcome equation 
+regression coefficients (constant will not be added by default).
+
+\eqn{z_{i}} - binary (0 or 1) dependent variable defined 
+in \code{selection} formula.
+
+\eqn{y_{i}} - continuous dependent variable defined 
+in \code{outcome} formula.
+
+Note that \eqn{\xi} is two dimensional and \code{z_K} corresponds
+to \eqn{K_{1}} while \code{y_K} determines \eqn{K_{2}}.
 
 The first polynomial coefficient (zero powers) 
-set to 1 for identification reasons.
+set to 1 for identification purposes i.e. \eqn{\alpha_{0}=1}.
+
+Rows in \code{data} corresponding to variables mentioned in \code{selection}
+and \code{outcome} formulas which have at least one \code{NA}
+value will be ignored. The exception is continues dependent variable 
+\eqn{y} which may have \code{NA} values for observation where \eqn{z_{i}=0}.
 
 Note that coefficient for the first
-independent variable in \code{selection} will be fixed to 1.
+independent variable in \code{selection} will be fixed
+to 1 i.e. \eqn{\gamma_{1}=1}.
 
 All variables mentioned in \code{selection} and 
 \code{outcome} should be numeric vectors.
 
 The function calculates standard errors via sandwich estimator
 and significance levels are reported taking into account quasi maximum
-likelihood estimator (QMLE) asymptotic normality. If ones wants to switch
+likelihood estimator (QMLE) asymptotic normality. If one wants to switch
 from QMLE to semi-nonparametric estimator (SNPE) during hypothesis testing
 then covariance matrix should be estimated again using bootstrap.
 
-Initial values for optimization routine are 
-obtained by Newey's method (see the reference below).
+Initial values for optimization routine are obtained by Newey's 
+method (see the reference below). In order to obtain initial values
+via least squares please, set \code{pol_elements = 0}. Initial values for
+the outcome equation are obtained via \code{\link[hpa]{hpaBinary}} function
+setting \code{K} to \code{z_K}.
 
-Note that selection equation dependent variables should have exactly two levels (0 and 1) where "0" states for the selection results 
-which leads to unobservable values of dependent variable in outcome equation.
+Note that selection equation dependent variables should have 
+exactly two levels (0 and 1) where "0" states for the selection results 
+which leads to unobservable values of dependent variable in 
+outcome equation.
 
 This function maximizes (quasi) log-likelihood function 
-via \code{\link[stats]{optim}} function setting it's \code{method} 
+via \code{\link[stats]{optim}} function setting its \code{method} 
 argument to "BFGS". If \code{opt_type = "GA"} then genetic
 algorithm from \code{\link[GA]{ga}} function
-will be additionally (after \code{\link[stats]{optim}} putting it's
-solution (\code{par}) to \code{suggestions} matrix) applied in order to 
+will be additionally (after \code{\link[stats]{optim}} putting its
+solution (\code{par}) into \code{suggestions} matrix) applied in order to 
 perform global optimization. Note that global optimization takes
 much more time (usually minutes but sometimes hours or even days). 
 The number of iterations and population size of the genetic algorithm
 will grow linearly along with the number of estimated parameters. 
-If it is seems that global maximum has not been found than it
+If it seems that global maximum has not been found then it
 is possible to continue the search restarting the function setting 
-it's input argument \code{x0} to \code{x1} output value. Note that
+its input argument \code{x0} to \code{x1} output value. Note that
 if \code{cov_type = "bootstrap"} then \code{\link[GA]{ga}}
 function will not be used for bootstrap iterations since it
 may be extremely time consuming.
@@ -203,18 +281,18 @@ Note that it is possible to set \code{population},
 function. These arguments information reported in \code{\link[GA]{ga}}.
 In order to provide manual values for \code{lower} and \code{upper} bounds
 please follow parameters ordering mentioned above for the
-\code{x0} argument. If these bonds are not provided manually then
+\code{x0} argument. If these bounds are not provided manually then
 they (except those related to the polynomial coefficients)
 will depend on the estimates obtained
 by local optimization via \code{\link[stats]{optim}} function
 (this estimates will be in the middle
 between \code{lower} and \code{upper}).
 Specifically for each sd parameter \code{lower} (\code{upper}) bound
-is 5 times lower (higher) then this
+is 5 times lower (higher) than this
 parameter \code{\link[stats]{optim}} estimate.
-For each mean and regression coefficient parameter it's lower and upper
-bounds deviate from corresponding \code{\link[stats]{optim}} estimate
-by two absolute value of this estimate.
+For each mean and regression coefficient parameter its lower and 
+upper bounds deviate from corresponding \code{\link[stats]{optim}} estimate
+by two absolute values of this estimate.
 Finally, lower and upper bounds for each polynomial
 coefficient are \code{-10} and \code{10} correspondingly (do not depend
 on their \code{\link[stats]{optim}} estimates).
@@ -230,7 +308,7 @@ list("method" = "Nelder-Mead", "poptim" = 0.2, "pressel" = 0.5)},
 \item \code{elitism = 2 + round(popSize * 0.1)}.}
 
 Let's denote by \code{n_reg} the number of regressors
-included to the \code{selection} and \code{outcome} formulas.
+included into the \code{selection} and \code{outcome} formulas.
 The arguments \code{popSize} and \code{maxiter} of
 \code{\link[GA]{ga}} function have been set proportional to the number of
 estimated polynomial coefficients and independent variables:
@@ -265,9 +343,9 @@ model <- hpaSelection(selection = lfp ~ educ + age + I(age ^ 2) +
                                   pol_elements = 3, is_Newey_loocv = TRUE)
 summary(model)
 
-# Plot outcome equation random errorrs density
+# Plot outcome equation random errors density
 plot(model, is_outcome = TRUE)
-# Plot selection equation random errorrs density
+# Plot selection equation random errors density
 plot(model, is_outcome = FALSE)
 }
 
@@ -284,7 +362,10 @@ n <- 1000
 
 # Simulate independent variables
 X_rho <- 0.5
-X_sigma <- matrix(c(1,X_rho,X_rho,X_rho,1,X_rho,X_rho,X_rho,1), ncol=3)
+X_sigma <- matrix(c(1, X_rho, X_rho,
+                    X_rho, 1, X_rho, 
+                    X_rho,X_rho,1), 
+                  ncol=3)
 X <- rmvnorm(n=n, mean = c(0,0,0), 
              sigma = X_sigma)
 
@@ -339,7 +420,9 @@ n <- 100
 
 # Simulate independent variables
 X_rho <- 0.5
-X_sigma <- matrix(c(1,X_rho,X_rho,X_rho,1,X_rho,X_rho,X_rho,1), ncol=3)
+X_sigma <- matrix(c(1, X_rho, X_rho, 
+                    X_rho, 1, X_rho, 
+                    X_rho, X_rho, 1), ncol=3)
 X <- rmvnorm(n=n, mean = c(0,0,0), 
              sigma = X_sigma)
 
@@ -395,5 +478,7 @@ W. K. Newey (2009) <https://doi.org/10.1111/j.1368-423X.2008.00263.x>
 Mroz T. A. (1987) <doi:10.2307/1911029>
 }
 \seealso{
-\link[hpa]{summary.hpaSelection}, \link[hpa]{predict.hpaSelection}, \link[hpa]{plot.hpaSelection}, \link[hpa]{AIC.hpaSelection}, \link[hpa]{logLik.hpaSelection}
+\link[hpa]{summary.hpaSelection}, 
+\link[hpa]{predict.hpaSelection}, \link[hpa]{plot.hpaSelection}, 
+\link[hpa]{logLik.hpaSelection}
 }

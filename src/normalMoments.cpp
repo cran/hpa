@@ -8,24 +8,27 @@ using namespace RcppParallel;
 // [[Rcpp::depends(RcppArmadillo)]]
 
 //' Calculate k-th order moment of normal distribution
-//' @description This function recursively calculates k-th order moment of normal distribution.
+//' @description This function recursively calculates k-th order moment of 
+//' normal distribution.
 //' @param k non-negative integer moment order.
 //' @param mean numeric expected value.
 //' @param sd positive numeric standard deviation.
-//' @param return_all_moments logical; if \code{TRUE}, function returns (k+1)-dimensional numeric
-//' vector of moments of normally distributed random variable with mean = \code{mean}
-//' and standard deviation = \code{sd}. Note that i-th vector's component value corresponds
-//' to the (i-1)-th moment.
+//' @param return_all_moments logical; if \code{TRUE}, function returns 
+//' (k+1)-dimensional numeric vector of moments of normally distributed random 
+//' variable with mean = \code{mean} and standard deviation = \code{sd}. 
+//' Note that i-th vector's component value corresponds to the (i-1)-th moment.
 //' @template is_validation_Template
-//' @param is_central logical; if \code{TRUE}, then central moments will be calculated.
-//' @details This function estimates \code{k}-th order moment of
-//' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd}.\cr
+//' @param is_central logical; if \code{TRUE}, then central moments 
+//' will be calculated.
+//' @details This function estimates \code{k}-th order moment of normal 
+//' distribution which mean equals to \code{mean} and standard deviation 
+//' equals to \code{sd}.\cr
 //' @template k_integer_Template
 //' @template diff_type_Template
 //' @return This function returns \code{k}-th order moment of
-//' normal distribution which mean equals to \code{mean} and standard deviation is \code{sd}.
-//' If \code{return_all_moments} is \code{TRUE} then see this argument description above for
-//' output details.
+//' normal distribution which mean equals to \code{mean} and standard deviation 
+//' is \code{sd}. If \code{return_all_moments} is \code{TRUE} then see this 
+//' argument description above for output details.
 //' @examples
 //' ## Calculate 5-th order moment of normal random variable which
 //' ## mean equals to 3 and standard deviation is 5.
@@ -45,7 +48,8 @@ using namespace RcppParallel;
 //' @export
 // [[Rcpp::export]]
 NumericVector normalMoment(int k = 0,
-						   double mean = 0, double sd = 1,
+						   double mean = 0, 
+						   double sd = 1,
 						   bool return_all_moments = false,
 						   bool is_validation = true,
 						   bool is_central = false,
@@ -85,7 +89,7 @@ NumericVector normalMoment(int k = 0,
 	  mean = 0;
 	}
 	
-	// The zero moment always equals 1 and it's derivatives respect to
+	// The zero moment always equals 1 and its derivatives respect to
 	// mean and sd parameters are 0
 	moments[0] = 1;
 	moments_diff[0] = 0;
@@ -99,7 +103,7 @@ NumericVector normalMoment(int k = 0,
 		return(moments);
 	}
 	
-	// If the moment is 1 it equals to mean, it's derivative respect to
+	// If the moment is 1 it equals to mean, its derivative respect to
 	// mean equals 1 and respect to sd equals zero
 	moments[1] = mean;
 	if(diff_type == "mean")
@@ -178,7 +182,8 @@ NumericVector normalMoment(int k = 0,
 }
 
 //' Calculate k-th order moment of truncated normal distribution
-//' @description This function recursively calculates k-th order moment of truncated normal distribution.
+//' @description This function recursively calculates k-th order moment of 
+//' truncated normal distribution.
 //' @param k non-negative integer moment order.
 //' @param x_lower numeric vector of lower truncation points.
 //' @param x_upper numeric vector of upper truncation points.
@@ -192,28 +197,33 @@ NumericVector normalMoment(int k = 0,
 //' @template is_validation_Template
 //' @template is_parallel_Template
 //' @template diff_type_Template
-//' @param return_all_moments logical; if \code{TRUE}, function returns the matrix of
-//' moments of normaly distributed random variable with mean = \code{mean}
-//' and standard deviation = \code{sd} under lower and upper truncation points
-//' \code{x_lower} and \code{x_upper} correspondingly. Note that element in i-th row and
-//' j-th column of this matrix corresponds to the i-th observation (j-1)-th
-//' order moment.
+//' @param return_all_moments logical; if \code{TRUE}, function returns the 
+//' matrix of moments of normally distributed random variable with 
+//' mean = \code{mean} and standard deviation = \code{sd} under lower and upper 
+//' truncation points \code{x_lower} and \code{x_upper} correspondingly. 
+//' Note that element in i-th row and j-th column of this matrix corresponds to 
+//' the i-th observation (j-1)-th order moment.
 //' @details This function estimates \code{k}-th order moment of
-//' normal distribution which mean equals to \code{mean} and standard deviation equals to \code{sd} truncated
-//' at points given by \code{x_lower} and \code{x_upper}. Note that the function is vectorized so you can provide
-//' \code{x_lower} and \code{x_upper} as vectors of equal size. If vectors values for \code{x_lower} and \code{x_upper} are not
-//' provided then their default values will be set to \code{-(.Machine$double.xmin * 0.99)} and \code{(.Machine$double.xmax * 0.99)} correspondingly.
+//' normal distribution which mean equals to \code{mean} and standard deviation 
+//' equals to \code{sd} truncated at points given by \code{x_lower} and 
+//' \code{x_upper}. Note that the function is vectorized so you can provide
+//' \code{x_lower} and \code{x_upper} as vectors of equal size. If vectors values 
+//' for \code{x_lower} and \code{x_upper} are not provided then their default 
+//' values will be set to \code{-(.Machine$double.xmin * 0.99)} and 
+//' \code{(.Machine$double.xmax * 0.99)} correspondingly.
 //' @template k_integer_Template
 //' @template pdf_cdf_precalculated_Template
-//' @return This function returns vector of k-th order moments for normaly distributed random variable
-//' with mean = \code{mean} and standard deviation = \code{sd} under x_lower
-//' and x_upper truncation points \code{x_lower} and \code{x_upper} correspondingly.
-//' If \code{return_all_moments} is \code{TRUE} then see this argument description above for
-//' output details.
+//' @return This function returns vector of k-th order moments for normally 
+//' distributed random variable with mean = \code{mean} and standard 
+//' deviation = \code{sd} under \code{x_lower} and \code{x_upper} truncation 
+//' points \code{x_lower} and \code{x_upper} correspondingly. 
+//' If \code{return_all_moments} is \code{TRUE} then see this argument 
+//' description above for output details.
 //' @examples
-//' ## Calculate 5-th order moment of three truncated normal random variables (x1,x2,x3) 
-//' ## which mean is 5 and standard deviation is 3. 
-//' ## These random variables truncation points are given as follows:-1<x1<1, 0<x2<2, 1<x3<3.
+//' ## Calculate 5-th order moment of three truncated normal random  
+//' ## variables (x1, x2, x3) which mean is 5 and standard deviation is 3. 
+//' ## These random variables truncation points are given 
+//' ## as follows:-1<x1<1, 0<x2<2, 1<x3<3.
 //' k <- 3
 //' x_lower <- c(-1, 0, 1, -Inf, -Inf)
 //' x_upper <- c(1, 2 , 3, 2, Inf)
@@ -224,13 +234,19 @@ NumericVector normalMoment(int k = 0,
 //' truncatedNormalMoment(k, x_lower, x_upper, mean, sd)
 //'
 //' # get matrix of (0-5)-th moments (columns) for each variable (rows)
-//' truncatedNormalMoment(k, x_lower, x_upper, mean, sd, return_all_moments = TRUE)
+//' truncatedNormalMoment(k, x_lower, x_upper, 
+//'                       mean, sd, 
+//'                       return_all_moments = TRUE)
 //'
 //' # get the moments derivatives respect to mean
-//' truncatedNormalMoment(k, x_lower, x_upper, mean, sd, diff_type = "mean")
+//' truncatedNormalMoment(k, x_lower, x_upper, 
+//'                       mean, sd, 
+//'                       diff_type = "mean")
 //' 
 //' # get the moments derivatives respect to standard deviation
-//' truncatedNormalMoment(k, x_lower, x_upper, mean, sd, diff_type = "sd")
+//' truncatedNormalMoment(k, x_lower, x_upper, 
+//'                       mean, sd, 
+//'                       diff_type = "sd")
 //' 
 //' @export
 // [[Rcpp::export]]
@@ -312,7 +328,7 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 		}
 		if(sum(x_lower >= x_upper) > 0)
 		{
-		  stop("x_lower values should be greater then x_upper values");
+		  stop("x_lower values should not be greater then x_upper values");
 		}
 	}
 	//------------------------------------------------------------
@@ -336,7 +352,7 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 	std::fill(tr_moments.begin(), tr_moments.end(), 1);
 
 	// If order is 0 just return 1 for  
-	// the moment or 0 for it's derivatives
+	// the moment or 0 for its derivatives
 	if (k == 0)
 	{
 	  if(diff_type != "NO")
@@ -522,7 +538,8 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 	  }
 	}
 	
-	// If return_all_moments is TRUE then return matrix of all moments from 0 to k
+	// If return_all_moments is TRUE then 
+	// return matrix of all moments from 0 to k
 	if (return_all_moments)
 	{
 	  if(diff_type != "NO")
