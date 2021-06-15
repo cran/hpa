@@ -11,7 +11,8 @@
 
 \item{y}{this parameter currently ignored}
 
-\item{...}{further arguments (currently ignored)}
+\item{...}{further arguments to be passed to \code{\link[base]{plot}}
+function.}
 }
 \description{
 Plot hpaBinary random errors approximated density

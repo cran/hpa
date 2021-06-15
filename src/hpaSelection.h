@@ -5,11 +5,12 @@
 using namespace Rcpp;
 using namespace RcppArmadillo;
 
-Rcpp::List hpaSelection(Rcpp::Formula selection,
+Rcpp::List hpaSelection(
+  Rcpp::Formula selection,
 	Rcpp::Formula outcome,
 	Rcpp::DataFrame data,
-	int z_K,
-	int y_K,
+	int selection_K,
+	int outcome_K,
 	int pol_elements,
 	bool is_Newey,
 	Rcpp::NumericVector x0,
@@ -18,19 +19,26 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	bool is_parallel,
   bool is_validation);
 
-Rcpp::List hpaSelectionLnLOptim_List(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+Rcpp::List hpaSelectionLnLOptim_List(Rcpp::NumericVector x0, 
+                                     Rcpp::List hpaSelection_args);
 
-double hpaSelectionLnLOptim(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+double hpaSelectionLnLOptim(Rcpp::NumericVector x0, 
+                            Rcpp::List hpaSelection_args);
 
-Rcpp::NumericVector hpaSelectionLnLOptim_ind(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+Rcpp::NumericVector hpaSelectionLnLOptim_ind(Rcpp::NumericVector x0, 
+                                             Rcpp::List hpaSelection_args);
 
-List hpaSelectionLnLOptim_grad_List(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+List hpaSelectionLnLOptim_grad_List(Rcpp::NumericVector x0, 
+                                    Rcpp::List hpaSelection_args);
 
-NumericVector hpaSelectionLnLOptim_grad(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+NumericVector hpaSelectionLnLOptim_grad(Rcpp::NumericVector x0, 
+                                        Rcpp::List hpaSelection_args);
 
-NumericMatrix hpaSelectionLnLOptim_grad_ind(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+NumericMatrix hpaSelectionLnLOptim_grad_ind(Rcpp::NumericVector x0, 
+                                            Rcpp::List hpaSelection_args);
 
-NumericMatrix hpaSelectionLnLOptim_hessian(Rcpp::NumericVector x0, Rcpp::List hpaSelection_args);
+NumericMatrix hpaSelectionLnLOptim_hessian(Rcpp::NumericVector x0, 
+                                           Rcpp::List hpaSelection_args);
 
 Rcpp::List predict_hpaSelection(Rcpp::List object, 
 	Rcpp::DataFrame newdata, 

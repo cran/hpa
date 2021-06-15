@@ -38,10 +38,10 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' @template formula_Template
 #' @template data_Template
 #' @template K_Template
-#' @template z_mean_fixed_Template
-#' @template z_sd_fixed_Template
-#' @template z_constant_fixed_Template
-#' @template z_coef_first_fixed_Template
+#' @template mean_fixed_Template
+#' @template sd_fixed_Template
+#' @template constant_fixed_Template
+#' @template coef_fixed_Template
 #' @template x0_binary_Template
 #' @template cov_type_Template
 #' @template boot_iter_Template
@@ -95,8 +95,8 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' \link[hpa]{logLik.hpaBinary}
 #' @template hpaBinary_examples_Template
 #' @export	
-hpaBinary <- function(formula, data, K = 1L, z_mean_fixed = NA_real_, z_sd_fixed = NA_real_, z_constant_fixed = 0, is_z_coef_first_fixed = TRUE, is_x0_probit = TRUE, is_sequence = FALSE, x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL, is_validation = TRUE) {
-    .Call(`_hpa_hpaBinary`, formula, data, K, z_mean_fixed, z_sd_fixed, z_constant_fixed, is_z_coef_first_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation)
+hpaBinary <- function(formula, data, K = 1L, mean_fixed = NA_real_, sd_fixed = NA_real_, constant_fixed = 0, coef_fixed = TRUE, is_x0_probit = TRUE, is_sequence = FALSE, x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL, is_validation = TRUE) {
+    .Call(`_hpa_hpaBinary`, formula, data, K, mean_fixed, sd_fixed, constant_fixed, coef_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation)
 }
 
 #' Predict method for hpaBinary
@@ -130,13 +130,6 @@ print_summary_hpaBinary <- function(x) {
     invisible(.Call(`_hpa_print_summary_hpaBinary`, x))
 }
 
-#' Plot hpaBinary random errors approximated density
-#' @param x Object of class "hpaBinary"
-#' @export	
-plot_hpaBinary <- function(x) {
-    invisible(.Call(`_hpa_plot_hpaBinary`, x))
-}
-
 #' Calculates log-likelihood for "hpaBinary" object
 #' @description This function calculates log-likelihood for "hpaBinary" object
 #' @param object Object of class "hpaBinary"
@@ -151,7 +144,7 @@ logLik_hpaBinary <- function(object) {
 #' density using Hermite polynomial based approximating function proposed by 
 #' Gallant and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details' 
 #' section to get more information concerning this approximating function.
-#' @template x_ML_Template
+#' @template data_ML_Template
 #' @template pol_degrees_Template
 #' @template tr_left_vec_Template
 #' @template tr_right_vec_Template
@@ -188,15 +181,15 @@ logLik_hpaBinary <- function(object) {
 #' \item \code{results} - numeric matrix representing estimation results.
 #' \item \code{log-likelihood} - value of Log-Likelihood function.
 #' \item \code{AIC} - AIC value.
-#' \item \code{data} - the same as \code{x} input parameter but without \code{NA} observations.
+#' \item \code{data} - the same as \code{data} input parameter but without \code{NA} observations.
 #' \item \code{n_obs} - number of observations.
 #' \item \code{bootstrap} - list where bootstrap estimation results are stored.}
 #' @seealso \link[hpa]{summary.hpaML}, \link[hpa]{predict.hpaML}, 
 #' \link[hpa]{logLik.hpaML}, \link[hpa]{plot.hpaML}
 #' @template hpaML_examples_Template
 #' @export
-hpaML <- function(x, pol_degrees = numeric(0), tr_left = numeric(0), tr_right = numeric(0), given_ind = logical(0), omit_ind = logical(0), x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL, is_validation = TRUE) {
-    .Call(`_hpa_hpaML`, x, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation)
+hpaML <- function(data, pol_degrees = numeric(0), tr_left = numeric(0), tr_right = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), x0 = numeric(0), cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL, is_validation = TRUE) {
+    .Call(`_hpa_hpaML`, data, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation)
 }
 
 #' Predict method for hpaML
@@ -244,6 +237,10 @@ mecdf <- function(x) {
     .Call(`_hpa_mecdf`, x)
 }
 
+hpaMain <- function(x_lower_vec = numeric(0), x_upper_vec = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), type = "pdf", given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), expectation_powers = numeric(0), grad_type = "NO", is_parallel = FALSE, is_cdf = FALSE, log = FALSE, is_validation = TRUE) {
+    .Call(`_hpa_hpaMain`, x_lower_vec, x_upper_vec, pol_coefficients, pol_degrees, type, given_ind, omit_ind, mean, sd, expectation_powers, grad_type, is_parallel, is_cdf, log, is_validation)
+}
+
 #' Probabilities and Moments Hermite Polynomial Approximation
 #' @name hpaDist
 #' @template dhpa_formula_Template
@@ -263,67 +260,91 @@ mecdf <- function(x) {
 #' @template tr_right_Template
 #' @template type_diff_Template
 #' @template is_validation_Template
+#' @template given_omit_Template
 #' @template GN_details_Template
 #' @template dhpa_examples_Template
+#' @param p numeric vector of probabilities
+#' @param n positive integer representing the number of observations
 #' @export
-dhpa <- function(x, pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+dhpa <- function(x, pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
     .Call(`_hpa_dhpa`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, log, is_validation)
 }
 
 #' @name hpaDist
 #' @template phpa_examples_Template
 #' @export
-phpa <- function(x, pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+phpa <- function(x, pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
     .Call(`_hpa_phpa`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, log, is_validation)
 }
 
 #' @name hpaDist
 #' @template ihpa_examples_Template
 #' @export
-ihpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+ihpa <- function(x_lower = numeric(0), x_upper = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
     .Call(`_hpa_ihpa`, x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, log, is_validation)
 }
 
 #' @name hpaDist
 #' @template ehpa_examples_Template
 #' @export
-ehpa <- function(x = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), expectation_powers = numeric(0), is_parallel = FALSE, is_validation = TRUE) {
+ehpa <- function(x = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), expectation_powers = numeric(0), is_parallel = FALSE, is_validation = TRUE) {
     .Call(`_hpa_ehpa`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, expectation_powers, is_parallel, is_validation)
 }
 
 #' @name hpaDist
 #' @template etrhpa_examples_Template
 #' @export
-etrhpa <- function(tr_left = matrix(1, 1), tr_right = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), mean = numeric(0), sd = numeric(0), expectation_powers = numeric(0), is_parallel = FALSE, is_validation = TRUE) {
+etrhpa <- function(tr_left = numeric(0), tr_right = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), mean = numeric(0), sd = numeric(0), expectation_powers = numeric(0), is_parallel = FALSE, is_validation = TRUE) {
     .Call(`_hpa_etrhpa`, tr_left, tr_right, pol_coefficients, pol_degrees, mean, sd, expectation_powers, is_parallel, is_validation)
 }
 
 #' @name hpaDist
 #' @template dtrhpa_examples_Template
 #' @export
-dtrhpa <- function(x, tr_left = matrix(), tr_right = matrix(), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+dtrhpa <- function(x, tr_left = numeric(0), tr_right = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
     .Call(`_hpa_dtrhpa`, x, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, log, is_validation)
 }
 
 #' @name hpaDist
 #' @template itrhpa_examples_Template
 #' @export
-itrhpa <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), tr_left = matrix(1, 1), tr_right = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+itrhpa <- function(x_lower = numeric(0), x_upper = numeric(0), tr_left = numeric(0), tr_right = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
     .Call(`_hpa_itrhpa`, x_lower, x_upper, tr_left, tr_right, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, is_parallel, log, is_validation)
 }
 
 #' @name hpaDist
 #' @template dhpaDiff_examples_Template
 #' @export
-dhpaDiff <- function(x, pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+dhpaDiff <- function(x, pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
     .Call(`_hpa_dhpaDiff`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel, log, is_validation)
+}
+
+#' @name hpaDist
+#' @template ehpaDiff_examples_Template
+#' @export
+ehpaDiff <- function(x = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), expectation_powers = numeric(0), type = "pol_coefficients", is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+    .Call(`_hpa_ehpaDiff`, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, expectation_powers, type, is_parallel, log, is_validation)
 }
 
 #' @name hpaDist
 #' @template ihpaDiff_examples_Template
 #' @export
-ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = logical(0), omit_ind = logical(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
+ihpaDiff <- function(x_lower = numeric(0), x_upper = numeric(0), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0), type = "pol_coefficients", is_parallel = FALSE, log = FALSE, is_validation = TRUE) {
     .Call(`_hpa_ihpaDiff`, x_lower, x_upper, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, type, is_parallel, log, is_validation)
+}
+
+#' @name hpaDist
+#' @template qhpa_examples_Template
+#' @export
+qhpa <- function(p, x = matrix(1, 1), pol_coefficients = numeric(0), pol_degrees = numeric(0), given_ind = numeric(0), omit_ind = numeric(0), mean = numeric(0), sd = numeric(0)) {
+    .Call(`_hpa_qhpa`, p, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd)
+}
+
+#' @name hpaDist
+#' @template rhpa_examples_Template
+#' @export
+rhpa <- function(n, pol_coefficients = numeric(0), pol_degrees = numeric(0), mean = numeric(0), sd = numeric(0)) {
+    .Call(`_hpa_rhpa`, n, pol_coefficients, pol_degrees, mean, sd)
 }
 
 #' Perform semi-nonparametric selection model estimation
@@ -341,8 +362,8 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' All variables in \code{outcome} should be numeric vectors of the 
 #' same length.
 #' @template data_Template
-#' @template z_K_Template
-#' @template y_K_Template
+#' @template selection_K_Template
+#' @template outcome_K_Template
 #' @param pol_elements number of conditional expectation approximating terms 
 #' for Newey's method. If \code{is_Newey_loocv} is \code{TRUE} then determines 
 #' maximum number of these terms during leave-one-out cross-validation.
@@ -385,19 +406,19 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' \item \code{x1} - numeric vector of distribution parameters estimates.
 #' \item \code{Newey} - list containing information concerning Newey's 
 #' method estimation results.
-#' \item \code{z_mean} - estimate of the hermite polynomial mean parameter 
-#' related to selection equation random error marginal distribution.
-#' \item \code{y_mean} - estimate of the hermite polynomial mean parameter 
+#' \item \code{selection_mean} - estimate of the hermite polynomial mean 
+#' parameter related to selection equation random error marginal distribution.
+#' \item \code{outcome_mean} - estimate of the hermite polynomial mean parameter 
 #' related to outcome equation random error marginal distribution.
-#' \item \code{z_sd} - estimate of sd parameter related to selection equation 
-#' random error marginal distribution.
-#' \item \code{y_sd} - estimate of the hermite polynomial sd parameter related 
+#' \item \code{selection_sd} - estimate of sd parameter related to 
+#' selection equation random error marginal distribution.
+#' \item \code{outcome_sd} - estimate of the hermite polynomial sd parameter related 
 #' to outcome equation random error marginal distribution.
 #' \item \code{pol_coefficients} - polynomial coefficients estimates.
-#' \item \code{pol_degrees} - numeric vector which first element is \code{z_K} 
-#' and the second is \code{y_K}.
-#' \item \code{z_coef} - selection equation regression coefficients estimates.
-#' \item \code{y_coef} - outcome equation regression coefficients estimates.
+#' \item \code{pol_degrees} - numeric vector which first element is \code{selection_K} 
+#' and the second is \code{outcome_K}.
+#' \item \code{selection_coef} - selection equation regression coefficients estimates.
+#' \item \code{outcome_coef} - outcome equation regression coefficients estimates.
 #' \item \code{cov_mat} - covariance matrix estimate.
 #' \item \code{results} - numeric matrix representing estimation results.
 #' \item \code{log-likelihood} - value of Log-Likelihood function.
@@ -414,10 +435,10 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' Abovementioned list \code{Newey} has class "hpaNewey" and contains 
 #' the following components:
 #' \itemize{
-#' \item \code{y_coef} - regression coefficients estimates (except 
+#' \item \code{outcome_coef} - regression coefficients estimates (except 
 #' constant term which is part of conditional expectation 
 #' approximating polynomial).
-#' \item \code{z_coef} - regression coefficients estimates related 
+#' \item \code{selection_coef} - regression coefficients estimates related 
 #' to selection equation.
 #' \item \code{constant_biased} - biased estimate of constant term.
 #' \item \code{inv_mills} - inverse mills ratios estimates and their 
@@ -457,8 +478,8 @@ ihpaDiff <- function(x_lower = matrix(1, 1), x_upper = matrix(1, 1), pol_coeffic
 #' \link[hpa]{logLik.hpaSelection}
 #' @template hpaSelection_examples_Template
 #' @export	
-hpaSelection <- function(selection, outcome, data, z_K = 1L, y_K = 1L, pol_elements = 3L, is_Newey = FALSE, x0 = numeric(0), is_Newey_loocv = FALSE, cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL, is_validation = TRUE) {
-    .Call(`_hpa_hpaSelection`, selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation)
+hpaSelection <- function(selection, outcome, data, selection_K = 1L, outcome_K = 1L, pol_elements = 3L, is_Newey = FALSE, x0 = numeric(0), is_Newey_loocv = FALSE, cov_type = "sandwich", boot_iter = 100L, is_parallel = FALSE, opt_type = "optim", opt_control = NULL, is_validation = TRUE) {
+    .Call(`_hpa_hpaSelection`, selection, outcome, data, selection_K, outcome_K, pol_elements, is_Newey, x0, is_Newey_loocv, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation)
 }
 
 #' Predict outcome and selection equation values from hpaSelection model
@@ -501,21 +522,6 @@ summary_hpaSelection <- function(object) {
 #' @export
 print_summary_hpaSelection <- function(x) {
     invisible(.Call(`_hpa_print_summary_hpaSelection`, x))
-}
-
-#' Plot hpaSelection random errors approximated density
-#' @param x Object of class "hpaSelection"
-#' @param is_outcome logical; if TRUE then function plots the graph for 
-#' outcome equation random errors. 
-#' Otherwise plot for selection equation random errors will be plotted.
-#' @return This function returns the list containing random error 
-#' expected value \code{errors_exp}
-#' and variance \code{errors_var} estimates for selection 
-#' (if \code{is_outcome = TRUE}) or outcome (if \code{is_outcome = FALSE}) 
-#' equation.
-#' @export
-plot_hpaSelection <- function(x, is_outcome = TRUE) {
-    .Call(`_hpa_plot_hpaSelection`, x, is_outcome)
 }
 
 #' Calculates log-likelihood for "hpaSelection" object

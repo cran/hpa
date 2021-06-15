@@ -10,15 +10,18 @@
 \alias{dtrhpa}
 \alias{itrhpa}
 \alias{dhpaDiff}
+\alias{ehpaDiff}
 \alias{ihpaDiff}
+\alias{qhpa}
+\alias{rhpa}
 \title{Probabilities and Moments Hermite Polynomial Approximation}
 \usage{
 dhpa(
   x,
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   is_parallel = FALSE,
@@ -30,8 +33,8 @@ phpa(
   x,
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   is_parallel = FALSE,
@@ -40,12 +43,12 @@ phpa(
 )
 
 ihpa(
-  x_lower = matrix(1, 1),
-  x_upper = matrix(1, 1),
+  x_lower = numeric(0),
+  x_upper = numeric(0),
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   is_parallel = FALSE,
@@ -54,11 +57,11 @@ ihpa(
 )
 
 ehpa(
-  x = matrix(1, 1),
+  x = numeric(0),
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   expectation_powers = numeric(0),
@@ -67,8 +70,8 @@ ehpa(
 )
 
 etrhpa(
-  tr_left = matrix(1, 1),
-  tr_right = matrix(1, 1),
+  tr_left = numeric(0),
+  tr_right = numeric(0),
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
   mean = numeric(0),
@@ -80,12 +83,12 @@ etrhpa(
 
 dtrhpa(
   x,
-  tr_left = matrix(),
-  tr_right = matrix(),
+  tr_left = numeric(0),
+  tr_right = numeric(0),
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   is_parallel = FALSE,
@@ -94,14 +97,14 @@ dtrhpa(
 )
 
 itrhpa(
-  x_lower = matrix(1, 1),
-  x_upper = matrix(1, 1),
-  tr_left = matrix(1, 1),
-  tr_right = matrix(1, 1),
+  x_lower = numeric(0),
+  x_upper = numeric(0),
+  tr_left = numeric(0),
+  tr_right = numeric(0),
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   is_parallel = FALSE,
@@ -113,8 +116,8 @@ dhpaDiff(
   x,
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   type = "pol_coefficients",
@@ -123,13 +126,28 @@ dhpaDiff(
   is_validation = TRUE
 )
 
-ihpaDiff(
-  x_lower = matrix(1, 1),
-  x_upper = matrix(1, 1),
+ehpaDiff(
+  x = numeric(0),
   pol_coefficients = numeric(0),
   pol_degrees = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
+  mean = numeric(0),
+  sd = numeric(0),
+  expectation_powers = numeric(0),
+  type = "pol_coefficients",
+  is_parallel = FALSE,
+  log = FALSE,
+  is_validation = TRUE
+)
+
+ihpaDiff(
+  x_lower = numeric(0),
+  x_upper = numeric(0),
+  pol_coefficients = numeric(0),
+  pol_degrees = numeric(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   mean = numeric(0),
   sd = numeric(0),
   type = "pol_coefficients",
@@ -137,9 +155,28 @@ ihpaDiff(
   log = FALSE,
   is_validation = TRUE
 )
+
+qhpa(
+  p,
+  x = matrix(1, 1),
+  pol_coefficients = numeric(0),
+  pol_degrees = numeric(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
+  mean = numeric(0),
+  sd = numeric(0)
+)
+
+rhpa(
+  n,
+  pol_coefficients = numeric(0),
+  pol_degrees = numeric(0),
+  mean = numeric(0),
+  sd = numeric(0)
+)
 }
 \arguments{
-\item{x}{numeric matrix of density function arguments and
+\item{x}{numeric matrix of function arguments and
 conditional values. Note that \code{x} rows are points (observations)
 while random vectors components (variables) are columns.}
 
@@ -148,15 +185,16 @@ while random vectors components (variables) are columns.}
 \item{pol_degrees}{non-negative integer vector of polynomial 
 degrees (orders).}
 
-\item{given_ind}{logical vector indicating whether corresponding random
-vector component is conditioned. By default it is a logical 
-vector of \code{FALSE} values. If \code{give_ind[i]} is \code{TRUE}
-then \code{i}-th column of \code{x} matrix will contain conditional values.}
+\item{given_ind}{logical or numeric vector indicating whether corresponding 
+random vector component is conditioned. By default it is a logical 
+vector of \code{FALSE} values. If \code{give_ind[i]} equals \code{TRUE} or 
+\code{i} then \code{i}-th column of \code{x} matrix will contain 
+conditional values.}
 
-\item{omit_ind}{logical vector indicating whether corresponding
-component is omitted. By default it is a logical vector 
-of \code{FALSE} values. If \code{omit_ind[i]} is \code{TRUE} then values in
-\code{i}-th column of \code{x} matrix will be ignored.}
+\item{omit_ind}{logical or numeric vector indicating whether corresponding
+random component is omitted. By default it is a logical vector 
+of \code{FALSE} values. If \code{omit_ind[i]} equals \code{TRUE} or \code{i} 
+then values in \code{i}-th column of \code{x} matrix will be ignored.}
 
 \item{mean}{numeric vector of expected values.}
 
@@ -205,6 +243,10 @@ For function \code{\link[hpa]{ihpaDiff}} it is possible to take
 gradient respect to the x lower and upper points setting 
 \code{type = "x_lower"} or \code{type = "upper"} correspondingly.
 In order to get full gradient please set \code{type="all"}.}
+
+\item{p}{numeric vector of probabilities}
+
+\item{n}{positive integer representing the number of observations}
 }
 \value{
 Functions \code{\link[hpa]{dhpa}}, \code{\link[hpa]{phpa}} and 
@@ -458,6 +500,11 @@ will be calculated.
 
 For further information please see 'Examples' section. Note that examples
 are given separately for each function.
+
+If \code{given_ind} and (or) \code{omit_ind} are numeric vectors
+then they are insensitive to the order of elements. 
+For example \code{given_ind = c(5, 2, 3)} is similar 
+to \code{given_ind = c(2, 3, 5)}.
 
 Densities Hermite polynomial approximation approach has been
 proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
@@ -1028,6 +1075,40 @@ dhpaDiff(x = x,
          omit_ind = omit_ind,
          type = "x")
          
+## Example demonstrating ehpaDiff function application.
+## Let's approximate some three random variables (X1, X2, X3) expectation
+## of the form E((X1 ^ 3) * (x2 ^ 1) * (X3 ^ 2)) and calculate the gradient
+
+# Distribution parameters
+mean <- c(1.1, 1.2, 1.3)
+sd <- c(2.1, 2.2, 2.3)
+pol_degrees <- c(1, 2, 3)
+pol_coefficients_n <- prod(pol_degrees + 1)
+pol_coefficients <- rep(1, pol_coefficients_n)
+
+# Set powers for expectation
+expectation_powers <- c(3, 1, 2)
+
+# Calculate expectation approximation gradient 
+# respect to all parameters
+ehpaDiff(pol_coefficients = pol_coefficients, 
+         pol_degrees = pol_degrees,
+         mean = mean, sd = sd,
+         expectation_powers = expectation_powers,
+         type = "all")
+
+# Let's calculate gradient of E(X1 ^ 3 | (X2 = 1, X3 = 2))
+x <- c(0, 1, 2)                  # x[1] may be arbitrary (not NA) values
+expectation_powers <- c(3, 0, 0) # expectation_powers[2:3] may be 
+                                 # arbitrary (not NA) values
+given_ind <- c(2, 3)
+ehpaDiff(x = x,
+         pol_coefficients = pol_coefficients, 
+         pol_degrees = pol_degrees,
+         mean = mean, sd = sd,
+         given_ind = given_ind,
+         expectation_powers = expectation_powers,
+         type = "all")
 ## Example demonstrating ihpaDiff function application.
 ## Let's approximate some three random variables (X1, X2, X3 ) joint interval 
 ## distribution function (intdf) at lower and upper points (0,1, 0.2, 0.3) 
@@ -1128,6 +1209,98 @@ ihpaDiff(x_lower = x_lower, x_upper = x_upper,
           given_ind = given_ind, omit_ind = omit_ind,
           type = "x_upper")
           
+## Examples demonstrating qhpa function application.
+
+## Sub-example 1 - univariate distribution
+## Consider random variable X
+
+# Distribution parameters
+mean <- 1
+sd <- 2
+pol_degrees <- 2
+pol_coefficients <- c(1, 0.1, -0.01)
+
+# The level of quantile
+p <- 0.7
+
+# Calculate quantile of X
+qhpa(p = p,
+     pol_coefficients = pol_coefficients, 
+     pol_degrees = pol_degrees,
+     mean = mean, sd = sd)
+     
+## Sub-example 2 - marginal distribution
+## Consider random vector (X1, X2) and quantile of X1
+
+# Distribution parameters
+mean <- c(1, 1.2)
+sd <- c(2, 3)
+pol_degrees <- c(2, 2)
+pol_coefficients <- c(1, 0.1, -0.01, 0.2, 0.012, 
+                      0.0013, 0.0042, 0.00025, 0)
+
+# The level of quantile
+p <- 0.7
+
+# Calculate quantile of X1
+qhpa(p = p,
+     pol_coefficients = pol_coefficients, 
+     pol_degrees = pol_degrees,
+     mean = mean, sd = sd,
+     omit_ind = 2)                          # set omitted variable index
+     
+## Sub-example 3 - marginal and conditional distribution
+## Consider random vector (X1, X2, X3) and 
+
+## quantiles of X1|X3 and X1|(X2,X3)
+mean <- c(1, 1.2, 0.9)
+sd <- c(2, 3, 2.5)
+pol_degrees <- c(1, 1, 1)
+pol_coefficients <- c(1, 0.1, -0.01, 0.2, 0.012, 
+                      0.0013, 0.0042, 0.00025)
+
+# The level of quantile
+p <- 0.7
+
+# Calculate quantile of X1|X3 = 0.2
+qhpa(p = p,
+     x = matrix(c(NA, NA, 0.2), nrow = 1),  # set any values to
+                                            # unconditioned and 
+                                            # omitted components
+     pol_coefficients = pol_coefficients, 
+     pol_degrees = pol_degrees,
+     mean = mean, sd = sd,
+     omit_ind = 2,                          # set omitted variable index
+     given_ind = 3)                         # set conditioned variable index
+     
+# Calculate quantile of X1|(X2 = 0.5, X3 = 0.2)
+qhpa(p = p,
+     x = matrix(c(NA, 0.5, 0.2), nrow = 1), # set any values to 
+                                            # unconditioned and 
+                                            # omitted components
+     pol_coefficients = pol_coefficients, 
+     pol_degrees = pol_degrees,
+     mean = mean, sd = sd,
+     given_ind = c(2, 3))                   # set conditioned
+                                            # variables indexes
+        
+## Examples demonstrating rhpa function application.
+
+# Set seed for reproducibility
+set.seed(123)
+
+# Distribution parameters
+mean <- 1
+sd <- 2
+pol_degrees <- 2
+pol_coefficients <- c(1, 0.1, -0.01)
+
+# Simulate two observations from this distribution
+rhpa(n = 2,
+     pol_coefficients = pol_coefficients, 
+     pol_degrees = pol_degrees,
+     mean = mean, sd = sd)
+        
 }
 \references{
 A. Gallant and D. W. Nychka (1987) <doi:10.2307/1913241>

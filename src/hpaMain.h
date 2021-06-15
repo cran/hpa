@@ -6,13 +6,13 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 	
 List hpaMain(
-	NumericMatrix x_lower,
-	NumericMatrix x_upper,
+	NumericVector x_lower_vec,
+	NumericVector x_upper_vec,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
 	String type,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	NumericVector expectation_powers,
@@ -27,11 +27,11 @@ List hpaMain(
 	bool is_validation);
 
 NumericVector dhpa(
-	NumericMatrix x,
+	NumericVector x,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
@@ -39,11 +39,11 @@ NumericVector dhpa(
 	bool is_validation);
 
 NumericVector phpa(
-	NumericMatrix x,
+	NumericVector x,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
@@ -51,23 +51,23 @@ NumericVector phpa(
 	bool is_validation);
 
 NumericVector ihpa(
-	NumericMatrix x_lower,
-	NumericMatrix x_upper,
+	NumericVector x_lower,
+	NumericVector x_upper,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
 	bool log,
 	bool is_validation);
 
-NumericVector ehpa(NumericMatrix x,
+NumericVector ehpa(NumericVector x,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	NumericVector expectation_powers,
@@ -77,8 +77,8 @@ NumericVector ehpa(NumericMatrix x,
 //Truncated distribution
 
 NumericVector etrhpa(
-	NumericMatrix tr_left,
-	NumericMatrix tr_right,
+	NumericVector tr_left,
+	NumericVector tr_right,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
 	NumericVector mean,
@@ -88,13 +88,13 @@ NumericVector etrhpa(
 	bool is_validation);
 
 NumericVector dtrhpa(
-	NumericMatrix x,
-	NumericMatrix tr_left,
-	NumericMatrix tr_right,
+	NumericVector x,
+	NumericVector tr_left,
+	NumericVector tr_right,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
@@ -102,14 +102,14 @@ NumericVector dtrhpa(
 	bool is_validation);
 
 NumericVector itrhpa(
-	NumericMatrix x_lower,
-	NumericMatrix x_upper,
-	NumericMatrix x_left,
-	NumericMatrix x_right,
+	NumericVector x_lower,
+	NumericVector x_upper,
+	NumericVector x_left,
+	NumericVector x_right,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	bool is_parallel,
@@ -117,11 +117,11 @@ NumericVector itrhpa(
 	bool is_validation);
 
 NumericMatrix dhpaDiff(
-	NumericMatrix x,
+	NumericVector x,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	String type,
@@ -129,18 +129,77 @@ NumericMatrix dhpaDiff(
 	bool log,
 	bool is_validation);
 
+NumericMatrix ehpaDiff(
+    NumericVector x,
+    NumericVector pol_coefficients,
+    NumericVector pol_degrees,
+    NumericVector given_ind,
+    NumericVector omit_ind,
+    NumericVector mean,
+    NumericVector sd,
+    NumericVector expectation_powers,
+    String type,
+    bool is_parallel,
+    bool log,
+    bool is_validation);
+
+NumericMatrix dehpaDiff(
+    NumericVector x,
+    NumericVector pol_coefficients,
+    NumericVector pol_degrees,
+    NumericVector given_ind,
+    NumericVector omit_ind,
+    NumericVector mean,
+    NumericVector sd,
+    NumericVector expectation_powers,
+    String diffType,
+    String type,
+    bool is_parallel,
+    bool log,
+    bool is_validation);
+
 NumericMatrix ihpaDiff(
-	NumericMatrix x_lower,
-	NumericMatrix x_upper,
+	NumericVector x_lower,
+	NumericVector x_upper,
 	NumericVector pol_coefficients,
 	NumericVector pol_degrees,
-	LogicalVector given_ind,
-	LogicalVector omit_ind,
+	NumericVector given_ind,
+	NumericVector omit_ind,
 	NumericVector mean,
 	NumericVector sd,
 	String type,
 	bool is_parallel,
 	bool log,
 	bool is_validation);
+
+NumericVector qhpa(
+    NumericVector p,
+    NumericMatrix x,
+    NumericVector pol_coefficients,
+    NumericVector pol_degrees,
+    NumericVector given_ind,
+    NumericVector omit_ind,
+    NumericVector mean,
+    NumericVector sd);
+
+double qhpa_opt(
+    NumericVector par,
+    NumericVector x,
+    NumericVector p,
+    NumericVector pol_coefficients,
+    NumericVector pol_degrees,
+    NumericVector given_ind,
+    NumericVector omit_ind,
+    NumericVector mean,
+    NumericVector sd,
+    int pol_degrees_n,
+    int x_ind);
+
+NumericMatrix rhpa(
+    int n,
+    NumericVector pol_coefficients,
+    NumericVector pol_degrees,
+    NumericVector mean,
+    NumericVector sd);
 
 #endif

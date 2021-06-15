@@ -5,12 +5,12 @@
 \title{Semi-nonparametric maximum likelihood estimation}
 \usage{
 hpaML(
-  x,
+  data,
   pol_degrees = numeric(0),
   tr_left = numeric(0),
   tr_right = numeric(0),
-  given_ind = logical(0),
-  omit_ind = logical(0),
+  given_ind = numeric(0),
+  omit_ind = numeric(0),
   x0 = numeric(0),
   cov_type = "sandwich",
   boot_iter = 100L,
@@ -21,7 +21,7 @@ hpaML(
 )
 }
 \arguments{
-\item{x}{numeric matrix which rows are realizations of independent 
+\item{data}{numeric matrix which rows are realizations of independent 
 identically distributed random vectors while columns correspond to
 variables.}
 
@@ -32,15 +32,16 @@ degrees (orders).}
 
 \item{tr_right}{numeric vector of right (upper) truncation limits.}
 
-\item{given_ind}{logical vector indicating whether corresponding random
-vector component is conditioned. By default it is a logical 
-vector of \code{FALSE} values. If \code{give_ind[i]} is \code{TRUE}
-then \code{i}-th column of \code{x} matrix will contain conditional values.}
+\item{given_ind}{logical or numeric vector indicating whether corresponding 
+random vector component is conditioned. By default it is a logical 
+vector of \code{FALSE} values. If \code{give_ind[i]} equals \code{TRUE} or 
+\code{i} then \code{i}-th column of \code{x} matrix will contain 
+conditional values.}
 
-\item{omit_ind}{logical vector indicating whether corresponding
-component is omitted. By default it is a logical vector 
-of \code{FALSE} values. If \code{omit_ind[i]} is \code{TRUE} then values in
-\code{i}-th column of \code{x} matrix will be ignored.}
+\item{omit_ind}{logical or numeric vector indicating whether corresponding
+random component is omitted. By default it is a logical vector 
+of \code{FALSE} values. If \code{omit_ind[i]} equals \code{TRUE} or \code{i} 
+then values in \code{i}-th column of \code{x} matrix will be ignored.}
 
 \item{x0}{numeric vector of optimization routine initial values.
 Note that \code{x0=c(pol_coefficients[-1], mean, sd)}. For 
@@ -102,7 +103,7 @@ If \code{opt_type = "GA"} then it is the list containing
 \item \code{results} - numeric matrix representing estimation results.
 \item \code{log-likelihood} - value of Log-Likelihood function.
 \item \code{AIC} - AIC value.
-\item \code{data} - the same as \code{x} input parameter but without \code{NA} observations.
+\item \code{data} - the same as \code{data} input parameter but without \code{NA} observations.
 \item \code{n_obs} - number of observations.
 \item \code{bootstrap} - list where bootstrap estimation results are stored.}
 }
@@ -127,9 +128,9 @@ quasi log-likelihood function:
 
 where (in addition to previously defined notations):
 
-\eqn{x_{i}} - are observations i.e. \code{x} matrix rows.
+\eqn{x_{i}} - are observations i.e. \code{data} matrix rows.
 
-\eqn{n} - is sample size i.e. the number of \code{x} matrix rows.
+\eqn{n} - is sample size i.e. the number of \code{data} matrix rows.
 
 Arguments \code{pol_degrees}, \code{tr_left}, \code{tr_right},
 \code{given_ind} and \code{omit_ind} affect the form of 
@@ -141,7 +142,7 @@ statistical properties has not been rigorously investigated yet.
 The first polynomial coefficient (zero powers) 
 set to 1 for identification purposes i.e. \eqn{\alpha_{(0,...,0)}=1}.
 
-All \code{NA} and \code{NaN} values will be removed from \code{x} matrix.
+All \code{NA} and \code{NaN} values will be removed from \code{data} matrix.
 
 The function calculates standard errors via sandwich estimator
 and significance levels are reported taking into account quasi maximum
@@ -220,13 +221,13 @@ set.seed(123)
 
 # Simulate 5000 realizations of Student distribution 
 # with 5 degrees of freedom
- n <- 5000
+n <- 5000
 df <- 5
 x <- matrix(rt(n, df), ncol = 1)
 pol_degrees <- c(4)
 
 # Apply pseudo maximum likelihood routine
-ml_result <- hpa::hpaML(x = x, pol_degrees = pol_degrees)
+ml_result <- hpa::hpaML(data = x, pol_degrees = pol_degrees)
 summary(ml_result)
 
 # Get predicted probabilites (density values) approximations
@@ -249,7 +250,7 @@ x <- matrix(rchisq(n, df), ncol = 1)
 pol_degrees <- c(5)
 
 # Apply pseudo maximum likelihood routine
-ml_result <- hpaML(x = x, pol_degrees = as.vector(pol_degrees), 
+ml_result <- hpaML(data = x, pol_degrees = as.vector(pol_degrees), 
 				tr_left = 0)
 summary(ml_result)
 
@@ -272,7 +273,7 @@ cov_mat <- matrix(c(1, 0.5, -0.5, 0.5, 1, 0.5, -0.5, 0.5, 1), ncol = 3)
 x <- rmvt(n = 5000, sigma = cov_mat, df = 5)
 
 # Estimate approximating joint distribution parameters
-ml_result <- hpaML(x = x, pol_degrees = c(1, 1, 1))
+ml_result <- hpaML(data = x, pol_degrees = c(1, 1, 1))
 
 # Get summary
 summary(ml_result)
@@ -303,7 +304,7 @@ x <- matrix(rt(n, df), ncol=1)
 ml_result <- matrix(list(), 4, 1)
 for(i in 1:4)
 {
- ml_result[[i]] <- hpa::hpaML(x = x, pol_degrees = i)
+ ml_result[[i]] <- hpa::hpaML(data = x, pol_degrees = i)
 }
 
 # Generate test values
@@ -359,7 +360,7 @@ x <- matrix(rt(n, df), ncol = 1)
 pol_degrees <- c(2)
 
 # Apply pseudo maximum likelihood routine
-ml_result <- hpa::hpaML(x = x, pol_degrees = pol_degrees)
+ml_result <- hpa::hpaML(data = x, pol_degrees = pol_degrees)
  summary(ml_result)
 
 # Get predicted probabilites (density values) approximations

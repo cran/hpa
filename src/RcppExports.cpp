@@ -35,18 +35,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // hpaBinary
-List hpaBinary(Rcpp::Formula formula, DataFrame data, int K, double z_mean_fixed, double z_sd_fixed, double z_constant_fixed, bool is_z_coef_first_fixed, bool is_x0_probit, bool is_sequence, NumericVector x0, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control, bool is_validation);
-RcppExport SEXP _hpa_hpaBinary(SEXP formulaSEXP, SEXP dataSEXP, SEXP KSEXP, SEXP z_mean_fixedSEXP, SEXP z_sd_fixedSEXP, SEXP z_constant_fixedSEXP, SEXP is_z_coef_first_fixedSEXP, SEXP is_x0_probitSEXP, SEXP is_sequenceSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP, SEXP is_validationSEXP) {
+List hpaBinary(Rcpp::Formula formula, DataFrame data, int K, double mean_fixed, double sd_fixed, double constant_fixed, bool coef_fixed, bool is_x0_probit, bool is_sequence, NumericVector x0, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control, bool is_validation);
+RcppExport SEXP _hpa_hpaBinary(SEXP formulaSEXP, SEXP dataSEXP, SEXP KSEXP, SEXP mean_fixedSEXP, SEXP sd_fixedSEXP, SEXP constant_fixedSEXP, SEXP coef_fixedSEXP, SEXP is_x0_probitSEXP, SEXP is_sequenceSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::Formula >::type formula(formulaSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type data(dataSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    Rcpp::traits::input_parameter< double >::type z_mean_fixed(z_mean_fixedSEXP);
-    Rcpp::traits::input_parameter< double >::type z_sd_fixed(z_sd_fixedSEXP);
-    Rcpp::traits::input_parameter< double >::type z_constant_fixed(z_constant_fixedSEXP);
-    Rcpp::traits::input_parameter< bool >::type is_z_coef_first_fixed(is_z_coef_first_fixedSEXP);
+    Rcpp::traits::input_parameter< double >::type mean_fixed(mean_fixedSEXP);
+    Rcpp::traits::input_parameter< double >::type sd_fixed(sd_fixedSEXP);
+    Rcpp::traits::input_parameter< double >::type constant_fixed(constant_fixedSEXP);
+    Rcpp::traits::input_parameter< bool >::type coef_fixed(coef_fixedSEXP);
     Rcpp::traits::input_parameter< bool >::type is_x0_probit(is_x0_probitSEXP);
     Rcpp::traits::input_parameter< bool >::type is_sequence(is_sequenceSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type x0(x0SEXP);
@@ -56,7 +56,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type opt_type(opt_typeSEXP);
     Rcpp::traits::input_parameter< List >::type opt_control(opt_controlSEXP);
     Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
-    rcpp_result_gen = Rcpp::wrap(hpaBinary(formula, data, K, z_mean_fixed, z_sd_fixed, z_constant_fixed, is_z_coef_first_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation));
+    rcpp_result_gen = Rcpp::wrap(hpaBinary(formula, data, K, mean_fixed, sd_fixed, constant_fixed, coef_fixed, is_x0_probit, is_sequence, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -94,16 +94,6 @@ BEGIN_RCPP
     return R_NilValue;
 END_RCPP
 }
-// plot_hpaBinary
-void plot_hpaBinary(List x);
-RcppExport SEXP _hpa_plot_hpaBinary(SEXP xSEXP) {
-BEGIN_RCPP
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type x(xSEXP);
-    plot_hpaBinary(x);
-    return R_NilValue;
-END_RCPP
-}
 // logLik_hpaBinary
 double logLik_hpaBinary(List object);
 RcppExport SEXP _hpa_logLik_hpaBinary(SEXP objectSEXP) {
@@ -116,17 +106,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // hpaML
-List hpaML(NumericMatrix x, NumericVector pol_degrees, NumericVector tr_left, NumericVector tr_right, LogicalVector given_ind, LogicalVector omit_ind, NumericVector x0, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control, bool is_validation);
-RcppExport SEXP _hpa_hpaML(SEXP xSEXP, SEXP pol_degreesSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP, SEXP is_validationSEXP) {
+List hpaML(NumericVector data, NumericVector pol_degrees, NumericVector tr_left, NumericVector tr_right, NumericVector given_ind, NumericVector omit_ind, NumericVector x0, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control, bool is_validation);
+RcppExport SEXP _hpa_hpaML(SEXP dataSEXP, SEXP pol_degreesSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP x0SEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type data(dataSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type tr_left(tr_leftSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type tr_right(tr_rightSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type x0(x0SEXP);
     Rcpp::traits::input_parameter< String >::type cov_type(cov_typeSEXP);
     Rcpp::traits::input_parameter< int >::type boot_iter(boot_iterSEXP);
@@ -134,7 +124,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type opt_type(opt_typeSEXP);
     Rcpp::traits::input_parameter< List >::type opt_control(opt_controlSEXP);
     Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
-    rcpp_result_gen = Rcpp::wrap(hpaML(x, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation));
+    rcpp_result_gen = Rcpp::wrap(hpaML(data, pol_degrees, tr_left, tr_right, given_ind, omit_ind, x0, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -193,17 +183,42 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// hpaMain
+List hpaMain(NumericVector x_lower_vec, NumericVector x_upper_vec, NumericVector pol_coefficients, NumericVector pol_degrees, String type, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, NumericVector expectation_powers, String grad_type, bool is_parallel, bool is_cdf, bool log, bool is_validation);
+RcppExport SEXP _hpa_hpaMain(SEXP x_lower_vecSEXP, SEXP x_upper_vecSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP typeSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP expectation_powersSEXP, SEXP grad_typeSEXP, SEXP is_parallelSEXP, SEXP is_cdfSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x_lower_vec(x_lower_vecSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x_upper_vec(x_upper_vecSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
+    Rcpp::traits::input_parameter< String >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expectation_powers(expectation_powersSEXP);
+    Rcpp::traits::input_parameter< String >::type grad_type(grad_typeSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_cdf(is_cdfSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
+    rcpp_result_gen = Rcpp::wrap(hpaMain(x_lower_vec, x_upper_vec, pol_coefficients, pol_degrees, type, given_ind, omit_ind, mean, sd, expectation_powers, grad_type, is_parallel, is_cdf, log, is_validation));
+    return rcpp_result_gen;
+END_RCPP
+}
 // dhpa
-NumericVector dhpa(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
+NumericVector dhpa(NumericVector x, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
 RcppExport SEXP _hpa_dhpa(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
@@ -214,16 +229,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // phpa
-NumericVector phpa(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
+NumericVector phpa(NumericVector x, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
 RcppExport SEXP _hpa_phpa(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
@@ -234,17 +249,17 @@ BEGIN_RCPP
 END_RCPP
 }
 // ihpa
-NumericVector ihpa(NumericMatrix x_lower, NumericMatrix x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
+NumericVector ihpa(NumericVector x_lower, NumericVector x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
 RcppExport SEXP _hpa_ihpa(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x_lower(x_lowerSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type x_upper(x_upperSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x_lower(x_lowerSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x_upper(x_upperSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
@@ -255,16 +270,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // ehpa
-NumericVector ehpa(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, NumericVector expectation_powers, bool is_parallel, bool is_validation);
+NumericVector ehpa(NumericVector x, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, NumericVector expectation_powers, bool is_parallel, bool is_validation);
 RcppExport SEXP _hpa_ehpa(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP expectation_powersSEXP, SEXP is_parallelSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type expectation_powers(expectation_powersSEXP);
@@ -275,13 +290,13 @@ BEGIN_RCPP
 END_RCPP
 }
 // etrhpa
-NumericVector etrhpa(NumericMatrix tr_left, NumericMatrix tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector mean, NumericVector sd, NumericVector expectation_powers, bool is_parallel, bool is_validation);
+NumericVector etrhpa(NumericVector tr_left, NumericVector tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector mean, NumericVector sd, NumericVector expectation_powers, bool is_parallel, bool is_validation);
 RcppExport SEXP _hpa_etrhpa(SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP expectation_powersSEXP, SEXP is_parallelSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type tr_left(tr_leftSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type tr_right(tr_rightSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tr_left(tr_leftSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tr_right(tr_rightSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
@@ -294,18 +309,18 @@ BEGIN_RCPP
 END_RCPP
 }
 // dtrhpa
-NumericVector dtrhpa(NumericMatrix x, NumericMatrix tr_left, NumericMatrix tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
+NumericVector dtrhpa(NumericVector x, NumericVector tr_left, NumericVector tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
 RcppExport SEXP _hpa_dtrhpa(SEXP xSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type tr_left(tr_leftSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type tr_right(tr_rightSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tr_left(tr_leftSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tr_right(tr_rightSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
@@ -316,19 +331,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // itrhpa
-NumericVector itrhpa(NumericMatrix x_lower, NumericMatrix x_upper, NumericMatrix tr_left, NumericMatrix tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
+NumericVector itrhpa(NumericVector x_lower, NumericVector x_upper, NumericVector tr_left, NumericVector tr_right, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, bool is_parallel, bool log, bool is_validation);
 RcppExport SEXP _hpa_itrhpa(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP tr_leftSEXP, SEXP tr_rightSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x_lower(x_lowerSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type x_upper(x_upperSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type tr_left(tr_leftSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type tr_right(tr_rightSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x_lower(x_lowerSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x_upper(x_upperSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tr_left(tr_leftSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type tr_right(tr_rightSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
@@ -339,16 +354,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // dhpaDiff
-NumericMatrix dhpaDiff(NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel, bool log, bool is_validation);
+NumericMatrix dhpaDiff(NumericVector x, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel, bool log, bool is_validation);
 RcppExport SEXP _hpa_dhpaDiff(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP typeSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< String >::type type(typeSEXP);
@@ -359,18 +374,40 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// ehpaDiff
+NumericMatrix ehpaDiff(NumericVector x, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, NumericVector expectation_powers, String type, bool is_parallel, bool log, bool is_validation);
+RcppExport SEXP _hpa_ehpaDiff(SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP expectation_powersSEXP, SEXP typeSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type expectation_powers(expectation_powersSEXP);
+    Rcpp::traits::input_parameter< String >::type type(typeSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_parallel(is_parallelSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
+    rcpp_result_gen = Rcpp::wrap(ehpaDiff(x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd, expectation_powers, type, is_parallel, log, is_validation));
+    return rcpp_result_gen;
+END_RCPP
+}
 // ihpaDiff
-NumericMatrix ihpaDiff(NumericMatrix x_lower, NumericMatrix x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, LogicalVector given_ind, LogicalVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel, bool log, bool is_validation);
+NumericMatrix ihpaDiff(NumericVector x_lower, NumericVector x_upper, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd, String type, bool is_parallel, bool log, bool is_validation);
 RcppExport SEXP _hpa_ihpaDiff(SEXP x_lowerSEXP, SEXP x_upperSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP typeSEXP, SEXP is_parallelSEXP, SEXP logSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type x_lower(x_lowerSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type x_upper(x_upperSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x_lower(x_lowerSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x_upper(x_upperSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type given_ind(given_indSEXP);
-    Rcpp::traits::input_parameter< LogicalVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
     Rcpp::traits::input_parameter< String >::type type(typeSEXP);
@@ -381,17 +418,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// qhpa
+NumericVector qhpa(NumericVector p, NumericMatrix x, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector given_ind, NumericVector omit_ind, NumericVector mean, NumericVector sd);
+RcppExport SEXP _hpa_qhpa(SEXP pSEXP, SEXP xSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP given_indSEXP, SEXP omit_indSEXP, SEXP meanSEXP, SEXP sdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type p(pSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type given_ind(given_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type omit_ind(omit_indSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
+    rcpp_result_gen = Rcpp::wrap(qhpa(p, x, pol_coefficients, pol_degrees, given_ind, omit_ind, mean, sd));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rhpa
+NumericMatrix rhpa(int n, NumericVector pol_coefficients, NumericVector pol_degrees, NumericVector mean, NumericVector sd);
+RcppExport SEXP _hpa_rhpa(SEXP nSEXP, SEXP pol_coefficientsSEXP, SEXP pol_degreesSEXP, SEXP meanSEXP, SEXP sdSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_coefficients(pol_coefficientsSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pol_degrees(pol_degreesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type sd(sdSEXP);
+    rcpp_result_gen = Rcpp::wrap(rhpa(n, pol_coefficients, pol_degrees, mean, sd));
+    return rcpp_result_gen;
+END_RCPP
+}
 // hpaSelection
-Rcpp::List hpaSelection(Rcpp::Formula selection, Rcpp::Formula outcome, DataFrame data, int z_K, int y_K, int pol_elements, bool is_Newey, NumericVector x0, bool is_Newey_loocv, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control, bool is_validation);
-RcppExport SEXP _hpa_hpaSelection(SEXP selectionSEXP, SEXP outcomeSEXP, SEXP dataSEXP, SEXP z_KSEXP, SEXP y_KSEXP, SEXP pol_elementsSEXP, SEXP is_NeweySEXP, SEXP x0SEXP, SEXP is_Newey_loocvSEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP, SEXP is_validationSEXP) {
+Rcpp::List hpaSelection(Rcpp::Formula selection, Rcpp::Formula outcome, DataFrame data, int selection_K, int outcome_K, int pol_elements, bool is_Newey, NumericVector x0, bool is_Newey_loocv, String cov_type, int boot_iter, bool is_parallel, String opt_type, List opt_control, bool is_validation);
+RcppExport SEXP _hpa_hpaSelection(SEXP selectionSEXP, SEXP outcomeSEXP, SEXP dataSEXP, SEXP selection_KSEXP, SEXP outcome_KSEXP, SEXP pol_elementsSEXP, SEXP is_NeweySEXP, SEXP x0SEXP, SEXP is_Newey_loocvSEXP, SEXP cov_typeSEXP, SEXP boot_iterSEXP, SEXP is_parallelSEXP, SEXP opt_typeSEXP, SEXP opt_controlSEXP, SEXP is_validationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< Rcpp::Formula >::type selection(selectionSEXP);
     Rcpp::traits::input_parameter< Rcpp::Formula >::type outcome(outcomeSEXP);
     Rcpp::traits::input_parameter< DataFrame >::type data(dataSEXP);
-    Rcpp::traits::input_parameter< int >::type z_K(z_KSEXP);
-    Rcpp::traits::input_parameter< int >::type y_K(y_KSEXP);
+    Rcpp::traits::input_parameter< int >::type selection_K(selection_KSEXP);
+    Rcpp::traits::input_parameter< int >::type outcome_K(outcome_KSEXP);
     Rcpp::traits::input_parameter< int >::type pol_elements(pol_elementsSEXP);
     Rcpp::traits::input_parameter< bool >::type is_Newey(is_NeweySEXP);
     Rcpp::traits::input_parameter< NumericVector >::type x0(x0SEXP);
@@ -402,7 +472,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< String >::type opt_type(opt_typeSEXP);
     Rcpp::traits::input_parameter< List >::type opt_control(opt_controlSEXP);
     Rcpp::traits::input_parameter< bool >::type is_validation(is_validationSEXP);
-    rcpp_result_gen = Rcpp::wrap(hpaSelection(selection, outcome, data, z_K, y_K, pol_elements, is_Newey, x0, is_Newey_loocv, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation));
+    rcpp_result_gen = Rcpp::wrap(hpaSelection(selection, outcome, data, selection_K, outcome_K, pol_elements, is_Newey, x0, is_Newey_loocv, cov_type, boot_iter, is_parallel, opt_type, opt_control, is_validation));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -440,18 +510,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type x(xSEXP);
     print_summary_hpaSelection(x);
     return R_NilValue;
-END_RCPP
-}
-// plot_hpaSelection
-List plot_hpaSelection(List x, bool is_outcome);
-RcppExport SEXP _hpa_plot_hpaSelection(SEXP xSEXP, SEXP is_outcomeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< List >::type x(xSEXP);
-    Rcpp::traits::input_parameter< bool >::type is_outcome(is_outcomeSEXP);
-    rcpp_result_gen = Rcpp::wrap(plot_hpaSelection(x, is_outcome));
-    return rcpp_result_gen;
 END_RCPP
 }
 // logLik_hpaSelection
@@ -539,7 +597,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hpa_predict_hpaBinary", (DL_FUNC) &_hpa_predict_hpaBinary, 3},
     {"_hpa_summary_hpaBinary", (DL_FUNC) &_hpa_summary_hpaBinary, 1},
     {"_hpa_print_summary_hpaBinary", (DL_FUNC) &_hpa_print_summary_hpaBinary, 1},
-    {"_hpa_plot_hpaBinary", (DL_FUNC) &_hpa_plot_hpaBinary, 1},
     {"_hpa_logLik_hpaBinary", (DL_FUNC) &_hpa_logLik_hpaBinary, 1},
     {"_hpa_hpaML", (DL_FUNC) &_hpa_hpaML, 13},
     {"_hpa_predict_hpaML", (DL_FUNC) &_hpa_predict_hpaML, 2},
@@ -547,6 +604,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hpa_print_summary_hpaML", (DL_FUNC) &_hpa_print_summary_hpaML, 1},
     {"_hpa_logLik_hpaML", (DL_FUNC) &_hpa_logLik_hpaML, 1},
     {"_hpa_mecdf", (DL_FUNC) &_hpa_mecdf, 1},
+    {"_hpa_hpaMain", (DL_FUNC) &_hpa_hpaMain, 15},
     {"_hpa_dhpa", (DL_FUNC) &_hpa_dhpa, 10},
     {"_hpa_phpa", (DL_FUNC) &_hpa_phpa, 10},
     {"_hpa_ihpa", (DL_FUNC) &_hpa_ihpa, 11},
@@ -555,12 +613,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hpa_dtrhpa", (DL_FUNC) &_hpa_dtrhpa, 12},
     {"_hpa_itrhpa", (DL_FUNC) &_hpa_itrhpa, 13},
     {"_hpa_dhpaDiff", (DL_FUNC) &_hpa_dhpaDiff, 11},
+    {"_hpa_ehpaDiff", (DL_FUNC) &_hpa_ehpaDiff, 12},
     {"_hpa_ihpaDiff", (DL_FUNC) &_hpa_ihpaDiff, 12},
+    {"_hpa_qhpa", (DL_FUNC) &_hpa_qhpa, 8},
+    {"_hpa_rhpa", (DL_FUNC) &_hpa_rhpa, 5},
     {"_hpa_hpaSelection", (DL_FUNC) &_hpa_hpaSelection, 15},
     {"_hpa_predict_hpaSelection", (DL_FUNC) &_hpa_predict_hpaSelection, 5},
     {"_hpa_summary_hpaSelection", (DL_FUNC) &_hpa_summary_hpaSelection, 1},
     {"_hpa_print_summary_hpaSelection", (DL_FUNC) &_hpa_print_summary_hpaSelection, 1},
-    {"_hpa_plot_hpaSelection", (DL_FUNC) &_hpa_plot_hpaSelection, 2},
     {"_hpa_logLik_hpaSelection", (DL_FUNC) &_hpa_logLik_hpaSelection, 1},
     {"_hpa_normalMoment", (DL_FUNC) &_hpa_normalMoment, 7},
     {"_hpa_truncatedNormalMoment", (DL_FUNC) &_hpa_truncatedNormalMoment, 14},

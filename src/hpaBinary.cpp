@@ -21,10 +21,10 @@ using namespace RcppParallel;
 //' @template formula_Template
 //' @template data_Template
 //' @template K_Template
-//' @template z_mean_fixed_Template
-//' @template z_sd_fixed_Template
-//' @template z_constant_fixed_Template
-//' @template z_coef_first_fixed_Template
+//' @template mean_fixed_Template
+//' @template sd_fixed_Template
+//' @template constant_fixed_Template
+//' @template coef_fixed_Template
 //' @template x0_binary_Template
 //' @template cov_type_Template
 //' @template boot_iter_Template
@@ -82,10 +82,10 @@ using namespace RcppParallel;
 List hpaBinary(Rcpp::Formula formula,
 	DataFrame data,
 	int K = 1,
-	double z_mean_fixed = NA_REAL,
-	double z_sd_fixed = NA_REAL,
-	double z_constant_fixed = 0,
-	bool is_z_coef_first_fixed = true,
+	double mean_fixed = NA_REAL,
+	double sd_fixed = NA_REAL,
+	double constant_fixed = 0,
+	bool coef_fixed = true,
 	bool is_x0_probit = true,
 	bool is_sequence = false,
 	NumericVector x0 = NumericVector(0),
@@ -121,7 +121,7 @@ List hpaBinary(Rcpp::Formula formula,
       }
       
       // Validate polynomial degree
-      pol_Validate(NumericVector::create(K), NumericVector(0));
+      pol_Validate(NumericVector::create(K), NumericVector(0), true);
   }
 
 	// Load additional environments
@@ -170,9 +170,9 @@ List hpaBinary(Rcpp::Formula formula,
 	int pol_coefficients_n = K;
 
 	// Initialize bool values related to fixed parameters
-	bool is_z_mean_fixed = !R_IsNA(z_mean_fixed);
-	bool is_z_sd_fixed = !R_IsNA(z_sd_fixed);
-	bool is_z_constant_fixed = !R_IsNA(z_constant_fixed);
+	bool is_z_mean_fixed = !R_IsNA(mean_fixed);
+	bool is_z_sd_fixed = !R_IsNA(sd_fixed);
+	bool is_z_constant_fixed = !R_IsNA(constant_fixed);
 
 	// Working with Data
 
@@ -213,8 +213,8 @@ List hpaBinary(Rcpp::Formula formula,
 		// for K=0
 		List results(K + 1);
 		results[0] = hpaBinary(formula, data, 
-                         0, z_mean_fixed, z_sd_fixed, z_constant_fixed, 
-                         is_z_coef_first_fixed, true, false, NumericVector(0), 
+                         0, mean_fixed, sd_fixed, constant_fixed, 
+                         coef_fixed, true, false, NumericVector(0), 
                          "sandwich", 100, is_parallel, 
                          opt_type, opt_control, false);
 		List results_current = results[0];
@@ -232,11 +232,11 @@ List hpaBinary(Rcpp::Formula formula,
 		{
 			if (is_z_sd_fixed)
 			{
-				z_sd_fixed = results_current["sd"];
+				sd_fixed = results_current["sd"];
 			}
 			results[i] = hpaBinary(formula, data, i, 
-                          z_mean_fixed, z_sd_fixed, z_constant_fixed, 
-                          is_z_coef_first_fixed, 
+                          mean_fixed, sd_fixed, constant_fixed, 
+                          coef_fixed, 
                           false, false, x0, "sandwich", 100, is_parallel, 
                           opt_type, opt_control);
 			results_current = results[i];
@@ -268,7 +268,7 @@ List hpaBinary(Rcpp::Formula formula,
 		// note thet constant is already in z_d_col or not
 		x0 = NumericVector(pol_coefficients_n +
 							         !is_z_mean_fixed + !is_z_sd_fixed +
-							         z_d_col - is_z_coef_first_fixed);
+							         z_d_col - coef_fixed);
 	}
 
 	// Assign indexes
@@ -312,7 +312,7 @@ List hpaBinary(Rcpp::Formula formula,
 	
 		// for z coefficients
 		// Note that z_d_col may contain or not the constant term
-	int n_coef = z_d_col - is_z_coef_first_fixed; // number of 
+	int n_coef = z_d_col - coef_fixed; // number of 
 	                                              // estimated coefficients
 	NumericVector z_coef_ind(n_coef);
 
@@ -357,7 +357,7 @@ List hpaBinary(Rcpp::Formula formula,
 		// input parameters should be used for adjust purposes
 		double coef_adjust = std::abs(glm_coef[1]);
 		
-		if (is_z_coef_first_fixed)
+		if (coef_fixed)
 		{
 		  // Adjust all coefficients
 		  glm_coef = glm_coef / coef_adjust;
@@ -365,7 +365,7 @@ List hpaBinary(Rcpp::Formula formula,
 			// Adjust sd to the first coefficient value
 			if (is_z_sd_fixed)
 			{
-				z_sd_fixed /= coef_adjust;
+				sd_fixed /= coef_adjust;
 			} else {
 				x0[z_sd_ind] = x0[z_sd_ind] / coef_adjust;
 			}
@@ -373,7 +373,7 @@ List hpaBinary(Rcpp::Formula formula,
 		  // Adjust coefficients to sd parameter
 			if (is_z_sd_fixed)
 			{
-				glm_coef = glm_coef / z_sd_fixed;
+				glm_coef = glm_coef / sd_fixed;
 			}
 		}
 		if (!is_z_constant_fixed)
@@ -384,13 +384,13 @@ List hpaBinary(Rcpp::Formula formula,
 			{
 				x0[z_mean_ind] = glm_coef[0];           // already adjusted because 
 			} else {                                  // glm_coef = glm_coef / coef_adjust 
-				z_mean_fixed = glm_coef[0];
+				mean_fixed = glm_coef[0];
 			}
 		}
 		for (int i = 0; i < (n_coef - !is_z_constant_fixed); i++)
 		{
 			x0[z_coef_ind[i]] = glm_coef[i + 1 +                // + 1 to omit constant 
-			                            is_z_coef_first_fixed]; // assigned previously
+			                            coef_fixed]; // assigned previously
 		}
 	}
 
@@ -400,7 +400,7 @@ List hpaBinary(Rcpp::Formula formula,
 	    // Collect some values to lists since there are limited 
 	    // number of objects could be stored in the list in Rcpp
 	List is_List = List::create(
-	  Named("is_z_coef_first_fixed") = is_z_coef_first_fixed, 
+	  Named("coef_fixed") = coef_fixed, 
 		Named("is_z_mean_fixed") = is_z_mean_fixed,
 		Named("is_z_sd_fixed") = is_z_sd_fixed,
 		Named("is_z_constant_fixed") = is_z_constant_fixed);
@@ -412,9 +412,9 @@ List hpaBinary(Rcpp::Formula formula,
     Named("pol_coefficients_ind") = pol_coefficients_ind);
 
 	List fixed_List = List::create(
-	  Named("z_mean_fixed") = z_mean_fixed,
-	  Named("z_sd_fixed") = z_sd_fixed,
-	  Named("z_constant_fixed") = z_constant_fixed);
+	  Named("mean_fixed") = mean_fixed,
+	  Named("sd_fixed") = sd_fixed,
+	  Named("constant_fixed") = constant_fixed);
 	
 	
 	  // Store all the values into the list
@@ -666,7 +666,7 @@ List hpaBinary(Rcpp::Formula formula,
 	}
 	else
 	{
-		z_mean = NumericVector::create(z_mean_fixed);
+		z_mean = NumericVector::create(mean_fixed);
 	}
 
 	NumericVector z_sd = NumericVector(1);
@@ -676,7 +676,7 @@ List hpaBinary(Rcpp::Formula formula,
 	}
 	else
 	{
-		z_sd = NumericVector::create(z_sd_fixed);
+		z_sd = NumericVector::create(sd_fixed);
 	}
 
 	NumericVector z_coef = x1[z_coef_ind];
@@ -810,7 +810,7 @@ List hpaBinary(Rcpp::Formula formula,
 	    Named("sd") = sd_dev);
 	}
 
-	// Prepare beautifull results output
+	// Prepare beautiful results output
 	NumericMatrix results(x1_n, 4);
 	
 	StringVector results_cols = StringVector::create("Estimate", "Std. Error", 
@@ -872,7 +872,7 @@ List hpaBinary(Rcpp::Formula formula,
 	}
 	
 	// remove first regressors if its coefficient is fixed
-	if (is_z_coef_first_fixed)
+	if (coef_fixed)
 	{
 	  z_df_names.erase(0);
 	}
@@ -886,20 +886,20 @@ List hpaBinary(Rcpp::Formula formula,
                                  z_coef_ind[i - coef_start]));
 		double z_stat = results(i, 0) / results(i, 1);
 		NumericVector F_z_stat = pnorm(NumericVector::create(z_stat));
-		results(i, 2) = 2 * std::min(F_z_stat[0], 1 - F_z_stat[0]);
+		results(i, 2) = z_stat;
 		results(i, 3) = 2 * std::min(F_z_stat[0], 1 - F_z_stat[0]);
 	}
 
 		// for expectation and variance
 	NumericVector z_e = ehpa(NumericMatrix(1, 1), pol_coefficients, 
                            NumericVector::create(K),
-		LogicalVector::create(false), LogicalVector::create(false),
-		z_mean, z_sd, 
-		NumericVector::create(1), false, false);
+		                       NumericVector(0), NumericVector(0),
+		                       z_mean, z_sd, 
+		                       NumericVector::create(1), false, false);
 
 	NumericVector z_e_2 = ehpa(NumericMatrix(1, 1), pol_coefficients, 
                              NumericVector::create(K),
-		LogicalVector::create(0), LogicalVector::create(0),
+                             NumericVector(0), NumericVector(0),
 		z_mean, z_sd,
 		NumericVector::create(2), false, false);
 
@@ -919,7 +919,7 @@ List hpaBinary(Rcpp::Formula formula,
 
 	StringVector z_coef_names = results_rows[z_coef_ind];
 
-	if (is_z_coef_first_fixed)
+	if (coef_fixed)
 	{
 	  z_coef.push_front(1); // add identity coefficient for fixed value
 	  z_coef_names.push_front(first_coef_name);
@@ -937,21 +937,21 @@ List hpaBinary(Rcpp::Formula formula,
 
 	if (is_z_constant_fixed)
 	{
-		z_latent = z_latent + z_constant_fixed;
+		z_latent = z_latent + constant_fixed;
 	}
 
 	NumericVector z_prob = 1 - phpa(-1.0 * z_latent, pol_coefficients,
                               		NumericVector::create(K),
-                              		LogicalVector::create(0), 
-                              		LogicalVector::create(0),
+                              		NumericVector(0), 
+                              		NumericVector(0),
                               		z_mean, z_sd,
                               		is_parallel, false, false);
 	
 	// Estimate marginal effects
 	NumericVector z_den = dhpa(-1.0 * z_latent, pol_coefficients,
                              NumericVector::create(K),
-                             LogicalVector::create(0), 
-                             LogicalVector::create(0),
+                             NumericVector(0),
+                             NumericVector(0),
                              z_mean, z_sd,
                              is_parallel, false, false);
 
@@ -1022,7 +1022,7 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
   bool is_parallel = hpaBinary_args["is_parallel"];
   
 	// Get values from the is_List
-	bool is_z_coef_first_fixed = is_List["is_z_coef_first_fixed"];
+	bool coef_fixed = is_List["coef_fixed"];
 	bool is_z_mean_fixed = is_List["is_z_mean_fixed"];
 	bool is_z_sd_fixed = is_List["is_z_sd_fixed"];
 	bool is_z_constant_fixed = is_List["is_z_constant_fixed"];
@@ -1034,9 +1034,9 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 	NumericVector pol_coefficients_ind = ind_List["pol_coefficients_ind"];
 	
 	// Get values from the fixed_List
-	double z_mean_fixed = fixed_List["z_mean_fixed"];
-	double z_sd_fixed = fixed_List["z_sd_fixed"];
-	double z_constant_fixed = fixed_List["z_constant_fixed"];
+	double mean_fixed = fixed_List["mean_fixed"];
+	double sd_fixed = fixed_List["sd_fixed"];
+	double constant_fixed = fixed_List["constant_fixed"];
 
 	// Assign estimated parameters values to corresponding vectors
 
@@ -1059,7 +1059,7 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 
 	if (is_z_mean_fixed)
 	{
-		z_mean[0] = z_mean_fixed;
+		z_mean[0] = mean_fixed;
 	}
 	else {
 		z_mean[0] = x0[z_mean_ind];
@@ -1070,7 +1070,7 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 
 	if (is_z_sd_fixed)
 	{
-		z_sd[0] = z_sd_fixed;
+		z_sd[0] = sd_fixed;
 	}
 	else {
 		z_sd[0] = x0[z_sd_ind];
@@ -1079,7 +1079,7 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 		// coefficients for independend variables
 	NumericVector z_coef_R = x0[z_coef_ind];
 
-	if (is_z_coef_first_fixed)
+	if (coef_fixed)
 	{
 		z_coef_R.push_front(1); // add identity coefficient for fixed value
 	}
@@ -1092,8 +1092,8 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 
 	  if (is_z_constant_fixed)
   	{
-  		z_h_1 = z_h_1 + z_constant_fixed;
-	    z_h_0 = z_h_0 + z_constant_fixed;
+  		z_h_1 = z_h_1 + constant_fixed;
+	    z_h_0 = z_h_0 + constant_fixed;
   	}
 	  
 	// get number of 1 observations
@@ -1105,13 +1105,13 @@ List hpaBinaryLnLOptim_List(NumericVector x0, List hpaBinary_args)
 	
 	NumericVector lnL_z_1 = ihpa(-1.0 * z_h_1, inf_vec,
                                pol_coefficients, pol_degrees,
-                               LogicalVector{false}, LogicalVector{false},
+                               NumericVector(0), NumericVector(0),
                                z_mean, z_sd, 
                                is_parallel, true, false);
 	
 	NumericVector lnL_z_0 = phpa(-1.0 * z_h_0,
                                pol_coefficients, pol_degrees,
-                               LogicalVector{false}, LogicalVector{false},
+                               NumericVector(0), NumericVector(0),
                                z_mean, z_sd, 
                                is_parallel, true, false);
 
@@ -1190,7 +1190,7 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   bool is_parallel = hpaBinary_args["is_parallel"];
   
   // Get values from the is_List
-  bool is_z_coef_first_fixed = is_List["is_z_coef_first_fixed"];
+  bool coef_fixed = is_List["coef_fixed"];
   bool is_z_mean_fixed = is_List["is_z_mean_fixed"];
   bool is_z_sd_fixed = is_List["is_z_sd_fixed"];
   bool is_z_constant_fixed = is_List["is_z_constant_fixed"];
@@ -1202,9 +1202,9 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   NumericVector pol_coefficients_ind = ind_List["pol_coefficients_ind"];
   
   // Get values from the fixed_List
-  double z_mean_fixed = fixed_List["z_mean_fixed"];
-  double z_sd_fixed = fixed_List["z_sd_fixed"];
-  double z_constant_fixed = fixed_List["z_constant_fixed"];
+  double mean_fixed = fixed_List["mean_fixed"];
+  double sd_fixed = fixed_List["sd_fixed"];
+  double constant_fixed = fixed_List["constant_fixed"];
   
   // Get parameters number
   int n_param = x0.size();
@@ -1233,7 +1233,7 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   
   if (is_z_mean_fixed)
   {
-    z_mean[0] = z_mean_fixed;
+    z_mean[0] = mean_fixed;
   }
   else {
     z_mean[0] = x0[z_mean_ind];
@@ -1244,7 +1244,7 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   
   if (is_z_sd_fixed)
   {
-    z_sd[0] = z_sd_fixed;
+    z_sd[0] = sd_fixed;
   }
   else {
     z_sd[0] = x0[z_sd_ind];
@@ -1253,7 +1253,7 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
     // coefficients for independend variables
   NumericVector z_coef_R = x0[z_coef_ind];
   
-  if (is_z_coef_first_fixed)
+  if (coef_fixed)
   {
     z_coef_R.push_front(1); // add identity coefficient for fixed value
   }
@@ -1266,8 +1266,8 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   
   if (is_z_constant_fixed)
   {
-    z_h_1 = z_h_1 + z_constant_fixed;
-    z_h_0 = z_h_0 + z_constant_fixed;
+    z_h_1 = z_h_1 + constant_fixed;
+    z_h_0 = z_h_0 + constant_fixed;
   }
   
   // calculate observations numbers
@@ -1294,16 +1294,16 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
 
   NumericMatrix all_grad_1 = ihpaDiff(-1.0 * z_h_1, inf_vec_1,
                                       pol_coefficients, pol_degrees,
-                                      LogicalVector{false}, 
-                                      LogicalVector{false},
+                                      NumericVector(0), 
+                                      NumericVector(0),
                                       z_mean, z_sd,
                                       "all",
                                       is_parallel, true, false);
 
   NumericMatrix all_grad_0 = ihpaDiff(neg_inf_vec_0, -1.0 * z_h_0,
                                       pol_coefficients, pol_degrees,
-                                      LogicalVector{false}, 
-                                      LogicalVector{false},
+                                      NumericVector(0), 
+                                      NumericVector(0),
                                       z_mean, z_sd,
                                       "all",
                                       is_parallel, true, false);
@@ -1351,9 +1351,9 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   {
     NumericVector my_grad_tmp = NumericVector(n_obs);
     
-    my_grad_tmp[Range(0, n_obs_1 - 1)] = z_d_1_adj(_, i + is_z_coef_first_fixed) *
+    my_grad_tmp[Range(0, n_obs_1 - 1)] = z_d_1_adj(_, i + coef_fixed) *
                                          all_grad_1(_, pol_coefficients_n + 2);
-    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = z_d_0_adj(_, i + is_z_coef_first_fixed) *
+    my_grad_tmp[Range(n_obs_1, n_obs - 1)] = z_d_0_adj(_, i + coef_fixed) *
                                              all_grad_0(_, pol_coefficients_n + 3);
     
     my_grad(_, z_coef_ind[i]) = my_grad_tmp;
@@ -1412,7 +1412,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   NumericMatrix my_hessian = NumericMatrix(n_param, n_param);
   
   // Get values from the is_List
-  bool is_z_coef_first_fixed = is_List["is_z_coef_first_fixed"];
+  bool coef_fixed = is_List["coef_fixed"];
   bool is_z_mean_fixed = is_List["is_z_mean_fixed"];
   bool is_z_sd_fixed = is_List["is_z_sd_fixed"];
   
@@ -1423,8 +1423,8 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   NumericVector pol_coefficients_ind = ind_List["pol_coefficients_ind"];
   
   // Get values from the fixed_List
-  double z_mean_fixed = fixed_List["z_mean_fixed"];
-  double z_sd_fixed = fixed_List["z_sd_fixed"];
+  double mean_fixed = fixed_List["mean_fixed"];
+  double sd_fixed = fixed_List["sd_fixed"];
   
   // Assign estimated parameters values to corresponding vectors
   
@@ -1447,7 +1447,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   
   if (is_z_mean_fixed)
   {
-    z_mean[0] = z_mean_fixed;
+    z_mean[0] = mean_fixed;
   }
   else {
     z_mean[0] = x0[z_mean_ind];
@@ -1458,7 +1458,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   
   if (is_z_sd_fixed)
   {
-    z_sd[0] = z_sd_fixed;
+    z_sd[0] = sd_fixed;
   }
   else {
     z_sd[0] = x0[z_sd_ind];
@@ -1467,7 +1467,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   // coefficients for independend variables
   NumericVector z_coef_R = x0[z_coef_ind];
   
-  if (is_z_coef_first_fixed)
+  if (coef_fixed)
   {
     z_coef_R.push_front(1); // add identity coefficient for fixed value
   }
@@ -1555,7 +1555,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue,
 
 		// extract fixed values
 	List fixed_List = model_Lists["fixed_List"];
-	double z_constant_fixed = fixed_List["z_constant_fixed"];
+	double constant_fixed = fixed_List["constant_fixed"];
 
 		// extract coefficients
 	NumericVector pol_coefficients = model["pol_coefficients"];
@@ -1622,7 +1622,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue,
 
 	if (is_z_constant_fixed)
 	{
-		z_latent = z_latent + z_constant_fixed;
+		z_latent = z_latent + constant_fixed;
 	}
 
 	if (!is_prob)
@@ -1633,7 +1633,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue,
 
 	NumericVector z_prob = 1 - phpa((-1) * z_latent, pol_coefficients,
 		NumericVector::create(K),
-		LogicalVector::create(0), LogicalVector::create(0),
+		NumericVector(0), NumericVector(0),
 		z_mean, z_sd, false, false, false);
 
 	return(z_prob);
@@ -1684,14 +1684,14 @@ void print_summary_hpaBinary(List x)
 
 	// Extract is values
 	List is_List = model_Lists["is_List"];
-	bool is_z_coef_first_fixed = is_List["is_z_coef_first_fixed"];
+	bool coef_fixed = is_List["coef_fixed"];
 	bool is_z_mean_fixed = is_List["is_z_mean_fixed"];
 	bool is_z_sd_fixed = is_List["is_z_sd_fixed"];
 	bool is_z_constant_fixed = is_List["is_z_constant_fixed"];
 
 	// Extract fixed values
 	List fixed_List = model_Lists["fixed_List"];
-	double z_constant_fixed = fixed_List["z_constant_fixed"];
+	double constant_fixed = fixed_List["constant_fixed"];
 
 	// Other stuff
 	NumericVector x1 = model["x1"];
@@ -1757,11 +1757,11 @@ void print_summary_hpaBinary(List x)
 	if (is_z_constant_fixed)
 	{
 		std::string new_str = "(Intercept) = " + 
-		                      std::to_string(z_constant_fixed) + "\n";
+		                      std::to_string(constant_fixed) + "\n";
 	  cat_R(new_str.c_str());
 	}
 
-	if (is_z_coef_first_fixed)
+	if (coef_fixed)
 	{
 		String new_str_names = data_names(1);
 		std::string new_str_names_str = new_str_names;
@@ -1788,82 +1788,6 @@ void print_summary_hpaBinary(List x)
 	cat_R("---\n");
 	cat_R("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
 	cat_R("--------------------------------------------------------------\n");
-}
-
-//' Plot hpaBinary random errors approximated density
-//' @param x Object of class "hpaBinary"
-//' @export	
-// [[Rcpp::export]]
-void plot_hpaBinary(List x) 
-{
-  // Extract the model
-	List model = x;
-
-	// Load additional environments
-	Rcpp::Environment base_env("package:base");
-	Rcpp::Function round_R = base_env["round"];
-	Rcpp::Function Version_R = base_env["R.Version"];
-	Rcpp::Function plot_R = base_env["c"];
-
-	// For compatibility with earlier versions of R
-	List Version_R_List = Version_R();
-	CharacterVector major_vec = Version_R_List["major"];
-	if(major_vec[0] == "4")
-	{
-	  plot_R = base_env["plot"];
-	} else {
-	  Rcpp::Environment graphics_env("package:graphics");
-	  plot_R = graphics_env["plot"];
-	}
-	
-	// Load data from the model
-	NumericVector pol_coefficients = model["pol_coefficients"];
-	NumericVector pol_degrees = model["pol_degrees"];
-
-	NumericVector mean = model["mean"];
-	NumericVector sd = model["sd"];
-
-	// Adjust precision
-	double errors_exp = model["errors_exp"];
-	double errors_var = model["errors_var"];
-
-	double plot_min = errors_exp - 3 * sqrt(errors_var);
-	double plot_max = errors_exp + 3 * sqrt(errors_var);
-
-	int n = 10000;
-
-	double precise = (plot_max - plot_min) / n;
-
-	NumericMatrix x_matr = NumericMatrix(n, 1);
-	x_matr(0, 0) = plot_min;
-	
-	for (int i = 1; i < n; i++)
-	{
-		x_matr(i, 0) = x_matr(i - 1, 0) + precise;
-	}
-
-	NumericVector x_vec = x_matr(_, 0);
-
-	// Calculate densities
-	NumericVector den = dhpa(x_matr,
-		pol_coefficients, pol_degrees,
-		LogicalVector::create(false),
-		LogicalVector::create(false),
-		mean, sd, false, false, false);
-
-	double den_min = min(den);
-	double den_max = max(den);
-
-	// Build the plot
-	plot_R(Rcpp::_["x"] = x_vec, Rcpp::_["y"] = den,
-		Rcpp::_["xlim"] = NumericVector::create(plot_min, plot_max),
-		Rcpp::_["xaxp"] = NumericVector::create(plot_min, plot_max, 5),
-		Rcpp::_["yaxp"] = NumericVector::create(den_min, den_max, 5),
-		Rcpp::_["type"] = "l",
-		Rcpp::_["lwd"] = 3,
-		Rcpp::_["main"] = "Random Errors Density Approximation Plot",
-		Rcpp::_["xlab"] = "value", 
-		Rcpp::_["ylab"] = "density");
 }
 
 //' Calculates log-likelihood for "hpaBinary" object

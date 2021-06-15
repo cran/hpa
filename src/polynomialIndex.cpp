@@ -55,7 +55,10 @@ NumericMatrix polynomialIndex(NumericVector pol_degrees = NumericVector(0),
   // Validation stuff
   if(is_validation)
   {
-    pol_Validate(pol_degrees, NumericVector(0));
+    if(min(pol_degrees) < 0)
+    {
+      stop("pol_degrees should be a vector of non-negative integers");
+    }
   }
   
   // Convert pol_degrees to std vector of integer values
@@ -131,7 +134,7 @@ Rcpp::String printPolynomial(NumericVector pol_degrees,
   // Validation stuff
   if(is_validation)
   {
-    pol_Validate(pol_degrees, pol_coefficients);
+    pol_Validate(pol_degrees, NumericVector(0), true);
   }
   
 	// Load R environments

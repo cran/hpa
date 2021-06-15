@@ -5,16 +5,21 @@ using namespace RcppArmadillo;
 // [[Rcpp::depends(RcppArmadillo)]]
 
 void pol_Validate(NumericVector pol_degrees = NumericVector(0),
-                  NumericVector pol_coefficients = NumericVector(0))
+                  NumericVector pol_coefficients = NumericVector(0),
+                  bool is_pol_coefficients_empty = false)
 {
   int n = pol_degrees.size();
   int m = pol_coefficients.size();
   
-  // Validation for polynomial degrees
+  if(n == 0)
+  {
+    stop("pol_degrees vector should be provided");
+  }
   
+  // Validation for polynomial degrees
   bool pol_degrees_is_na = any(is_na(pol_degrees));
   bool pol_degrees_is_nan = any(is_nan(pol_degrees));
-  bool pol_degrees_is_epmpy = n == 0;
+  bool pol_degrees_is_epmpy = (n == 0);
   
   bool pol_degrees_is_notposint = false;
   for(int i = 0; i < n; i ++)
@@ -34,7 +39,6 @@ void pol_Validate(NumericVector pol_degrees = NumericVector(0),
   }
   
   // Validation for polynomial coefficients
-
   if(m > 0)
   {
     int pol_degrees_prod = 1;
@@ -55,7 +59,12 @@ void pol_Validate(NumericVector pol_degrees = NumericVector(0),
     {
       warning("pol_coefficients contains NA and (or) NaN values.");
     }
-  }
+  } else {
+    if(!is_pol_coefficients_empty)
+    {
+      stop("pol_coefficients should not be an empty vector");
+    }
+    }
 }
 
 void ind_Validate(LogicalVector given_ind,

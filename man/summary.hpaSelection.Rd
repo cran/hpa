@@ -12,7 +12,8 @@
 \item{...}{further arguments (currently ignored)}
 }
 \value{
-This function returns the same list as \code{\link[hpa]{hpaSelection}} 
+This function returns the same list 
+as \code{\link[hpa]{hpaSelection}} 
 function changing its class to "summary.hpaSelection".
 }
 \description{

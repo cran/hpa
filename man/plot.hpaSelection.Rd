@@ -4,22 +4,19 @@
 \alias{plot.hpaSelection}
 \title{Plot hpaSelection random errors approximated density}
 \usage{
-\method{plot}{hpaSelection}(x, y = NULL, ..., is_outcome = TRUE)
+\method{plot}{hpaSelection}(x, y = NULL, ..., type = "outcome")
 }
 \arguments{
 \item{x}{Object of class "hpaSelection"}
 
 \item{y}{this parameter currently ignored}
 
-\item{...}{further arguments (currently ignored)}
+\item{...}{further arguments to be passed to \code{\link[base]{plot}}
+function.}
 
-\item{is_outcome}{logical; if TRUE then function plots the graph for outcome equation random errors. 
-Otherwise plot for selection equation random errors will be plotted.}
-}
-\value{
-This function returns the list containing random error expected value \code{errors_exp}
-and variance \code{errors_var} estimates for selection (if \code{is_outcome = TRUE}) or outcome
-(if \code{is_outcome = FALSE}) equation.
+\item{type}{character; if "outcome" then function plots the graph for 
+outcome equation random errors, if "selection" then plot for selection 
+equation random errors will be generated.}
 }
 \description{
 Plot hpaSelection random errors approximated density

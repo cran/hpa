@@ -17,7 +17,7 @@ using namespace RcppParallel;
 //' density using Hermite polynomial based approximating function proposed by 
 //' Gallant and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details' 
 //' section to get more information concerning this approximating function.
-//' @template x_ML_Template
+//' @template data_ML_Template
 //' @template pol_degrees_Template
 //' @template tr_left_vec_Template
 //' @template tr_right_vec_Template
@@ -54,7 +54,7 @@ using namespace RcppParallel;
 //' \item \code{results} - numeric matrix representing estimation results.
 //' \item \code{log-likelihood} - value of Log-Likelihood function.
 //' \item \code{AIC} - AIC value.
-//' \item \code{data} - the same as \code{x} input parameter but without \code{NA} observations.
+//' \item \code{data} - the same as \code{data} input parameter but without \code{NA} observations.
 //' \item \code{n_obs} - number of observations.
 //' \item \code{bootstrap} - list where bootstrap estimation results are stored.}
 //' @seealso \link[hpa]{summary.hpaML}, \link[hpa]{predict.hpaML}, 
@@ -62,12 +62,12 @@ using namespace RcppParallel;
 //' @template hpaML_examples_Template
 //' @export
 // [[Rcpp::export]]
-List hpaML(NumericMatrix x,
+List hpaML(NumericVector data,
 	NumericVector pol_degrees = NumericVector(0),
 	NumericVector tr_left = NumericVector(0),
 	NumericVector tr_right = NumericVector(0),
-	LogicalVector given_ind = LogicalVector(0),
-	LogicalVector omit_ind = LogicalVector(0),
+	NumericVector given_ind = NumericVector(0),
+	NumericVector omit_ind = NumericVector(0),
 	NumericVector x0 = NumericVector(0),
 	String cov_type = "sandwich",
 	int boot_iter = 100,
@@ -76,8 +76,48 @@ List hpaML(NumericMatrix x,
 	List opt_control = R_NilValue,
 	bool is_validation = true)
 {
-  // Validation Stuff
+  // Prevent from overwriting variables in global environment
+  x0 = clone(x0);
+  data = clone(data);
+  tr_left = clone(tr_left);
+  tr_right = clone(tr_right);
   
+  // Load additional environments
+  
+    // stats environment
+  Rcpp::Environment stats_env("package:stats");
+  Rcpp::Function na_omit_R = stats_env["na.omit"];
+  Rcpp::Function optim = stats_env["optim"];
+  Rcpp::Function cov_R = stats_env["cov"];
+  
+    // base environment
+  Rcpp::Environment base_env("package:base");
+  Rcpp::Function c_R = base_env["c"];
+  Rcpp::Function diag_R = base_env["diag"];
+  Rcpp::Function requireNamespace_R = base_env["requireNamespace"];
+  Rcpp::Function cat_R = base_env["cat"];
+  
+    // GA environment
+  Rcpp::Function ga_R = stats_env["optim"];
+  Rcpp::Function ga_summary_R = stats_env["optim"];
+  
+  // Initialize polynomial structure 
+  // related values
+  int pol_degrees_n = pol_degrees.size();  // random vector dimensionality
+  int pol_coefficients_n = 1;              // number of polynomial coefficients
+  
+  // Remove NA values from data
+  data = na_omit_R(data);
+  
+  // Get the number of observations
+  int n_obs = data.size() / pol_degrees_n;
+  
+  // Convert data to matrix
+  data.attr("dim") = Dimension(n_obs, pol_degrees_n);
+  NumericMatrix x = as<NumericMatrix>(data);
+  
+  // Validation Stuff
+
   if(is_validation)
   {
       // Validate covariance matrix type
@@ -103,7 +143,7 @@ List hpaML(NumericMatrix x,
     int target_dim = x.ncol();
     
     // Validate polynomial degrees
-    pol_Validate(pol_degrees, NumericVector(0));
+    pol_Validate(pol_degrees, NumericVector(0), true);
 
     if (pol_degrees.size() != target_dim)
     {
@@ -111,7 +151,7 @@ List hpaML(NumericMatrix x,
     }
     
     // Validate conditional and omitted values
-    ind_Validate(given_ind, omit_ind);
+    // ind_Validate(given_ind, omit_ind);
     
     int n_given_ind = given_ind.size();
     if((n_given_ind != 0) & (n_given_ind != target_dim))
@@ -132,24 +172,6 @@ List hpaML(NumericMatrix x,
       stop("tr_left and tr_right should be vectors of the same dimensions");
     }
   }
-	// Load additional environments
-
-		// stats environment
-	Rcpp::Environment stats_env("package:stats");
-	Rcpp::Function na_omit_R = stats_env["na.omit"];
-	Rcpp::Function optim = stats_env["optim"];
-	Rcpp::Function cov_R = stats_env["cov"];
-
-		// base environment
-	Rcpp::Environment base_env("package:base");
-	Rcpp::Function c_R = base_env["c"];
-	Rcpp::Function diag_R = base_env["diag"];
-	Rcpp::Function requireNamespace_R = base_env["requireNamespace"];
-	Rcpp::Function cat_R = base_env["cat"];
-	
-	  // GA environment
-	Rcpp::Function ga_R = stats_env["optim"];
-	Rcpp::Function ga_summary_R = stats_env["optim"];
 	
 	    // should be LogicalVector not bool otherwise not working
 	LogicalVector is_ga_installed = requireNamespace_R(Rcpp::_["package"] = "GA", 
@@ -167,18 +189,6 @@ List hpaML(NumericMatrix x,
 	    stop("Package GA needed if (opt_type = 'GA'). Please install it.");
 	  }
 	}
-	
-	// Remove NA values from data
-	x = clone(x);
-	x = na_omit_R(x);
-	
-	// Get the number of observations
-	int n_obs = x.nrow();
-	
-	// Initialize polynomial structure 
-	// related values
-	int pol_degrees_n = pol_degrees.size();  // random vector dimensionality
-	int pol_coefficients_n = 1;              // number of polynomial coefficients
 
 	// Calculate the number of 
 	// polynomial coefficients
@@ -287,7 +297,7 @@ List hpaML(NumericMatrix x,
 		std::fill(tr_left_mat.begin(), tr_left_mat.end(), NA_REAL);
 		std::fill(tr_right_mat.begin(), tr_right_mat.end(), NA_REAL);
 	}
-	
+
 	// Apply optimization routine
 	
 	  // Set optim control parameters
@@ -309,7 +319,7 @@ List hpaML(NumericMatrix x,
                         Named("tr_left") = tr_left_mat,
                         Named("tr_right") = tr_right_mat,
                         Named("is_parallel") = is_parallel);
-	
+
 	  // Perform the optimization
 	List optim_results = optim(
 	    Rcpp::_["par"] = x0,
@@ -322,8 +332,18 @@ List hpaML(NumericMatrix x,
 
 	// Extract the point of maximum from optim function
 	NumericVector x1 = optim_results["par"];
-	
 	int x1_n = x1.size();
+	
+	// Check for improvement due to optimization
+	if(opt_type == "GA")
+	{
+  	double opt_value_1 = hpaLnLOptim(x1, hpaML_args);
+  	double opt_value_0 = hpaLnLOptim(x0, hpaML_args);
+  	if (opt_value_0 > opt_value_1)
+  	{
+  	  x1 = clone(x0);
+  	}
+	}
 	
 	  // Genetic algorithm
 	List ga_List;
@@ -338,10 +358,10 @@ List hpaML(NumericMatrix x,
 	    ga_suggestions = Rcpp::as<Rcpp::NumericMatrix>(
 	      opt_control["suggestions"]);
 	  } else {
-	    ga_suggestions= NumericMatrix(1, x1_n);
-  	  ga_suggestions(0,_) = x1;
+	    ga_suggestions = NumericMatrix(1, x1_n);
+  	  ga_suggestions(0, _) = x1;
 	  }
-  	
+
   	  // set lower and upper bounds for parameters space
   	NumericVector ga_lower = NumericVector(x1_n);
   	NumericVector ga_upper = NumericVector(x1_n);
@@ -368,7 +388,7 @@ List hpaML(NumericMatrix x,
   	  ga_lower[sd_ind] = ga_lower_sd;
   	  ga_upper[sd_ind] = ga_upper_sd;
   	  
-  	    // bounds for thepolynomial coefficients parameters
+  	    // bounds for the polynomial coefficients parameters
   	  ga_lower[pol_coefficients_ind] = -10;
   	  ga_upper[pol_coefficients_ind] = 10;
   	}
@@ -474,7 +494,7 @@ List hpaML(NumericMatrix x,
   	  Rcpp::_["seed"] = ga_seed,
       Rcpp::_["hpaML_args"] = hpaML_args,
       Rcpp::_["monitor"] = ga_monitor));
-  	
+
   	  // add \n in order to ensure that the prompt is at the next line
   	  if(ga_monitor)
   	  {
@@ -491,7 +511,7 @@ List hpaML(NumericMatrix x,
   	  Rcpp::_["fn"] = Rcpp::InternalFunction(&hpaLnLOptim),
   	  Rcpp::_["gr"] = Rcpp::InternalFunction(&hpaLnLOptim_grad),
   	  Rcpp::_["control"] = PGN_control,
-  	  Rcpp::_["method"] = "BFGS",
+  	  Rcpp::_["method"] = "Nelder-Mead",
   	  Rcpp::_["hessian"] = true,
   	  Rcpp::_["hpaML_args"] = hpaML_args);
 
@@ -743,7 +763,7 @@ List hpaML(NumericMatrix x,
 		Named("tr_right") = tr_right_mat,
 		Named("omit_ind") = omit_ind, 
 		Named("given_ind") = given_ind,
-		Named("cov_matrix") = cov_mat,
+		Named("cov_mat") = cov_mat,
 		Named("results") = results, 
 		Named("log-likelihood") = lnL, 
 		Named("AIC") = 2 * (x1_n - lnL),
@@ -765,14 +785,14 @@ List hpaLnLOptim_List(NumericVector x0, List hpaML_args)
   NumericMatrix x_data = hpaML_args["x_data"];
   NumericVector pol_coefficients_ind = hpaML_args["pol_coefficients_ind"];
   NumericVector pol_degrees = hpaML_args["pol_degrees"];
-  LogicalVector given_ind = hpaML_args["given_ind"];
-  LogicalVector omit_ind = hpaML_args["omit_ind"];
+  NumericVector given_ind = hpaML_args["given_ind"];
+  NumericVector omit_ind = hpaML_args["omit_ind"];
   NumericVector mean_ind = hpaML_args["mean_ind"];
   NumericVector sd_ind = hpaML_args["sd_ind"];
   NumericMatrix tr_left = hpaML_args["tr_left"];
   NumericMatrix tr_right = hpaML_args["tr_right"];
   bool is_parallel = hpaML_args["is_parallel"];
-  
+
   // Get number of observations
   int n = x_data.nrow();
   
@@ -864,7 +884,7 @@ double hpaLnLOptim(NumericVector x0, List hpaML_args)
   {
     return_aggregate = R_NegInf;
   }
-  
+
   return(return_aggregate);
 }
 
@@ -887,8 +907,8 @@ List hpaLnLOptim_grad_List(NumericVector x0, List hpaML_args)
   NumericMatrix x_data = hpaML_args["x_data"];
   NumericVector pol_coefficients_ind = hpaML_args["pol_coefficients_ind"];
   NumericVector pol_degrees = hpaML_args["pol_degrees"];
-  LogicalVector given_ind = hpaML_args["given_ind"];
-  LogicalVector omit_ind = hpaML_args["omit_ind"];
+  NumericVector given_ind = hpaML_args["given_ind"];
+  NumericVector omit_ind = hpaML_args["omit_ind"];
   NumericVector mean_ind = hpaML_args["mean_ind"];
   NumericVector sd_ind = hpaML_args["sd_ind"];
   NumericMatrix tr_left = hpaML_args["tr_left"];
@@ -1009,8 +1029,8 @@ NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
   NumericMatrix x_data = hpaML_args["x_data"];
   NumericVector pol_coefficients_ind = hpaML_args["pol_coefficients_ind"];
   NumericVector pol_degrees = hpaML_args["pol_degrees"];
-  LogicalVector given_ind = hpaML_args["given_ind"];
-  LogicalVector omit_ind = hpaML_args["omit_ind"];
+  NumericVector given_ind = hpaML_args["given_ind"];
+  NumericVector omit_ind = hpaML_args["omit_ind"];
   NumericVector mean_ind = hpaML_args["mean_ind"];
   NumericVector sd_ind = hpaML_args["sd_ind"];
   NumericMatrix tr_left = hpaML_args["tr_left"];
@@ -1107,8 +1127,8 @@ NumericVector predict_hpaML(List object,
 	NumericMatrix tr_left = model["tr_left"];
 	NumericMatrix tr_right = model["tr_right"];
 
-	LogicalVector omit_ind = model["omit_ind"];
-	LogicalVector given_ind = model["given_ind"];
+	NumericVector omit_ind = model["omit_ind"];
+	NumericVector given_ind = model["given_ind"];
 
 	NumericMatrix x = model["data"];
 

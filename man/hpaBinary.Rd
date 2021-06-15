@@ -8,10 +8,10 @@ hpaBinary(
   formula,
   data,
   K = 1L,
-  z_mean_fixed = NA_real_,
-  z_sd_fixed = NA_real_,
-  z_constant_fixed = 0,
-  is_z_coef_first_fixed = TRUE,
+  mean_fixed = NA_real_,
+  sd_fixed = NA_real_,
+  constant_fixed = 0,
+  coef_fixed = TRUE,
   is_x0_probit = TRUE,
   is_sequence = FALSE,
   x0 = numeric(0),
@@ -34,20 +34,20 @@ vectors of the same length.}
 
 \item{K}{non-negative integer representing polynomial degree (order).}
 
-\item{z_mean_fixed}{numeric value for binary choice 
+\item{mean_fixed}{numeric value for binary choice 
 equation random error density mean parameter. 
 Set it to \code{NA} (default) if this parameter should be 
 estimated rather than fixed.}
 
-\item{z_sd_fixed}{numeric value for binary choice equation random error
+\item{sd_fixed}{numeric value for binary choice equation random error
 density \code{sd} parameter. Set it to \code{NA} (default) if this parameter
 should be estimated rather than fixed.}
 
-\item{z_constant_fixed}{numeric value for binary choice 
+\item{constant_fixed}{numeric value for binary choice 
 equation constant parameter. Set it to \code{NA} (default) if this 
 parameter should be estimated rather than fixed.}
 
-\item{is_z_coef_first_fixed}{logical value indicating whether binary 
+\item{coef_fixed}{logical value indicating whether binary 
 equation first independent variable coefficient should be fixed 
 (\code{TRUE}) or estimated (\code{FALSE}).}
 
@@ -173,18 +173,18 @@ to \eqn{K=K_{1}}.
 The first polynomial coefficient (zero powers) 
 set to 1 for identification purposes i.e. \eqn{\alpha_{0}=1}.
 
-If \code{is_z_coef_first_fixed} is \code{TRUE} then the coefficient for the 
+If \code{coef_fixed} is \code{TRUE} then the coefficient for the 
 first independent variable in \code{formula} will be fixed to 1 i.e.
 \eqn{\gamma_{1}=1}.
 
-If \code{z_mean_fixed} is not \code{NA} then \eqn{\mu}=\code{z_mean_fixed}
+If \code{mean_fixed} is not \code{NA} then \eqn{\mu}=\code{mean_fixed}
 fixed.
 
-If \code{z_sd_fixed} is not \code{NA} then \eqn{\sigma}=\code{z_mean_fixed}
+If \code{sd_fixed} is not \code{NA} then \eqn{\sigma}=\code{mean_fixed}
 fixed. However if \code{is_x0_probit = TRUE} then parameter \eqn{\sigma} will 
 be scale adjusted in order to provide better initial point for optimization 
 routine. Please, extract \eqn{\sigma} adjusted value from the function's 
-output list. The same is for \code{z_mean_fixed}.
+output list. The same is for \code{mean_fixed}.
 
 Rows in \code{data} corresponding to variables mentioned in \code{formula}
 which have at least one \code{NA} value will be ignored.

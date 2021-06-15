@@ -6,7 +6,8 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 
 void pol_Validate(NumericVector pol_degrees,
-                  NumericVector pol_coefficients);
+                  NumericVector pol_coefficients,
+                  bool is_pol_coefficients_empty);
 
 void ind_Validate(LogicalVector given_ind,
                   LogicalVector omit_ind);

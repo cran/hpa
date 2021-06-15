@@ -8,8 +8,8 @@ hpaSelection(
   selection,
   outcome,
   data,
-  z_K = 1L,
-  y_K = 1L,
+  selection_K = 1L,
+  outcome_K = 1L,
   pol_elements = 3L,
   is_Newey = FALSE,
   x0 = numeric(0),
@@ -35,10 +35,10 @@ same length.}
 
 \item{data}{data frame containing the variables in the model.}
 
-\item{z_K}{non-negative integer representing 
+\item{selection_K}{non-negative integer representing 
 polynomial degree related to selection equation.}
 
-\item{y_K}{non-negative integer representing polynomial 
+\item{outcome_K}{non-negative integer representing polynomial 
 degree related to outcome equation.}
 
 \item{pol_elements}{number of conditional expectation approximating terms 
@@ -103,19 +103,19 @@ If \code{opt_type = "GA"} then it is the list containing
 \item \code{x1} - numeric vector of distribution parameters estimates.
 \item \code{Newey} - list containing information concerning Newey's 
 method estimation results.
-\item \code{z_mean} - estimate of the hermite polynomial mean parameter 
-related to selection equation random error marginal distribution.
-\item \code{y_mean} - estimate of the hermite polynomial mean parameter 
+\item \code{selection_mean} - estimate of the hermite polynomial mean 
+parameter related to selection equation random error marginal distribution.
+\item \code{outcome_mean} - estimate of the hermite polynomial mean parameter 
 related to outcome equation random error marginal distribution.
-\item \code{z_sd} - estimate of sd parameter related to selection equation 
-random error marginal distribution.
-\item \code{y_sd} - estimate of the hermite polynomial sd parameter related 
+\item \code{selection_sd} - estimate of sd parameter related to 
+selection equation random error marginal distribution.
+\item \code{outcome_sd} - estimate of the hermite polynomial sd parameter related 
 to outcome equation random error marginal distribution.
 \item \code{pol_coefficients} - polynomial coefficients estimates.
-\item \code{pol_degrees} - numeric vector which first element is \code{z_K} 
-and the second is \code{y_K}.
-\item \code{z_coef} - selection equation regression coefficients estimates.
-\item \code{y_coef} - outcome equation regression coefficients estimates.
+\item \code{pol_degrees} - numeric vector which first element is \code{selection_K} 
+and the second is \code{outcome_K}.
+\item \code{selection_coef} - selection equation regression coefficients estimates.
+\item \code{outcome_coef} - outcome equation regression coefficients estimates.
 \item \code{cov_mat} - covariance matrix estimate.
 \item \code{results} - numeric matrix representing estimation results.
 \item \code{log-likelihood} - value of Log-Likelihood function.
@@ -132,10 +132,10 @@ input parameter.
 Abovementioned list \code{Newey} has class "hpaNewey" and contains 
 the following components:
 \itemize{
-\item \code{y_coef} - regression coefficients estimates (except 
+\item \code{outcome_coef} - regression coefficients estimates (except 
 constant term which is part of conditional expectation 
 approximating polynomial).
-\item \code{z_coef} - regression coefficients estimates related 
+\item \code{selection_coef} - regression coefficients estimates related 
 to selection equation.
 \item \code{constant_biased} - biased estimate of constant term.
 \item \code{inv_mills} - inverse mills ratios estimates and their 
@@ -217,8 +217,8 @@ in \code{selection} formula.
 \eqn{y_{i}} - continuous dependent variable defined 
 in \code{outcome} formula.
 
-Note that \eqn{\xi} is two dimensional and \code{z_K} corresponds
-to \eqn{K_{1}} while \code{y_K} determines \eqn{K_{2}}.
+Note that \eqn{\xi} is two dimensional and \code{selection_K} corresponds
+to \eqn{K_{1}} while \code{outcome_K} determines \eqn{K_{2}}.
 
 The first polynomial coefficient (zero powers) 
 set to 1 for identification purposes i.e. \eqn{\alpha_{0}=1}.
@@ -245,7 +245,7 @@ Initial values for optimization routine are obtained by Newey's
 method (see the reference below). In order to obtain initial values
 via least squares please, set \code{pol_elements = 0}. Initial values for
 the outcome equation are obtained via \code{\link[hpa]{hpaBinary}} function
-setting \code{K} to \code{z_K}.
+setting \code{K} to \code{selection_K}.
 
 Note that selection equation dependent variables should have 
 exactly two levels (0 and 1) where "0" states for the selection results 
@@ -336,17 +336,18 @@ h = data.frame("kids" = as.numeric(Mroz87$kids5 + Mroz87$kids618 > 0),
 	
 # Estimate model parameters
 model <- hpaSelection(selection = lfp ~ educ + age + I(age ^ 2) + 
-                                  kids + log(faminc),
+                                        kids + log(faminc),
                       outcome = log(wage) ~ exper + I(exper ^ 2) + 
                                             educ + city,
-                                  z_K = 2, y_K = 3, data = h, 
+                                  selection_K = 2, outcome_K = 3, 
+                                  data = h, 
                                   pol_elements = 3, is_Newey_loocv = TRUE)
 summary(model)
 
 # Plot outcome equation random errors density
-plot(model, is_outcome = TRUE)
+plot(model, type = "outcome")
 # Plot selection equation random errors density
-plot(model, is_outcome = FALSE)
+plot(model, type = "selection")
 }
 
 ## Estimate semi-nonparametric sample selection model
@@ -389,25 +390,26 @@ names(h) <- c("z", "y", "x1", "x2", "x3")
 # Estimate parameters
 model <- hpaSelection(selection = z ~ x1 + x2, 
                       outcome = y ~ x1 + x3,
-                      data = h, z_K = 1, y_K = 3)
+                      data = h, 
+                      selection_K = 1, outcome_K = 3)
 summary(model)
 
 # Get conditional predictions for outcome equation
-model_pred_c <- predict(model,is_cond = TRUE)
+model_pred_c <- predict(model, is_cond = TRUE)
 # Conditional predictions y|z=1
 model_pred_c$y_1
 # Conditional predictions y|z=0
 model_pred_c$y_0
 
 # Get unconditional predictions for outcome equation
-model_pred_u <- predict(model,is_cond = FALSE)
+model_pred_u <- predict(model, is_cond = FALSE)
 model_pred_u$y
 
 # Get conditional predictions for selection equation
 # Note that for z=0 these predictions are NA
-predict(model, is_cond = TRUE, is_outcome = FALSE)
+predict(model, is_cond = TRUE, type = "selection")
 # Get unconditional predictions for selection equation
-predict(model, is_cond = FALSE, is_outcome = FALSE)
+predict(model, is_cond = FALSE, type = "selection")
 }
 
 \dontshow{
@@ -446,25 +448,26 @@ names(h) <- c("z", "y", "x1", "x2", "x3")
 # Estimate parameters
 model <- hpaSelection(selection = z ~ x1 + x2, 
                       outcome = y ~ x1 + x3,
-                      data = h, z_K = 1, y_K = 0)
+                      data = h, 
+                      selection_K = 1, outcome_K = 0)
 summary(model)
 
 # Get conditional predictions for outcome equation
-model_pred_c <- predict(model,is_cond = TRUE)
+model_pred_c <- predict(model, is_cond = TRUE)
 # Conditional predictions y|z=1
 model_pred_c$y_1
 # Conditional predictions y|z=0
 model_pred_c$y_0
 
 # Get unconditional predictions for outcome equation
-model_pred_u <- predict(model,is_cond = FALSE)
+model_pred_u <- predict(model, is_cond = FALSE)
 model_pred_u$y
 
 # Get conditional predictions for selection equation
 # Note that for z=0 these predictions are NA
-predict(model, is_cond = TRUE, is_outcome = FALSE)
+predict(model, is_cond = TRUE, type = "selection")
 # Get unconditional predictions for selection equation
-predict(model, is_cond = FALSE, is_outcome = FALSE)
+predict(model, is_cond = FALSE, type = "selection")
 
 # Plot outcome equation random errorrs density
 plot(model)
