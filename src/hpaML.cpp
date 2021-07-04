@@ -375,15 +375,15 @@ List hpaML(NumericVector data,
   	    // bounds for the mean parameter
   	  NumericVector x1_mean = x1[mean_ind];
   	  
-  	  NumericVector ga_lower_mean = x1_mean - 2 * abs(x1_mean);
-  	  NumericVector ga_upper_mean = x1_mean + 2 * abs(x1_mean);
+  	  NumericVector ga_lower_mean = x1_mean - 2 * Rcpp::abs(x1_mean);
+  	  NumericVector ga_upper_mean = x1_mean + 2 * Rcpp::abs(x1_mean);
   	  
   	  ga_lower[mean_ind] = ga_lower_mean;
   	  ga_upper[mean_ind] = ga_upper_mean;
   	  
   	    // bounds for the sd parameter
-  	  NumericVector ga_lower_sd = abs(x1[sd_ind]) * 0.2;
-  	  NumericVector ga_upper_sd = abs(x1[sd_ind]) * 5;
+  	  NumericVector ga_lower_sd = Rcpp::abs(x1[sd_ind]) * 0.2;
+  	  NumericVector ga_upper_sd = Rcpp::abs(x1[sd_ind]) * 5;
   	  
   	  ga_lower[sd_ind] = ga_lower_sd;
   	  ga_upper[sd_ind] = ga_upper_sd;
@@ -1053,7 +1053,7 @@ NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
   double machinePrecision = std::numeric_limits<double>::epsilon();
   double my_precision = std::sqrt(machinePrecision);
   
-  NumericVector eps = abs(x0 * my_precision);
+  NumericVector eps = Rcpp::abs(x0 * my_precision);
   
   // Control for zero values
   eps[eps < (machinePrecision * 100)] = machinePrecision * 100;

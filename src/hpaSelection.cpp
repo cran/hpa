@@ -637,15 +637,15 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    // Set lower and upper bounds for parameters space
 	    
 	      // bounds for the selection_mean parameter
-  	  double ga_lower_z_mean = x1[z_mean_ind] - 2 * abs(x1[z_mean_ind]);
-  	  double ga_upper_z_mean = x1[z_mean_ind] + 2 * abs(x1[z_mean_ind]);
+  	  double ga_lower_z_mean = x1[z_mean_ind] - 2 * std::fabs(x1[z_mean_ind]);
+  	  double ga_upper_z_mean = x1[z_mean_ind] + 2 * std::fabs(x1[z_mean_ind]);
   	    
   	  ga_lower[z_mean_ind] = ga_lower_z_mean;
   	  ga_upper[z_mean_ind] = ga_upper_z_mean;
   	  
   	    // bounds for the outcome_mean parameter
-  	  double ga_lower_y_mean = x1[y_mean_ind] - 2 * abs(x1[y_mean_ind]);
-  	  double ga_upper_y_mean = x1[y_mean_ind] + 2 * abs(x1[y_mean_ind]);
+  	  double ga_lower_y_mean = x1[y_mean_ind] - 2 * std::fabs(x1[y_mean_ind]);
+  	  double ga_upper_y_mean = x1[y_mean_ind] + 2 * std::fabs(x1[y_mean_ind]);
   	  
   	  ga_lower[y_mean_ind] = ga_lower_y_mean;
   	  ga_upper[y_mean_ind] = ga_upper_y_mean;
@@ -1677,7 +1677,7 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0,
   double machinePrecision = std::numeric_limits<double>::epsilon();
   double my_precision = std::sqrt(machinePrecision);
   
-  NumericVector eps = abs(x0 * my_precision);
+  NumericVector eps = Rcpp::abs(x0 * my_precision);
   
   // Control for zero values
   eps[eps < (machinePrecision * 100)] = my_precision;

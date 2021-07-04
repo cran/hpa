@@ -57,3 +57,8 @@ S3method("print", "hpaSelection")
 S3method("print", "summary.hpaSelection")
 S3method("coef", "hpaSelection")
 S3method("vcov", "hpaSelection")
+
+export("bsplineGenerate", "bsplineEstimate",
+       "bsplineComb")
+
+export("dhsa", "ehsa")

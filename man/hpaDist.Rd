@@ -205,7 +205,7 @@ used for some calculations. It usually provides speed advantage for
 large enough samples (about more than 1000 observations).}
 
 \item{log}{logical; if \code{TRUE} then probabilities p are given as log(p)
-or derivatives will be given respect to log(p)}
+or derivatives will be given respect to log(p).}
 
 \item{is_validation}{logical value indicating whether function input 
 arguments should be validated.  Set it to \code{FALSE} for slight

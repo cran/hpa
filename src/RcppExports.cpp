@@ -589,6 +589,112 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// bsplineMult
+List bsplineMult(List b, double t1, double t2, bool is_left);
+RcppExport SEXP _hpa_bsplineMult(SEXP bSEXP, SEXP t1SEXP, SEXP t2SEXP, SEXP is_leftSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type b(bSEXP);
+    Rcpp::traits::input_parameter< double >::type t1(t1SEXP);
+    Rcpp::traits::input_parameter< double >::type t2(t2SEXP);
+    Rcpp::traits::input_parameter< bool >::type is_left(is_leftSEXP);
+    rcpp_result_gen = Rcpp::wrap(bsplineMult(b, t1, t2, is_left));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bsplineMerge
+List bsplineMerge(List b_left, List b_right);
+RcppExport SEXP _hpa_bsplineMerge(SEXP b_leftSEXP, SEXP b_rightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type b_left(b_leftSEXP);
+    Rcpp::traits::input_parameter< List >::type b_right(b_rightSEXP);
+    rcpp_result_gen = Rcpp::wrap(bsplineMerge(b_left, b_right));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bsplineNames
+List bsplineNames(List b);
+RcppExport SEXP _hpa_bsplineNames(SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(bsplineNames(b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bsplineGenerate
+List bsplineGenerate(NumericVector knots, int degree, bool is_names);
+RcppExport SEXP _hpa_bsplineGenerate(SEXP knotsSEXP, SEXP degreeSEXP, SEXP is_namesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type knots(knotsSEXP);
+    Rcpp::traits::input_parameter< int >::type degree(degreeSEXP);
+    Rcpp::traits::input_parameter< bool >::type is_names(is_namesSEXP);
+    rcpp_result_gen = Rcpp::wrap(bsplineGenerate(knots, degree, is_names));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bsplineEstimate
+NumericVector bsplineEstimate(NumericVector x, NumericMatrix m, NumericVector knots);
+RcppExport SEXP _hpa_bsplineEstimate(SEXP xSEXP, SEXP mSEXP, SEXP knotsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type m(mSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type knots(knotsSEXP);
+    rcpp_result_gen = Rcpp::wrap(bsplineEstimate(x, m, knots));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bsplineComb
+List bsplineComb(List splines, NumericVector weights);
+RcppExport SEXP _hpa_bsplineComb(SEXP splinesSEXP, SEXP weightsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type splines(splinesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weights(weightsSEXP);
+    rcpp_result_gen = Rcpp::wrap(bsplineComb(splines, weights));
+    return rcpp_result_gen;
+END_RCPP
+}
+// dhsa
+NumericVector dhsa(NumericVector x, NumericMatrix m, NumericVector knots, double mean, double sd, bool log);
+RcppExport SEXP _hpa_dhsa(SEXP xSEXP, SEXP mSEXP, SEXP knotsSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP logSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type m(mSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type knots(knotsSEXP);
+    Rcpp::traits::input_parameter< double >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
+    Rcpp::traits::input_parameter< bool >::type log(logSEXP);
+    rcpp_result_gen = Rcpp::wrap(dhsa(x, m, knots, mean, sd, log));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ehsa
+double ehsa(NumericMatrix m, NumericVector knots, double mean, double sd, double power);
+RcppExport SEXP _hpa_ehsa(SEXP mSEXP, SEXP knotsSEXP, SEXP meanSEXP, SEXP sdSEXP, SEXP powerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type m(mSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type knots(knotsSEXP);
+    Rcpp::traits::input_parameter< double >::type mean(meanSEXP);
+    Rcpp::traits::input_parameter< double >::type sd(sdSEXP);
+    Rcpp::traits::input_parameter< double >::type power(powerSEXP);
+    rcpp_result_gen = Rcpp::wrap(ehsa(m, knots, mean, sd, power));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_hpa_dnorm_parallel", (DL_FUNC) &_hpa_dnorm_parallel, 4},
@@ -626,6 +732,14 @@ static const R_CallMethodDef CallEntries[] = {
     {"_hpa_truncatedNormalMoment", (DL_FUNC) &_hpa_truncatedNormalMoment, 14},
     {"_hpa_polynomialIndex", (DL_FUNC) &_hpa_polynomialIndex, 2},
     {"_hpa_printPolynomial", (DL_FUNC) &_hpa_printPolynomial, 3},
+    {"_hpa_bsplineMult", (DL_FUNC) &_hpa_bsplineMult, 4},
+    {"_hpa_bsplineMerge", (DL_FUNC) &_hpa_bsplineMerge, 2},
+    {"_hpa_bsplineNames", (DL_FUNC) &_hpa_bsplineNames, 1},
+    {"_hpa_bsplineGenerate", (DL_FUNC) &_hpa_bsplineGenerate, 3},
+    {"_hpa_bsplineEstimate", (DL_FUNC) &_hpa_bsplineEstimate, 3},
+    {"_hpa_bsplineComb", (DL_FUNC) &_hpa_bsplineComb, 2},
+    {"_hpa_dhsa", (DL_FUNC) &_hpa_dhsa, 6},
+    {"_hpa_ehsa", (DL_FUNC) &_hpa_ehsa, 5},
     {NULL, NULL, 0}
 };
 

@@ -701,3 +701,119 @@ printPolynomial <- function(pol_degrees, pol_coefficients, is_validation = TRUE)
     .Call(`_hpa_printPolynomial`, pol_degrees, pol_coefficients, is_validation)
 }
 
+#' @export
+bsplineMult <- function(b, t1, t2, is_left = TRUE) {
+    .Call(`_hpa_bsplineMult`, b, t1, t2, is_left)
+}
+
+#' @export
+bsplineMerge <- function(b_left, b_right) {
+    .Call(`_hpa_bsplineMerge`, b_left, b_right)
+}
+
+#' @export
+bsplineNames <- function(b) {
+    .Call(`_hpa_bsplineNames`, b)
+}
+
+#' B-splines generation, estimation and combination
+#' @name bspline
+#' @description Function \code{\link[hpa]{bsplineGenerate}} generates a list
+#' of all basis splines with appropriate \code{knots} vector and \code{degree}.
+#' Function \code{\link[hpa]{bsplineComb}} allows to get linear combinations
+#' of these b-splines with particular \code{weights}. 
+#' Function \code{\link[hpa]{bsplineEstimate}} estimates the spline at
+#' points \code{x}. The structure of this spline should be provided via
+#' \code{m} and \code{knots} arguments.
+#' @details In contrast to \code{\link[splines]{bs}} function 
+#' \code{\link[hpa]{bsplineGenerate}} generates a splines basis in a form
+#' of a list containing information concerning these b-splines structure.
+#' In order to evaluate one of these b-splines at particular points
+#' \code{\link[hpa]{bsplineEstimate}} function should be applied.
+#' @return Function \code{\link[hpa]{bsplineGenerate}} returns a list. Each
+#' element of this list is a list containing the following
+#' information concerning b-spline structure:
+#' \itemize{
+#' \item \code{knots} - knots vector of the b-spline. 
+#' \item \code{m} - matrix representing polynomial coefficients for each
+#' interval of the spline in the same manner as for \code{m} argument
+#' (see this argument description above).
+#' \item \code{ind} - index of the b-spline.}
+#' Function \code{bsplineComb} returns a list with the following arguments:
+#' \itemize{
+#' \item \code{knots} - knots vector of the \code{splines}. 
+#' \item \code{m} - linear combination of the \code{splines} matrices; 
+#' coefficients of this linear combination are given 
+#' via \code{weights} argument.}
+#' @return Function \code{\link[hpa]{bsplineGenerate}} returns a numeric
+#' vector of values being calculated at points \code{x} via splines with 
+#' \code{knots} vector and matrix \code{m}.
+#' @template knots_Template
+#' @template degree_Template
+#' @template m_Template
+#' @param is_names logical; if TRUE (default) then rows and columns of the
+#' spline matrices will have a names. Set it to FALSE in order to get notable 
+#' speed boost.
+#' @template bsplines_examples_Template
+#' @export
+bsplineGenerate <- function(knots, degree, is_names = TRUE) {
+    .Call(`_hpa_bsplineGenerate`, knots, degree, is_names)
+}
+
+#' @name bspline
+#' @param x numeric vector representing the points at which the 
+#' spline should be estimated.
+#' @export
+bsplineEstimate <- function(x, m, knots) {
+    .Call(`_hpa_bsplineEstimate`, x, m, knots)
+}
+
+#' @name bspline
+#' @param splines list being returned by the 
+#' \code{\link[hpa]{bsplineGenerate}} function or a manually constructed
+#' list with b-splines knots and matrices entries.
+#' @param weights numeric vector of the same length as \code{splines}.
+#' @export
+bsplineComb <- function(splines, weights) {
+    .Call(`_hpa_bsplineComb`, splines, weights)
+}
+
+#' Probabilities and Moments Hermite Spline Approximation
+#' @name hsaDist
+#' @param x numeric vector of values for which the function should 
+#' be estimated.
+#' @template m_Template
+#' @template knots_Template
+#' @param mean expected value of a normal distribution.
+#' @param sd standard deviation of a normal distribution.
+#' @template log_Template
+#' @description The set of functions similar to \code{\link[hpa]{dhpa}}-like
+#' functions. The difference is that instead of polynomial these functions
+#' utilize spline.
+#' @details In contrast to \code{\link[hpa]{dhpa}}-like functions these
+#' functions may deal with univariate distributions only. In future this
+#' functions will be generalized to work with multivariate distributions.
+#' The main idea of these functions is to use squared spline instead of squared 
+#' polynomial in order to provide greater numeric stability and approximation 
+#' accuracy. To provide spline parameters please use \code{m} and \code{knots}
+#' arguments (i.e. instead of \code{pol_degrees} and \code{pol_coefficients}
+#' arguments that where used to specify the polynomial
+#' for \code{\link[hpa]{dhpa}}-like functions).
+#' @return Function \code{\link[hpa]{dhsa}} returns vector of probabilities
+#' of the same length as \code{x}. Function \code{\link[hpa]{ehsa}} 
+#' returns moment value.
+#' @seealso \code{\link[hpa]{dhpa}}, \code{\link[hpa]{bsplineGenerate}}
+#' @template dhsa_examples_Template
+#' @export
+dhsa <- function(x, m, knots, mean = 0, sd = 1, log = FALSE) {
+    .Call(`_hpa_dhsa`, x, m, knots, mean, sd, log)
+}
+
+#' @name hsaDist
+#' @param power non-negative integer representing the power of the 
+#' expected value i.e. E(X ^ power) will be estimated.
+#' @export
+ehsa <- function(m, knots, mean = 0, sd = 1, power = 1) {
+    .Call(`_hpa_ehsa`, m, knots, mean, sd, power)
+}
+

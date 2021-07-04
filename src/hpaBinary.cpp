@@ -355,7 +355,7 @@ List hpaBinary(Rcpp::Formula formula,
 		
 		// Coefficient for the first regressor which under some
 		// input parameters should be used for adjust purposes
-		double coef_adjust = std::abs(glm_coef[1]);
+		double coef_adjust = std::fabs(glm_coef[1]);
 		
 		if (coef_fixed)
 		{
@@ -490,8 +490,8 @@ List hpaBinary(Rcpp::Formula formula,
   	  {
     	  x1_mean = x1[z_mean_ind];
     	  
-    	  double ga_lower_mean = x1_mean - 2 * abs(x1_mean);
-    	  double ga_upper_mean = x1_mean + 2 * abs(x1_mean);
+    	  double ga_lower_mean = x1_mean - 2 * std::fabs(x1_mean);
+    	  double ga_upper_mean = x1_mean + 2 * std::fabs(x1_mean);
   
     	  ga_lower[z_mean_ind] = ga_lower_mean;
     	  ga_upper[z_mean_ind] = ga_upper_mean;
@@ -1476,7 +1476,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
   double machinePrecision = std::numeric_limits<double>::epsilon();
   double my_precision = std::sqrt(machinePrecision);
   
-  NumericVector eps = abs(x0 * my_precision);
+  NumericVector eps = Rcpp::abs(x0 * my_precision);
   
   // Control for zero values
   eps[eps < (machinePrecision * 100)] = my_precision;
