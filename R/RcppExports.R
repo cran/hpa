@@ -29,6 +29,79 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
     .Call(`_hpa_pnorm_parallel`, x, mean, sd, is_parallel)
 }
 
+#' Fast pdf and cdf for standardized univariate PGN distribution
+#' @description This function uses fast algorithms to calculate densities
+#' and probabilities (along with their derivatives) related to standardized 
+#' PGN distribution.
+#' @name hpaDist0
+#' @param x numeric vector of functions arguments.
+#' @param pc polynomial coefficients without the first term.
+#' @param mean expected value (mean) of the distribution.
+#' @param sd standard deviation of the distribution.
+#' @param is_parallel logical; if TRUE then multiple cores will be used for 
+#' some calculations. Currently unavailable.
+#' @template log_Template
+#' @template is_validation_Template
+#' @param is_grad logical; if \code{TRUE} (default) then function returns 
+#' gradients respect to \code{x} and \code{pc}.
+#' @details Functions \code{\link[hpa]{dhpa0}} and 
+#' \code{\link[hpa]{phpa0}} are similar to \code{\link[hpa]{dhpa}} and
+#' \code{\link[hpa]{phpa}} correspondingly. However there are two key
+#' differences. First, \code{\link[hpa]{dhpa0}} and \code{\link[hpa]{phpa0}}
+#' are deal with univariate PGN distribution only. Second, this distribution
+#' is standardized to zero mean and unit variances. Moreover \code{pc} is 
+#' similar to \code{pol_coefficients} argument of \code{\link[hpa]{dhpa}} but
+#' without the first component i.e. \code{pc=pol_coefficients[-1]}. Also
+#' \code{mean} and \code{sd} are not the arguments of the normal density
+#' but actual mean and standard deviation of the resulting distribution. So
+#' if these arguments are different from \code{0} and \code{1} correspondingly
+#' then standardized PGN distribution will be linearly transformed to have
+#' mean \code{mean} and standard deviation \code{sd}.
+#' @return Both functions return a list.
+#' Function \code{\link[hpa]{dhpa0}} returns a list with element named
+#' \code{"den"} that is a numeric vector of density values. 
+#' Function \code{\link[hpa]{phpa0}} returns a list with element named
+#' \code{"prob"} that is a numeric vector of probabilities. 
+#' 
+#' If \code{is_grad = TRUE} then elements \code{"grad_x"} and \code{"grad_pc"}
+#' will be add to the list containing gradients respect to input argument
+#' \code{x} and parameters \code{pc} correspondingly. If \code{log = TRUE} then
+#' additional elements will be add to the list containing density, probability
+#' and gradient values for logarithms of corresponding functions. These
+#' elements will be named as \code{"grad_x_log"}, \code{"grad_pc_log"},
+#' \code{"grad_prob_log"} and \code{"grad_den_log"}.
+#' @examples
+#' # Calculate density and probability of standartized PGN
+#' # distribution
+#'   # distribution parameters
+#' pc <- c(0.5, -0.2)
+#'   # function arguments
+#' x <- c(-0.3, 0.8, 1.5)
+#'   # probability density function
+#' dhpa0(x, pc)
+#'   # cumulative distribution function
+#' phpa0(x, pc)
+#' 
+#' # Additionally calculate gradients respect to arguments
+#' # and parameters of the PGN distribution
+#' dhpa0(x, pc, is_grad = TRUE)
+#' phpa0(x, pc, is_grad = TRUE)
+#' 
+#' # Let's denote by X standardized PGN random variable and repeat
+#' # calculations for 2 * X + 1
+#' dhpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
+#' phpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
+#' @export
+dhpa0 <- function(x, pc, mean = 0, sd = 1, is_parallel = FALSE, log = FALSE, is_validation = TRUE, is_grad = FALSE) {
+    .Call(`_hpa_dhpa0`, x, pc, mean, sd, is_parallel, log, is_validation, is_grad)
+}
+
+#' @name hpaDist0
+#' @export
+phpa0 <- function(x, pc, mean = 0, sd = 1, is_parallel = FALSE, log = FALSE, is_validation = TRUE, is_grad = FALSE) {
+    .Call(`_hpa_phpa0`, x, pc, mean, sd, is_parallel, log, is_validation, is_grad)
+}
+
 #' Semi-nonparametric single index binary choice model estimation
 #' @description This function performs semi-nonparametric (SNP) maximum 
 #' likelihood estimation of single index binary choice model 
@@ -817,3 +890,7 @@ ehsa <- function(m, knots, mean = 0, sd = 1, power = 1) {
     .Call(`_hpa_ehsa`, m, knots, mean, sd, power)
 }
 
+# Register entry points for exported C++ functions
+methods::setLoadAction(function(ns) {
+    .Call('_hpa_RcppExport_registerCCallable', PACKAGE = 'hpa')
+})

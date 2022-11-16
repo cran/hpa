@@ -6,6 +6,7 @@ using namespace RcppArmadillo;
 using namespace RcppParallel;
 
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 //' Calculate k-th order moment of normal distribution
 //' @description This function recursively calculates k-th order moment of 
@@ -67,7 +68,7 @@ NumericVector normalMoment(int k = 0,
 		{
 			stop("parameter sd should be positive integer");
 		}
-		if((diff_type != "NO") & (diff_type != "mean") & (diff_type != "sd"))
+		if((diff_type != "NO") && (diff_type != "mean") && (diff_type != "sd"))
 		{
 		  stop("diff_type argument should take value 'NO', 'mean' or 'sd'");
 		}
@@ -293,36 +294,36 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 		{
 			stop("parameter sd should be positive integer");
 		}
-		if ((x_upper.size() != n) & (x_upper[0] != max_value))
+		if ((x_upper.size() != n) && (x_upper[0] != max_value))
 		{
 			stop("vectors x_lower and x_upper should have the same length");
 		}
-		if ((x_lower.size() != n) & (x_lower[0] != min_value))
+		if ((x_lower.size() != n) && (x_lower[0] != min_value))
 		{
 			stop("vectors x_lower and x_upper should have the same length");
 		}
-		if ((pdf_lower.size() != n) & (pdf_lower.size() != 0))
+		if ((pdf_lower.size() != n) && (pdf_lower.size() != 0))
 		{
 			stop("vectors x_lower and pdf_lower should have the same length");
 		}
-		if ((cdf_lower.size() != n) & (cdf_lower.size() != 0))
+		if ((cdf_lower.size() != n) && (cdf_lower.size() != 0))
 		{
 			stop("vectors x_lower and cdf_lower should have the same length");
 		}
-		if ((pdf_upper.size() != n) & (pdf_upper.size() != 0))
+		if ((pdf_upper.size() != n) && (pdf_upper.size() != 0))
 		{
 			stop("vectors x_lower and pdf_upper should have the same length");
 		}
-		if ((cdf_upper.size() != n) & (cdf_upper.size() != 0))
+		if ((cdf_upper.size() != n) && (cdf_upper.size() != 0))
 		{
 			stop("vectors x_lower and cdf_upper should have the same length");
 		}
-		if ((cdf_difference.size() != n) & (cdf_difference.size() != 0))
+		if ((cdf_difference.size() != n) && (cdf_difference.size() != 0))
 		{
 			stop("vectors x_lower and cdf_difference should have the same length");
 		}
-		if((diff_type != "NO") & (diff_type != "mean") & (diff_type != "sd") &
-       (diff_type != "x_lower") & (diff_type != "x_upper"))
+		if((diff_type != "NO") && (diff_type != "mean") && (diff_type != "sd") &&
+       (diff_type != "x_lower") && (diff_type != "x_upper"))
 		{
 		  stop("diff_type argument should take value 'NO', 'mean', 'sd', 'x_lower' or 'x_upper'");
 		}

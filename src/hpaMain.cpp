@@ -10,9 +10,11 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace RcppParallel;
 
+// [[Rcpp::interfaces(r, cpp)]]
+
 // Hermite polynomial density,
 // cumulative distribution function and moments approximations.
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 List hpaMain(
 	NumericVector x_lower_vec = NumericVector(0),
 	NumericVector x_upper_vec = NumericVector(0),
@@ -82,7 +84,7 @@ List hpaMain(
     }
   }
   
-  if (!((type == "interval") | (type == "expectation truncated")) | is_cdf)
+  if (!((type == "interval") || (type == "expectation truncated")) || is_cdf)
   {
     x_lower = NumericMatrix(n, pol_degrees_n);
     std::fill(x_lower.begin(), x_lower.end(), R_NegInf);
@@ -98,7 +100,7 @@ List hpaMain(
     // Validate polynomial structure
     pol_Validate(pol_degrees, pol_coefficients, false);
     
-    if ((type != "expectation") & (type != "expectation truncated"))
+    if ((type != "expectation") && (type != "expectation truncated"))
     {
       if (pol_degrees.size() != target_dim)
       {
@@ -115,14 +117,14 @@ List hpaMain(
     
     // Validate mean and sd vectors
     int n_mean = mean.size();
-    if ((n_mean != 0) & (n_mean != target_dim))
+    if ((n_mean != 0) && (n_mean != target_dim))
     {
       stop("mean length should be the same as the length of pol_degrees.");
     }
     mean_Validate(mean);
     
     int n_sd = sd.size();
-    if ((n_sd != 0) & (n_sd != target_dim))
+    if ((n_sd != 0) && (n_sd != target_dim))
     {
       stop("sd length should be the same as the length of pol_degrees.");
     }
@@ -130,7 +132,7 @@ List hpaMain(
     
     // Validate expectations powers vectors
     int n_expectation_powers = expectation_powers.size();
-    if ((n_expectation_powers != 0) & 
+    if ((n_expectation_powers != 0) && 
         (n_expectation_powers != target_dim))
     {
       stop("expectation_powers length should be the same as the length of pol_degrees.");
@@ -138,9 +140,9 @@ List hpaMain(
     expectation_powers_Validate(expectation_powers);
     
     // Validate x_lower and x_upper
-    if ((type != "expectation") & (type != "expectation truncated"))
+    if ((type != "expectation") && (type != "expectation truncated"))
     {
-      if (((x_lower.nrow() > 1) | (x_lower.ncol() > 1)) & !is_cdf)
+      if (((x_lower.nrow() > 1) || (x_lower.ncol() > 1)) && !is_cdf)
       {
         if ((x_lower.ncol() != x_upper.ncol()))
         {
@@ -152,7 +154,7 @@ List hpaMain(
         }
       }
     } else {
-      if ((x_upper.nrow() > 1) | (x_upper.ncol() > 1))
+      if ((x_upper.nrow() > 1) || (x_upper.ncol() > 1))
       {
         if (x_upper.ncol() != target_dim)
         {
@@ -179,12 +181,12 @@ List hpaMain(
 	    stop("omit_ind do not match pol_degrees dimensions");
 	  }
 	  
-	  if ((min(given_ind) < 0) | (max(given_ind) > pol_degrees_n))
+	  if ((min(given_ind) < 0) || (max(given_ind) > pol_degrees_n))
 	  {
 	    stop("incorrect values supplied to given_ind");
 	  }
 	  
-	  if ((min(omit_ind) < 0) | (max(omit_ind) > pol_degrees_n))
+	  if ((min(omit_ind) < 0) || (max(omit_ind) > pol_degrees_n))
 	  {
 	    stop("incorrect values supplied to omit_ind");
 	  }
@@ -192,7 +194,7 @@ List hpaMain(
 	
 	if (given_ind.size() != 0)
 	{
-	  if ((sum(given_ind == 0) > 0) | (sum(given_ind == 1) > 1))
+	  if ((sum(given_ind == 0) > 0) || (sum(given_ind == 1) > 1))
 	  {
 	    given_ind_logical = given_ind;
 	  } else {
@@ -202,7 +204,7 @@ List hpaMain(
 	
 	if (omit_ind.size() != 0)
 	{
-	  if ((sum(omit_ind == 0) > 0) | (sum(omit_ind == 1) > 1))
+	  if ((sum(omit_ind == 0) > 0) || (sum(omit_ind == 1) > 1))
 	  {
 	    omit_ind_logical = omit_ind;
 	  } else {
@@ -230,8 +232,8 @@ List hpaMain(
 	}
 
 	// Control for the expected powered product powers values
-	if ((expectation_powers.size() == 0) | ((type != "expectation") & 
-                                          (type != "expectation truncated")))
+	if ((expectation_powers.size() == 0) || ((type != "expectation") && 
+                                           (type != "expectation truncated")))
 	{
 		expectation_powers = NumericVector(pol_degrees_n);
 		std::fill(expectation_powers.begin(), expectation_powers.end(), 0);
@@ -260,13 +262,13 @@ List hpaMain(
             1);
 	
 	// control for zero moments during numeric differentiation if need
-	if ((grad_type == "mean") | (grad_type == "sd") | (grad_type == "all"))
+	if ((grad_type == "mean") || (grad_type == "sd") || (grad_type == "all"))
 	{
 	  mean[mean == 0] = std::numeric_limits<double>::epsilon();
 	}
 	
 	// control for zero x_lower during numeric differentiation if need
-	if ((grad_type == "x_lower") | (grad_type == "all"))
+	if ((grad_type == "x_lower") || (grad_type == "all"))
 	{
 	  for (int i = 0; i < pol_degrees_n; i++)
 	  {
@@ -283,7 +285,7 @@ List hpaMain(
 	  grad_type = "x_upper";
 	}
 	
-	if ((grad_type == "x_upper") | (grad_type == "all"))
+	if ((grad_type == "x_upper") || (grad_type == "all"))
 	{
 	  for (int i = 0; i < pol_degrees_n; i++)
 	  {
@@ -310,7 +312,7 @@ List hpaMain(
   			}
 
   		// Lower densities
-  		if ((type == "interval") | (type == "expectation truncated"))
+  		if ((type == "interval") || (type == "expectation truncated"))
   		{
   			for (int i = 0; i < pol_degrees_n; i++)
   			{
@@ -358,7 +360,7 @@ List hpaMain(
   		}
 
   		// Lower cdf
-  		if (((type == "interval") | (type == "expectation truncated")))
+  		if (((type == "interval") || (type == "expectation truncated")))
   		{
   			cdf_lower = NumericMatrix(n, pol_degrees_n);
   			for (int i = 0; i < pol_degrees_n; i++)
@@ -374,8 +376,8 @@ List hpaMain(
 
   		// Calculate cdf_difference and pdf_difference if need
   		// for gradient calculations
-  		if ((grad_type == "mean") | (grad_type == "x_lower") |
-          (grad_type == "x_upper") | (grad_type == "all"))
+  		if ((grad_type == "mean") || (grad_type == "x_lower") ||
+          (grad_type == "x_upper") || (grad_type == "all"))
   		{
   		  pdf_difference = NumericMatrix(n, pol_degrees_n);
   		}
@@ -384,8 +386,8 @@ List hpaMain(
   			if (d_cond[i])
   			{
   				cdf_difference(_, i) = cdf_upper(_, i) - cdf_lower(_, i);
-  			  if ((grad_type == "mean") | (grad_type == "x_lower") |
-              (grad_type == "x_upper") | (grad_type == "all"))
+  			  if ((grad_type == "mean") || (grad_type == "x_lower") ||
+              (grad_type == "x_upper") || (grad_type == "all"))
   			  {
   			    pdf_difference(_, i) = pdf_upper(_, i) - pdf_lower(_, i);
   			  }
@@ -425,14 +427,14 @@ List hpaMain(
 									              mean[i], sd[i], 
 									              true, false, 
 									              false, "NO");
-			if ((grad_type == "mean") | (grad_type == "all"))
+			if ((grad_type == "mean") || (grad_type == "all"))
 			{
 			  moments_diff_mean[i] = normalMoment(max_degree,
                                             mean[i], sd[i], 
                                             true, false, 
                                             false, "mean");
 			}
-			if ((grad_type == "sd") | (grad_type == "all"))
+			if ((grad_type == "sd") || (grad_type == "all"))
 			{
 			  moments_diff_sd[i] = normalMoment(max_degree,
                                           mean[i], sd[i], 
@@ -449,7 +451,7 @@ List hpaMain(
 	List tr_moments_diff_x_upper(pol_degrees_n);   // for derivative w.r.t. x_upper
 	List tr_moments_diff_x_lower(pol_degrees_n);   // for derivative w.r.t. x_lower
 
-	if ((type != "pdf") & (type != "expectation"))
+	if ((type != "pdf") && (type != "expectation"))
 	{
 		for (int i = 0; i < pol_degrees_n; i++)
 		{
@@ -462,7 +464,7 @@ List hpaMain(
 					pdf_lower(_, i), cdf_lower(_, i),
 					pdf_upper(_, i), cdf_upper(_, i),
 					cdf_difference(_, i), true, false, is_parallel, "NO");
-				if ((grad_type == "mean") | (grad_type == "all"))
+				if ((grad_type == "mean") || (grad_type == "all"))
 				{
 				  tr_moments_diff_mean[i] = truncatedNormalMoment(max_degree,
             x_lower(_, i), x_upper(_, i),
@@ -471,7 +473,7 @@ List hpaMain(
             pdf_upper(_, i), cdf_upper(_, i),
             cdf_difference(_, i), true, false, is_parallel, "mean");
 				}
-				if ((grad_type == "sd") | (grad_type == "all"))
+				if ((grad_type == "sd") || (grad_type == "all"))
 				{
 				  tr_moments_diff_sd[i] = truncatedNormalMoment(max_degree,
             x_lower(_, i), x_upper(_, i),
@@ -480,7 +482,7 @@ List hpaMain(
             pdf_upper(_, i), cdf_upper(_, i),
             cdf_difference(_, i), true, false, is_parallel, "sd");
 				}
-				if ((grad_type == "x_upper") | (grad_type == "all"))
+				if ((grad_type == "x_upper") || (grad_type == "all"))
 				{
 				  tr_moments_diff_x_upper[i] = truncatedNormalMoment(max_degree,
             x_lower(_, i), x_upper(_, i),
@@ -489,7 +491,7 @@ List hpaMain(
             pdf_upper(_, i), cdf_upper(_, i),
             cdf_difference(_, i), true, false, is_parallel, "x_upper");
 				}
-				if (((grad_type == "x_lower") | (grad_type == "all")) & 
+				if (((grad_type == "x_lower") || (grad_type == "all")) && 
             (type == "interval"))
 				{
 				  tr_moments_diff_x_lower[i] = truncatedNormalMoment(max_degree,
@@ -576,31 +578,31 @@ List hpaMain(
 	NumericMatrix x_lower_grad_psi;
 	
 	  // preallocate memory to store gradient specific information if need
-	if ((grad_type == "pol_coefficients") | (grad_type == "all"))
+	if ((grad_type == "pol_coefficients") || (grad_type == "all"))
 	{
 	  pc_grad = NumericMatrix(n, pol_coefficients_n);
 	  pc_grad_value = NumericMatrix(n, pol_coefficients_n);
 	  pc_grad_psi = NumericMatrix(n, pol_coefficients_n);
 	}
-	if ((grad_type == "mean") | (grad_type == "all"))
+	if ((grad_type == "mean") || (grad_type == "all"))
 	{
 	  mean_grad = NumericMatrix(n, pol_degrees_n);
 	  mean_grad_value = NumericMatrix(n, pol_degrees_n);
 	  mean_grad_psi = NumericMatrix(n, pol_degrees_n);
 	}
-	if ((grad_type == "sd") | (grad_type == "all"))
+	if ((grad_type == "sd") || (grad_type == "all"))
 	{
 	  sd_grad = NumericMatrix(n, pol_degrees_n);
 	  sd_grad_value = NumericMatrix(n, pol_degrees_n);
 	  sd_grad_psi = NumericMatrix(n, pol_degrees_n);
 	}
-	if ((grad_type == "x_upper") | (grad_type == "all"))
+	if ((grad_type == "x_upper") || (grad_type == "all"))
 	{
 	  x_upper_grad = NumericMatrix(n, pol_degrees_n);
 	  x_upper_grad_value = NumericMatrix(n, pol_degrees_n);
 	  x_upper_grad_psi = NumericMatrix(n, pol_degrees_n);
 	}
-	if (((grad_type == "x_lower") | (grad_type == "all")) & (type == "interval"))
+	if (((grad_type == "x_lower") || (grad_type == "all")) && (type == "interval"))
 	{
 	  x_lower_grad = NumericMatrix(n, pol_degrees_n);
 	  x_lower_grad_value = NumericMatrix(n, pol_degrees_n);
@@ -626,7 +628,7 @@ List hpaMain(
 				                 polynomial_index(r, j);
 				if (!omit_ind_logical[r])
 				{
-					if ((type == "pdf") | (given_ind_logical[r]))
+					if ((type == "pdf") || (given_ind_logical[r]))
 					{
 						NumericMatrix x_pow_r = x_pow[r];
 						value_sum_element = value_sum_element * 
@@ -681,7 +683,7 @@ List hpaMain(
 			// gradient specific storage respect to
 
 			  // mean
-			if ((grad_type == "mean") | (grad_type == "all"))
+			if ((grad_type == "mean") || (grad_type == "all"))
 			{
 			  for (int r = 0; r < pol_degrees_n; r++)
 			  {
@@ -702,7 +704,7 @@ List hpaMain(
   			                              value_sum_element_adj * moments_ratio;
   			    }
   			    
-  			    if((type == "expectation") & (!omit_ind_logical[r]))
+  			    if((type == "expectation") && (!omit_ind_logical[r]))
   			    {
   			      double moments_ratio_2 = moments_r_diff_mean[polynomial_sum + 
   			                                                   expectation_powers[r]] /
@@ -712,7 +714,7 @@ List hpaMain(
   			                              value_sum_element_adj * moments_ratio_2;
   			    }
   			    
-  			    if ((type == "interval") & d_cond[r])
+  			    if ((type == "interval") && d_cond[r])
   			    {
   			      NumericMatrix tr_moments_r = tr_moments[r];
   			      NumericMatrix tr_moments_diff_mean_r = tr_moments_diff_mean[r];
@@ -726,7 +728,7 @@ List hpaMain(
 			}
 
 			  // sd
-			if ((grad_type == "sd") | (grad_type == "all"))
+			if ((grad_type == "sd") || (grad_type == "all"))
 			{
 			  for (int r = 0; r < pol_degrees_n; r++)
 			  {
@@ -747,7 +749,7 @@ List hpaMain(
 			                              value_sum_element_adj * moments_ratio;
 			      }
 			      
-			      if((type == "expectation") & (!omit_ind_logical[r]))
+			      if((type == "expectation") && (!omit_ind_logical[r]))
 			      {
 			        double moments_ratio_2 = moments_r_diff_sd[polynomial_sum + 
 			                                                   expectation_powers[r]] /
@@ -757,7 +759,7 @@ List hpaMain(
 			                              value_sum_element_adj * moments_ratio_2;
 			      }
 			      
-			      if ((type == "interval") & d_cond[r])
+			      if ((type == "interval") && d_cond[r])
 			      {
 			        NumericMatrix tr_moments_r = tr_moments[r];
 			        NumericMatrix tr_moments_diff_sd_r = tr_moments_diff_sd[r];
@@ -771,7 +773,7 @@ List hpaMain(
 			}
 			
 			  // x_upper
-			if ((grad_type == "x_upper") | (grad_type == "all"))
+			if ((grad_type == "x_upper") || (grad_type == "all"))
 			{
 			  for (int r = 0; r < pol_degrees_n; r++)
 			  {
@@ -787,7 +789,7 @@ List hpaMain(
                         			         value_sum_element_adj * polynomial_sum /
                         			         x_upper(_, r);
 			    }
-			    if (d_cond[r] & (type != "expectation"))
+			    if (d_cond[r] && (type != "expectation"))
 			    {
 			      if (type == "interval")
 			      {
@@ -807,7 +809,7 @@ List hpaMain(
 			}
 			
 			  // x_lower
-			if (((grad_type == "x_lower") | (grad_type == "all")) & 
+			if (((grad_type == "x_lower") || (grad_type == "all")) && 
           (type == ("interval")))
 			{
 			  for (int r = 0; r < pol_degrees_n; r++)
@@ -815,7 +817,7 @@ List hpaMain(
 			    polynomial_sum = polynomial_index(r, i) + 
               			       polynomial_index(r, j);
 			    
-			    if (d_cond[r] & (type == "interval"))
+			    if (d_cond[r] && (type == "interval"))
 			    {
 			      NumericMatrix tr_moments_r = tr_moments[r];
 			      NumericMatrix tr_moments_diff_x_lower_r = tr_moments_diff_x_lower[r];
@@ -828,7 +830,7 @@ List hpaMain(
 			}
 			
 			  // polynomial coefficients
-			if ((grad_type == "pol_coefficients") | (grad_type == "all"))
+			if ((grad_type == "pol_coefficients") || (grad_type == "all"))
 			{
 			  pc_grad_value(_, i) = pc_grad_value(_, i) + mult_for_unequal_i_j * 
 			                        value_sum_element * pol_coefficients[j];
@@ -846,9 +848,9 @@ List hpaMain(
 	
 	NumericVector return_value;
 
-	if (!log | (grad_type == "NO"))
+	if (!log || (grad_type == "NO"))
 	{
-  	if ((type == "expectation") | (type == "expectation truncated"))
+  	if ((type == "expectation") || (type == "expectation truncated"))
   	{
   	  return_value = value_pgn / psi;
   	}
@@ -869,7 +871,7 @@ List hpaMain(
 	// Return gradient specific values if need
 
 	  // for polynomial coefficients
-	if ((grad_type == "pol_coefficients") | (grad_type == "all"))
+	if ((grad_type == "pol_coefficients") || (grad_type == "all"))
 	{
 	  for (int i = 0; i < pol_coefficients_n; i++)
 	  {
@@ -889,18 +891,18 @@ List hpaMain(
 	}
 
 	  // for mean
-	if ((grad_type == "mean") | (grad_type == "all"))
+	if ((grad_type == "mean") || (grad_type == "all"))
 	{
 	  for (int r = 0; r < pol_degrees_n; r++)
 	  {
-	    if (omit_ind_logical[r] | (d_cond[r] & ((type == "interval") | 
-                                              (type == "expectation"))))
+	    if (omit_ind_logical[r] || (d_cond[r] && ((type == "interval") || 
+                                                (type == "expectation"))))
 	    {
 	      mean_grad(_, r) = mean_grad(_, r) + 
 	                        mean_grad_value(_, r) / value_pgn;
 	    } 
 
-	    if (!omit_ind_logical[r] & !given_ind_logical[r])
+	    if (!omit_ind_logical[r] && !given_ind_logical[r])
 	    {
 	      if (type == "pdf")
 	      {
@@ -935,18 +937,18 @@ List hpaMain(
 	}
 
 	  // for sd
-	if ((grad_type == "sd") | (grad_type == "all"))
+	if ((grad_type == "sd") || (grad_type == "all"))
 	{
 	  for (int r = 0; r < pol_degrees_n; r++)
 	  {
-	    if (omit_ind_logical[r] | (d_cond[r] & ((type == "interval") | 
-                                              (type == "expectation"))))
+	    if (omit_ind_logical[r] || (d_cond[r] && ((type == "interval") || 
+                                                (type == "expectation"))))
 	    {
 	      sd_grad(_, r) = sd_grad(_, r) + 
 	                      sd_grad_value(_, r) / value_pgn;
 	    } 
 	    
-	    if (!omit_ind_logical[r] & !given_ind_logical[r])
+	    if (!omit_ind_logical[r] && !given_ind_logical[r])
 	    {
 	      if (type == "pdf")
 	      {
@@ -990,7 +992,7 @@ List hpaMain(
 	}
 
 	  // for x_upper
-	if ((grad_type == "x_upper") | (grad_type == "all"))
+	if ((grad_type == "x_upper") || (grad_type == "all"))
 	{
 	  for (int r = 0; r < pol_degrees_n; r++)
 	  {
@@ -1035,12 +1037,12 @@ List hpaMain(
 	}
 	
   	// for x_lower
-	if (((grad_type == "x_lower") | (grad_type == "all")) & 
+	if (((grad_type == "x_lower") || (grad_type == "all")) && 
       (type == ("interval")))
 	{
 	  for (int r = 0; r < pol_degrees_n; r++)
 	  {
-	    if (d_cond[r] & (type == "interval"))
+	    if (d_cond[r] && (type == "interval"))
 	    {
 	      x_lower_grad(_, r) = x_lower_grad(_, r) + 
 	                           x_lower_grad_value(_, r) / value_pgn;
@@ -1099,7 +1101,7 @@ List hpaMain(
 //' @param p numeric vector of probabilities
 //' @param n positive integer representing the number of observations
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector dhpa(
 	NumericVector x,
 	NumericVector pol_coefficients = NumericVector(0),
@@ -1112,7 +1114,6 @@ NumericVector dhpa(
 	bool log = false,
 	bool is_validation = true)
 {
-  
   List return_List = hpaMain(
     NumericVector(0),               // x_lower
     x,                              // x_upper
@@ -1133,7 +1134,7 @@ NumericVector dhpa(
 //' @name hpaDist
 //' @template phpa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector phpa(
 	NumericVector x,
 	NumericVector pol_coefficients = NumericVector(0),
@@ -1166,7 +1167,7 @@ NumericVector phpa(
 //' @name hpaDist
 //' @template ihpa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector ihpa(
 	NumericVector x_lower = NumericVector(0),
 	NumericVector x_upper = NumericVector(0),
@@ -1200,7 +1201,7 @@ NumericVector ihpa(
 //' @name hpaDist
 //' @template ehpa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector ehpa(
   NumericVector x = NumericVector(0),                     //for given
 	NumericVector pol_coefficients = NumericVector(0),
@@ -1233,7 +1234,7 @@ NumericVector ehpa(
 //' @name hpaDist
 //' @template etrhpa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector etrhpa(
 	NumericVector tr_left = NumericVector(0),
 	NumericVector tr_right = NumericVector(0),
@@ -1265,7 +1266,7 @@ NumericVector etrhpa(
 //' @name hpaDist
 //' @template dtrhpa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector dtrhpa(
 	NumericVector x,
 	NumericVector tr_left = NumericVector(0),
@@ -1285,7 +1286,7 @@ NumericVector dtrhpa(
     
   if (is_validation)
   {
-    if ((tr_left.size() != tr_right.size()) | 
+    if ((tr_left.size() != tr_right.size()) || 
         (tr_left.size() != tr_right.size()))
     {
       stop("tr_left and tr_right should be matrices of the same dimensions.");
@@ -1293,7 +1294,7 @@ NumericVector dtrhpa(
     
     // Insure that all values are between
     // lower and upper truncation points
-    if ((tr_left.size() == 1) | (tr_right.size() == 1))
+    if ((tr_left.size() == 1) || (tr_right.size() == 1))
     {
       for (int i = 0; i < m; i++)
       {
@@ -1305,7 +1306,7 @@ NumericVector dtrhpa(
         }
         for (int j = 0; j < n; j++)
         {
-          if ((x(j, i) < tr_left_value) |
+          if ((x(j, i) < tr_left_value) ||
              (x(j, i) > tr_right_value))
           {
             NumericVector tr_return = rep(0.0, n);
@@ -1322,7 +1323,7 @@ NumericVector dtrhpa(
       {
         for (int j = 0; j < n; j++)
         {
-          if ((x(j, i) < tr_left(j, i)) | 
+          if ((x(j, i) < tr_left(j, i)) || 
              (x(j, i) > tr_right(j, i)))
           {
             NumericVector tr_return = rep(0.0, n);
@@ -1357,7 +1358,7 @@ NumericVector dtrhpa(
 	
 	NumericVector return_value;
 
-	if ((tr_left.size() == 1) | (tr_right.size() == 1))
+	if ((tr_left.size() == 1) || (tr_right.size() == 1))
 	{
 	  if (log)
 	  {
@@ -1382,7 +1383,7 @@ NumericVector dtrhpa(
 //' @name hpaDist
 //' @template itrhpa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector itrhpa(
 	NumericVector x_lower = NumericVector(0),
 	NumericVector x_upper = NumericVector(0),
@@ -1414,7 +1415,7 @@ NumericVector itrhpa(
       }
     }
     
-    if ((tr_left.size() != tr_right.size()) | 
+    if ((tr_left.size() != tr_right.size()) || 
        (tr_left.size() != tr_right.size()))
     {
       stop("tr_left and tr_right should be matrices of the same dimensions");
@@ -1422,7 +1423,7 @@ NumericVector itrhpa(
     
     // Set values under and above truncation points
     // equal to truncation points
-    if ((tr_left.size() == 1) | (tr_right.size() == 1))
+    if ((tr_left.size() == 1) || (tr_right.size() == 1))
     {
       for (int i = 0; i < m; i++)
       {
@@ -1482,7 +1483,7 @@ NumericVector itrhpa(
 
 	NumericVector return_value;
 	
-	if ((tr_left.size() == 1) | (tr_right.size() == 1))
+	if ((tr_left.size() == 1) || (tr_right.size() == 1))
 	{
 	  if (log)
 	  {
@@ -1506,7 +1507,7 @@ NumericVector itrhpa(
 //' @name hpaDist
 //' @template dhpaDiff_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericMatrix dhpaDiff(
   NumericVector x,
   NumericVector pol_coefficients = NumericVector(0),
@@ -1520,6 +1521,68 @@ NumericMatrix dhpaDiff(
   bool log = false,
   bool is_validation = true)
 {
+  // double adj = 0;
+  // if (is_standard)
+  // {
+  //   if (pol_degrees.size() > 1)
+  //   {
+  //     stop("Argument 'is_standard' is only for univariate distributions.");
+  //   }
+  //   
+  //   NumericVector e1 = ehpa(NumericVector(0), 
+  //                           pol_coefficients, pol_degrees,
+  //                           given_ind, omit_ind,
+  //                           NumericVector::create(0),        // mean
+  //                           NumericVector::create(1),        // sd
+  //                           NumericVector::create(1),
+  //                           is_parallel, is_validation);
+  //   NumericVector e2 = ehpa(NumericVector(0), 
+  //                           pol_coefficients, pol_degrees,
+  //                           given_ind, omit_ind,
+  //                           NumericVector::create(0),        // mean
+  //                           NumericVector::create(1),        // sd
+  //                           NumericVector::create(2),
+  //                           is_parallel, is_validation);
+  //   double var1 = e2[0] - pow(e1[0], 2);
+  //   adj = sqrt(var1) / sd[0];
+  //   NumericVector x0 = x - mean[0];
+  //   NumericVector x_adj = adj * x0 + e1;
+  //   
+  //   NumericMatrix df = dhpaDiff(x_adj, 
+  //                               pol_coefficients, pol_degrees,
+  //                               given_ind, omit_ind,
+  //                               NumericVector::create(0),      // mean
+  //                               NumericVector::create(1),      // sd
+  //                               "pol_coefficients",
+  //                               is_parallel, log, 
+  //                               is_validation, false);      
+  //   NumericMatrix de1 = ehpaDiff(NumericVector(0), 
+  //                                pol_coefficients, pol_degrees,
+  //                                given_ind, omit_ind,
+  //                                NumericVector::create(0),     // mean
+  //                                NumericVector::create(1),     // sd
+  //                                NumericVector::create(1),
+  //                                "pol_coefficients",
+  //                                is_parallel, false, is_validation);
+  //   NumericMatrix de2 = ehpaDiff(NumericVector(0), 
+  //                                pol_coefficients, pol_degrees,
+  //                                given_ind, omit_ind,
+  //                                NumericVector::create(0),     // mean
+  //                                NumericVector::create(1),     // sd
+  //                                NumericVector::create(2),
+  //                                "pol_coefficients",
+  //                                is_parallel, false, is_validation);
+  //   NumericVector dvar = de2(0, _) - 2 * de1(0, _);
+  //   NumericVector dsd = 1 / (sqrt(dvar) * sd[0]);
+  //   const int n = df.nrow();
+  //   const int m = pol_coefficients.size();
+  //   NumericMatrix darg(n, m);
+  //   for (int i = 0; i < m; i++)
+  //   {
+  //     darg(_, i) = dsd[i] * x0 + de1(0, i);
+  //   }
+  // }
+  
   return(dehpaDiff(
            x, 
            pol_coefficients, pol_degrees,
@@ -1533,7 +1596,7 @@ NumericMatrix dhpaDiff(
 //' @name hpaDist
 //' @template ehpaDiff_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericMatrix ehpaDiff(
   NumericVector x = NumericVector(0),
   NumericVector pol_coefficients = NumericVector(0),
@@ -1590,8 +1653,8 @@ NumericMatrix dehpaDiff(
   int pol_degrees_n = pol_degrees.size();
   int pol_coefficients_n = pol_coefficients.size();
 
-  if ((type == "pol_coefficients") | (type == "mean") |
-      (type == "sd") | (type == "x") |
+  if ((type == "pol_coefficients") || (type == "mean") ||
+      (type == "sd") || (type == "x") ||
       (type == "all"))
   {
     if (diffType == "pdf")
@@ -1633,7 +1696,7 @@ NumericMatrix dehpaDiff(
   // Prepare output and assign the names
   
     // to polynomial coefficients
-  if ((type == "pol_coefficients") | (type == "all"))
+  if ((type == "pol_coefficients") || (type == "all"))
   {
     NumericMatrix pol_ind = polynomialIndex(pol_degrees, false);
     
@@ -1660,7 +1723,7 @@ NumericMatrix dehpaDiff(
   }
   
     // to mean
-  if ((type == "mean") | (type == "all"))
+  if ((type == "mean") || (type == "all"))
   {
     mean_names = StringVector(pol_degrees_n);
     
@@ -1679,7 +1742,7 @@ NumericMatrix dehpaDiff(
   }
   
     // to sd
-  if ((type == "sd") | (type == "all"))
+  if ((type == "sd") || (type == "all"))
   {
     sd_names = StringVector(pol_degrees_n);
     
@@ -1698,7 +1761,7 @@ NumericMatrix dehpaDiff(
   }
   
     // to x
-  if ((type == "x") | (type == "all"))
+  if ((type == "x") || (type == "all"))
   {
     x_upper_names = StringVector(pol_degrees_n);
     
@@ -1760,7 +1823,7 @@ NumericMatrix dehpaDiff(
 //' @name hpaDist
 //' @template ihpaDiff_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericMatrix ihpaDiff(
     NumericVector x_lower = NumericVector(0),
     NumericVector x_upper = NumericVector(0),
@@ -1794,8 +1857,8 @@ NumericMatrix ihpaDiff(
   int pol_degrees_n = pol_degrees.size();
   int pol_coefficients_n = pol_coefficients.size();
   
-  if ((type == "pol_coefficients") | (type == "mean") |
-      (type == "sd") | (type == "x_lower") | (type == "x_upper") |
+  if ((type == "pol_coefficients") || (type == "mean") ||
+      (type == "sd") || (type == "x_lower") || (type == "x_upper") ||
       (type == "all"))
   {
     return_List = hpaMain(
@@ -1817,7 +1880,7 @@ NumericMatrix ihpaDiff(
   // Prepare output and assign the names
   
     // to polynomial coefficients
-  if ((type == "pol_coefficients") | (type == "all"))
+  if ((type == "pol_coefficients") || (type == "all"))
   {
     NumericMatrix pol_ind = polynomialIndex(pol_degrees, false);
     
@@ -1844,7 +1907,7 @@ NumericMatrix ihpaDiff(
   }
   
     // to mean
-  if ((type == "mean") | (type == "all"))
+  if ((type == "mean") || (type == "all"))
   {
     mean_names = StringVector(pol_degrees_n);
     
@@ -1863,7 +1926,7 @@ NumericMatrix ihpaDiff(
   }
   
     // to sd
-  if ((type == "sd") | (type == "all"))
+  if ((type == "sd") || (type == "all"))
   {
     sd_names = StringVector(pol_degrees_n);
     
@@ -1882,7 +1945,7 @@ NumericMatrix ihpaDiff(
   }
   
     // to x_lower
-  if ((type == "x_lower") | (type == "all"))
+  if ((type == "x_lower") || (type == "all"))
   {
     x_lower_names = StringVector(pol_degrees_n);
     
@@ -1901,7 +1964,7 @@ NumericMatrix ihpaDiff(
   }
   
     // to x_upper
-  if ((type == "x_upper") | (type == "all"))
+  if ((type == "x_upper") || (type == "all"))
   {
     x_upper_names = StringVector(pol_degrees_n);
     
@@ -1972,7 +2035,7 @@ NumericMatrix ihpaDiff(
 //' @name hpaDist
 //' @template qhpa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector qhpa(
     NumericVector p,
     NumericMatrix x = NumericMatrix(1, 1),
@@ -2008,7 +2071,7 @@ NumericVector qhpa(
   
   if (given_ind.size() != 0)
   {
-    if ((sum(given_ind == 0) > 0) | (sum(given_ind == 1) > 1))
+    if ((sum(given_ind == 0) > 0) || (sum(given_ind == 1) > 1))
     {
       given_ind_logical = given_ind;
     } else {
@@ -2018,7 +2081,7 @@ NumericVector qhpa(
   
   if (omit_ind.size() != 0)
   {
-    if ((sum(omit_ind == 0) > 0) | (sum(omit_ind == 1) > 1))
+    if ((sum(omit_ind == 0) > 0) || (sum(omit_ind == 1) > 1))
     {
       omit_ind_logical = omit_ind;
     } else {
@@ -2047,6 +2110,10 @@ NumericVector qhpa(
                             Rcpp::_["index.return"] = true);
   NumericVector p_sort = p_sort_list["x"];
   NumericVector p_ind = p_sort_list["ix"];
+  // ПОЧИНИТЬ СОРТИРОВКУ!!!!!!!!!!!!!!!!!!!!!!!!!!
+  p_ind = seq(1, n);
+  p_sort = p;
+  // ПОЧИНИТЬ СОРТИРОВКУ!!!!!!!!!!!!!!!!!!!!!!!!!!
   p_ind = p_ind - 1;
   for(int i = 0; i < pol_degrees_n; i++)
   {
@@ -2071,7 +2138,7 @@ NumericVector qhpa(
   int x_ind = 0;
   for(int i = 0; i < pol_degrees_n; i++)
   {
-    if ((!given_ind_logical[i]) & (!omit_ind_logical[i]))
+    if ((!given_ind_logical[i]) && (!omit_ind_logical[i]))
     {
       x_ind = i;
     }
@@ -2185,7 +2252,7 @@ NumericMatrix rhpa(
   NumericVector u_new = u(_, 0);
   q(_, 0) = qhpa(u_new, NumericMatrix(1, 1),
                  pol_coefficients, pol_degrees,
-                 omit_ind, given_ind,
+                 given_ind, omit_ind,
                  mean, sd);
 
     // for the rest components
@@ -2198,7 +2265,7 @@ NumericMatrix rhpa(
 
     q(_, i) = qhpa(u_new, q,
                    pol_coefficients, pol_degrees,
-                   omit_ind, given_ind,
+                   given_ind, omit_ind,
                    mean, sd);
   }
   

@@ -8,6 +8,8 @@ export("dhpa", "phpa", "ihpa", "ehpa",
        "dhpaDiff", "ihpaDiff", "ehpaDiff",
        "qhpa", "rhpa")
 
+export("dhpa0", "phpa0")
+
 export("dnorm_parallel", "pnorm_parallel")
 
 export("normalMoment", "truncatedNormalMoment")

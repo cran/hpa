@@ -7,8 +7,10 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace RcppParallel;
 
+// [[Rcpp::interfaces(r, cpp)]]
+
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 List bsplineMult(List b,
                  double t1, 
                  double t2, 
@@ -60,7 +62,7 @@ List bsplineMult(List b,
 }
 
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 List bsplineMerge(List b_left, List b_right)
 {
   // Get splines characteristics
@@ -99,7 +101,7 @@ List bsplineMerge(List b_left, List b_right)
 }
 
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 List bsplineNames(List b)
 {
   b = clone(b);
@@ -170,7 +172,7 @@ List bsplineNames(List b)
 //' speed boost.
 //' @template bsplines_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 List bsplineGenerate(NumericVector knots, 
                      int degree, 
                      bool is_names = true)
@@ -245,7 +247,7 @@ List bsplineGenerate(NumericVector knots,
 //' @param x numeric vector representing the points at which the 
 //' spline should be estimated.
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector bsplineEstimate(NumericVector x,
                               NumericMatrix m, 
                               NumericVector knots)
@@ -275,7 +277,7 @@ NumericVector bsplineEstimate(NumericVector x,
   {
     for(int j = 0; j < m_row; j++)
     {
-      if ((knots[j] <= x[i]) & (x[i] <= knots[j + 1]))
+      if ((knots[j] <= x[i]) && (x[i] <= knots[j + 1]))
       {
         val(i) = dot(m_arma.row(j), x_pow.row(i));
         break;
@@ -292,7 +294,7 @@ NumericVector bsplineEstimate(NumericVector x,
 //' list with b-splines knots and matrices entries.
 //' @param weights numeric vector of the same length as \code{splines}.
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 List bsplineComb(List splines, 
                  NumericVector weights)
 {
@@ -349,7 +351,7 @@ List bsplineComb(List splines,
 //' @seealso \code{\link[hpa]{dhpa}}, \code{\link[hpa]{bsplineGenerate}}
 //' @template dhsa_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector dhsa(NumericVector x,
                    NumericMatrix m,
                    NumericVector knots,
@@ -415,7 +417,7 @@ NumericVector dhsa(NumericVector x,
 //' @param power non-negative integer representing the power of the 
 //' expected value i.e. E(X ^ power) will be estimated.
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 double ehsa(NumericMatrix m,
             NumericVector knots,
             double mean = 0,

@@ -6,6 +6,8 @@ using namespace Rcpp;
 using namespace RcppArmadillo;
 using namespace RcppParallel;
 
+// [[Rcpp::interfaces(r, cpp)]]
+
 // Initialize some binary functions
 
   // calculate square
@@ -191,7 +193,7 @@ NumericVector ParallelVectorExp(NumericVector x)
 //' @template is_parallel_Template
 //' @template dnorm_parallel_examples_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector dnorm_parallel(NumericVector x, double mean = 0, 
                              double sd = 1, bool is_parallel = false) 
 {
@@ -242,7 +244,7 @@ struct ParallelVectorNormalCDFStruct : public Worker
 //' @param sd double positive value.
 //' @template is_parallel_Template
 //' @export
-// [[Rcpp::export]]
+// [[Rcpp::export(rng = false)]]
 NumericVector pnorm_parallel(NumericVector x, double mean = 0, 
                              double sd = 1, bool is_parallel = false)
 {

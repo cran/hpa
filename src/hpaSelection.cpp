@@ -10,6 +10,7 @@
 using namespace RcppArmadillo;
 
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 //' Perform semi-nonparametric selection model estimation
 //' @description This function performs semi-nonparametric (SNP) maximum 
@@ -164,15 +165,15 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
   if (is_validation)
   {
       // Check covariance matrix type
-    if ((cov_type != "sandwich") & (cov_type != "sandwichFD") &
-        (cov_type != "bootstrap") & (cov_type != "gop") & 
-        (cov_type != "hessian") & (cov_type != "hessianFD"))
+    if ((cov_type != "sandwich") && (cov_type != "sandwichFD") &&
+        (cov_type != "bootstrap") && (cov_type != "gop") && 
+        (cov_type != "hessian") && (cov_type != "hessianFD"))
     {
       stop("Incorrect cov_type argument value.");
     }
 
       // Check opt_type
-    if ((opt_type != "optim") & (opt_type != "GA"))
+    if ((opt_type != "optim") && (opt_type != "GA"))
     {
       stop("Incorrect opt_type argument value.");
     }
@@ -255,8 +256,8 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	NumericVector z_temporal = z_y_df[0];
 	LogicalVector is_y_unobs = (z_temporal == 0);
 
-	LogicalVector df_cond = is_z_y_df_complete | 
-	                        (is_z_df_complete & is_y_unobs);
+	LogicalVector df_cond = is_z_y_df_complete || 
+	                        (is_z_df_complete && is_y_unobs);
 
 	z_df = subset_R(Rcpp::_["x"] = z_df, 
                   Rcpp::_["subset"] = df_cond);
@@ -372,7 +373,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	List Newey;
 	
 	// Get initial values from hpaBinary and Newey
-	if (!x0_given | is_Newey)
+	if (!x0_given || is_Newey)
 	{
 		// Estimate selection equation parameters via hpaBinary
 		List modelBinary;
@@ -627,7 +628,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	    ga_suggestions(0,_) = x1;
 	  }
 	  
-	  if(opt_control.containsElementNamed("lower") & 
+	  if(opt_control.containsElementNamed("lower") && 
        opt_control.containsElementNamed("upper"))
 	  {
 	    ga_lower = opt_control["lower"];
@@ -812,7 +813,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 		// get polynomial coefficients
 	NumericVector pol_coefficients = NumericVector(pol_coefficients_n);
 
-	if ((selection_K != 0) | (outcome_K != 0))
+	if ((selection_K != 0) || (outcome_K != 0))
 	{
 		pol_coefficients = x1[pol_coefficients_ind];
 	}
@@ -838,7 +839,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	arma::mat J_part;
 	
 	// Estimate jacobian for inner part
-	if ((cov_type == "gop") | (cov_type == "sandwich") | 
+	if ((cov_type == "gop") || (cov_type == "sandwich") || 
       (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_jacobian = hpaSelectionLnLOptim_grad_ind(
@@ -848,14 +849,14 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	}
 	
 	// Estimate hessian matrix
-	if ((cov_type == "hessian") | (cov_type == "sandwich"))
+	if ((cov_type == "hessian") || (cov_type == "sandwich"))
 	{
 	  NumericMatrix my_hessian = optim_results["hessian"];
 	  
 	  H_part = as<arma::mat>(my_hessian).i();
 	}
 	
-	if ((cov_type == "hessianFD") | (cov_type == "sandwichFD"))
+	if ((cov_type == "hessianFD") || (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_hessian = optim_results["hessian"];
 	  
@@ -872,13 +873,13 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	}
 	
 	// Sandwich estimate
-	if ((cov_type == "sandwich") | (cov_type == "sandwichFD"))
+	if ((cov_type == "sandwich") || (cov_type == "sandwichFD"))
 	{
 	  cov_mat = wrap(H_part * (J_part.t() * J_part) * H_part);
 	}
 	
 	// Inverse hessian estimate
-	if ((cov_type == "hessian") | (cov_type == "hessianFD"))
+	if ((cov_type == "hessian") || (cov_type == "hessianFD"))
 	{
 	  cov_mat = wrap(-H_part);
 	}
@@ -1081,7 +1082,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	rownames(cov_mat) = results_rows;
 	colnames(cov_mat) = results_rows;
 
-	if ((selection_K != 0) & (outcome_K != 0))
+	if ((selection_K != 0) && (outcome_K != 0))
 	{
 		pol_coefficients.names() = c_R("a_0", results_rows[pol_coefficients_ind]);
 	}

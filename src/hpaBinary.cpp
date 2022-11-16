@@ -11,6 +11,7 @@ using namespace RcppArmadillo;
 using namespace RcppParallel;
 
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 //' Semi-nonparametric single index binary choice model estimation
 //' @description This function performs semi-nonparametric (SNP) maximum 
@@ -101,15 +102,15 @@ List hpaBinary(Rcpp::Formula formula,
   if (is_validation)
   {
       // Check covariance matrix type
-    if ((cov_type != "sandwich") & (cov_type != "sandwichFD") &
-        (cov_type != "bootstrap") & (cov_type != "gop") & 
-        (cov_type != "hessian") & (cov_type != "hessianFD"))
+    if ((cov_type != "sandwich") && (cov_type != "sandwichFD") &&
+        (cov_type != "bootstrap") && (cov_type != "gop") && 
+        (cov_type != "hessian") && (cov_type != "hessianFD"))
     {
       stop("Incorrect cov_type argument value.");
     }
     
       // Check opt_type
-      if ((opt_type != "optim") & (opt_type != "GA"))
+      if ((opt_type != "optim") && (opt_type != "GA"))
       {
         stop("Incorrect opt_type argument value.");
       }
@@ -336,13 +337,13 @@ List hpaBinary(Rcpp::Formula formula,
 	arma::mat z_d_0 = (as<arma::mat>(z_d)).rows(arma::find(z_arma == 0));
 
 	// Set initial sd value to 1
-	if (!is_z_sd_fixed & !x0_given)
+	if (!is_z_sd_fixed && !x0_given)
 	{
 		x0[z_sd_ind] = 1;
 	}
 
 	// Estimate intial values via probit model using glm function
-	if (is_x0_probit & !x0_given)
+	if (is_x0_probit && !x0_given)
 	{
 	  // Calculate probit model via glm function
 		List model_probit = glm(Rcpp::_["formula"] = formula, 
@@ -476,7 +477,7 @@ List hpaBinary(Rcpp::Formula formula,
 	  }
 
 	  // set lower and upper bounds for parameters space
-	  if(opt_control.containsElementNamed("lower") & 
+	  if(opt_control.containsElementNamed("lower") && 
        opt_control.containsElementNamed("upper"))
 	  {
 	    ga_lower = opt_control["lower"];
@@ -687,7 +688,7 @@ List hpaBinary(Rcpp::Formula formula,
 	arma::mat J_part;
 	
 	// Estimate Jacobian for the inner part
-	if ((cov_type == "gop") | (cov_type == "sandwich") | 
+	if ((cov_type == "gop") || (cov_type == "sandwich") || 
       (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_jacobian = hpaBinaryLnLOptim_grad_ind(x1, hpaBinary_args);
@@ -695,13 +696,13 @@ List hpaBinary(Rcpp::Formula formula,
 	}
 
 	  // Estimate Hessian
-	if ((cov_type == "hessian") | (cov_type == "sandwich"))
+	if ((cov_type == "hessian") || (cov_type == "sandwich"))
 	{
 	  NumericMatrix my_hessian = optim_results["hessian"];
 	  H_part = as<arma::mat>(my_hessian).i();
 	}
 
-	if ((cov_type == "hessianFD") | (cov_type == "sandwichFD"))
+	if ((cov_type == "hessianFD") || (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_hessian = optim_results["hessian"];
 	  
@@ -717,13 +718,13 @@ List hpaBinary(Rcpp::Formula formula,
 	}
 
 	  // Sandwich Estimate
-	if ((cov_type == "sandwich") | (cov_type == "sandwichFD"))
+	if ((cov_type == "sandwich") || (cov_type == "sandwichFD"))
 	{
 	  cov_mat = wrap(H_part * (J_part.t() * J_part) * H_part);
 	}
 
 	  // Inverse Hessian estimate
-	if ((cov_type == "hessian") | (cov_type == "hessianFD"))
+	if ((cov_type == "hessian") || (cov_type == "hessianFD"))
 	{
 	  cov_mat = wrap(-H_part);
 	}
@@ -973,7 +974,7 @@ List hpaBinary(Rcpp::Formula formula,
 		Named("ind_List") = ind_List,
 		Named("fixed_List") = fixed_List);
 
-	if((opt_type == "GA") | (opt_type == "ga"))
+	if((opt_type == "GA") || (opt_type == "ga"))
 	{
 	  optim_results = List::create(
 	    Named("optim") = optim_results,

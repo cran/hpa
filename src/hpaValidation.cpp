@@ -3,6 +3,7 @@
 using namespace Rcpp;
 using namespace RcppArmadillo;
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 void pol_Validate(NumericVector pol_degrees = NumericVector(0),
                   NumericVector pol_coefficients = NumericVector(0),
@@ -24,7 +25,7 @@ void pol_Validate(NumericVector pol_degrees = NumericVector(0),
   bool pol_degrees_is_notposint = false;
   for(int i = 0; i < n; i ++)
   {
-    if((floor(pol_degrees[i]) != pol_degrees[i]) |
+    if((floor(pol_degrees[i]) != pol_degrees[i]) ||
        (pol_degrees[i] < 0))
     {
       pol_degrees_is_notposint = true;

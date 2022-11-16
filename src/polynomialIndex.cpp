@@ -4,6 +4,7 @@
 using namespace Rcpp;
 using namespace RcppArmadillo;
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 //' Multivariate Polynomial Representation
 //' @name polynomialIndex

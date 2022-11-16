@@ -10,6 +10,7 @@ using namespace RcppArmadillo;
 using namespace RcppParallel;
 
 // [[Rcpp::depends(RcppArmadillo)]]
+// [[Rcpp::interfaces(r, cpp)]]
 
 //' Semi-nonparametric maximum likelihood estimation
 //' @description This function performs semi-nonparametric (SNP)
@@ -121,15 +122,15 @@ List hpaML(NumericVector data,
   if(is_validation)
   {
       // Validate covariance matrix type
-    if((cov_type != "sandwich") & (cov_type != "sandwichFD") &
-       (cov_type != "bootstrap") & (cov_type != "gop") & 
-       (cov_type != "hessian") & (cov_type != "hessianFD"))
+    if((cov_type != "sandwich") && (cov_type != "sandwichFD") &&
+       (cov_type != "bootstrap") && (cov_type != "gop") && 
+       (cov_type != "hessian") && (cov_type != "hessianFD"))
     {
       stop("Incorrect cov_type argument value.");
     }
     
       // Validate opt_type
-    if((opt_type != "optim") & (opt_type != "GA"))
+    if((opt_type != "optim") && (opt_type != "GA"))
     {
       stop("Incorrect opt_type argument value.");
     }
@@ -154,20 +155,20 @@ List hpaML(NumericVector data,
     // ind_Validate(given_ind, omit_ind);
     
     int n_given_ind = given_ind.size();
-    if((n_given_ind != 0) & (n_given_ind != target_dim))
+    if((n_given_ind != 0) && (n_given_ind != target_dim))
     {
       stop("given_ind length should be the same as the length of pol_degrees");
     }
     
     int n_omit_ind = omit_ind.size();
-    if((n_omit_ind != 0) & (n_omit_ind != target_dim))
+    if((n_omit_ind != 0) && (n_omit_ind != target_dim))
     {
       stop("omit_ind length should be the same as the length of pol_degrees");
     }
     
     // Validate truncation points
-    if((tr_left.size() != tr_right.size()) & 
-       (tr_left.size() != 0) & (tr_right.size() != 0))
+    if((tr_left.size() != tr_right.size()) &&
+       (tr_left.size() != 0) && (tr_right.size() != 0))
     {
       stop("tr_left and tr_right should be vectors of the same dimensions");
     }
@@ -178,7 +179,7 @@ List hpaML(NumericVector data,
                                                      Rcpp::_["quietly"] = true);
 
 	    // check weather GA package has been installed
-	if((opt_type == "GA") | (opt_type == "ga"))
+	if((opt_type == "GA") || (opt_type == "ga"))
 	{
 	  if(is_ga_installed[0])
 	  {
@@ -279,7 +280,7 @@ List hpaML(NumericVector data,
 	NumericMatrix tr_left_mat(1, pol_degrees_n);
 	NumericMatrix tr_right_mat(1, pol_degrees_n);
 
-	if ((tr_left.size() > 0) | (tr_right.size() > 0))
+	if ((tr_left.size() > 0) || (tr_right.size() > 0))
 	{
 		if (tr_left.size() == 0) // if there is no left truncation
 		{                        // set it to negative infinity
@@ -366,7 +367,7 @@ List hpaML(NumericVector data,
   	NumericVector ga_lower = NumericVector(x1_n);
   	NumericVector ga_upper = NumericVector(x1_n);
   	
-  	if(opt_control.containsElementNamed("lower") & 
+  	if(opt_control.containsElementNamed("lower") && 
        opt_control.containsElementNamed("upper"))
   	{
   	  ga_lower = opt_control["lower"];
@@ -538,7 +539,7 @@ List hpaML(NumericVector data,
 	NumericMatrix my_hessian = optim_results["hessian"];  // Hessian matrix
 	
 	  // Estimate hessian
-	if ((cov_type == "hessianFD") | (cov_type == "sandwichFD"))
+	if ((cov_type == "hessianFD") || (cov_type == "sandwichFD"))
 	{
 	  try
 	  {
@@ -550,8 +551,8 @@ List hpaML(NumericVector data,
 	}
 	
 	  // estimate inverse Hessian
-	if ((cov_type == "hessian") | (cov_type == "sandwich") |
-      (cov_type == "hessianFD") | (cov_type == "sandwichFD"))
+	if ((cov_type == "hessian") || (cov_type == "sandwich") ||
+      (cov_type == "hessianFD") || (cov_type == "sandwichFD"))
 	{
 	  
 	  H_part = as<arma::mat>(my_hessian);
@@ -567,7 +568,7 @@ List hpaML(NumericVector data,
 	}
 	
 	  // Estimate jacobian
-	if ((cov_type == "gop") | (cov_type == "sandwich") |
+	if ((cov_type == "gop") || (cov_type == "sandwich") ||
       (cov_type == "sandwichFD"))
 	{
 	  NumericMatrix my_jacobian = hpaLnLOptim_grad_ind(x1, hpaML_args);
@@ -576,13 +577,13 @@ List hpaML(NumericVector data,
 	}
 
 	  // Sandwich estimate
-	if ((cov_type == "sandwich") | (cov_type == "sandwichFD"))
+	if ((cov_type == "sandwich") || (cov_type == "sandwichFD"))
 	{
 	  cov_mat = wrap(H_part * (J_part.t() * J_part) * H_part);
 	}
 	
 	  // Inverse hessian estimate
-	if ((cov_type == "hessian") | (cov_type == "hessianFD"))
+	if ((cov_type == "hessian") || (cov_type == "hessianFD"))
 	{
 	  cov_mat = wrap(-H_part);
 	}
@@ -821,7 +822,7 @@ List hpaLnLOptim_List(NumericVector x0, List hpaML_args)
 	pol_coefficients.push_front(1);
 
 	// Perform calculations
-	if (!(R_IsNA(tr_left(0, 0))) & !(R_IsNA(tr_right(0, 0))))
+	if (!(R_IsNA(tr_left(0, 0))) && !(R_IsNA(tr_right(0, 0))))
 	{
 	  return_individual = dtrhpa(x_data,
                                tr_left, tr_right,
@@ -970,7 +971,7 @@ List hpaLnLOptim_grad_List(NumericVector x0, List hpaML_args)
   }
   
     // Deal with truncation
-  if (!(R_IsNA(tr_left(0, 0))) & !(R_IsNA(tr_right(0, 0))))
+  if (!(R_IsNA(tr_left(0, 0))) && !(R_IsNA(tr_right(0, 0))))
   {
     NumericMatrix tr_grad = ihpaDiff(tr_left, tr_right,
                                      pol_coefficients, pol_degrees,
@@ -1133,7 +1134,7 @@ NumericVector predict_hpaML(List object,
 	NumericMatrix x = model["data"];
 
 	// Get data
-	if ((newdata.ncol() == 1) & (newdata.nrow() == 1))
+	if ((newdata.ncol() == 1) && (newdata.nrow() == 1))
 	{
 		newdata = x;
 	} else {
@@ -1141,7 +1142,7 @@ NumericVector predict_hpaML(List object,
 	}
 
 	// Estimate
-	if (!(R_IsNA(tr_left(0, 0))) & !(R_IsNA(tr_right(0, 0))))
+	if (!(R_IsNA(tr_left(0, 0))) && !(R_IsNA(tr_right(0, 0))))
 	{
 		return(dtrhpa(newdata,
 			tr_left, tr_right,
@@ -1258,15 +1259,15 @@ StringVector starVector(NumericVector p_values)
       {
         stars[i] = "***";
       } else {
-        if ((0.001 < p_values[i]) & (p_values[i] <= 0.01))
+        if ((0.001 < p_values[i]) && (p_values[i] <= 0.01))
         {
           stars[i] = "**";
         } else {
-          if ((0.01 < p_values[i]) & (p_values[i] <= 0.05))
+          if ((0.01 < p_values[i]) && (p_values[i] <= 0.05))
           {
             stars[i] = "*";
           } else {
-            if ((0.05 < p_values[i]) & (p_values[i] <= 0.1))
+            if ((0.05 < p_values[i]) && (p_values[i] <= 0.1))
             {
               stars[i] = ".";
             } else {
