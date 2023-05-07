@@ -3,6 +3,7 @@
 #include "hpaBinary.h"
 #include "polynomialIndex.h"
 #include "hpaValidation.h"
+#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
 

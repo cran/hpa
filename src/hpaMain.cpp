@@ -3,6 +3,7 @@
 #include "hpaMain.h"
 #include "ParallelFunctions.h"
 #include "hpaValidation.h"
+#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
 

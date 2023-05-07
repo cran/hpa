@@ -1,5 +1,6 @@
 #include "spline.h"
 #include "normalMoments.h"
+#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
 
