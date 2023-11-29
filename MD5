@@ -1,6 +1,6 @@
-bd6f3df15c66992cff4985e752748a91 *DESCRIPTION
+a0788741220823d82835c1705b0e17f0 *DESCRIPTION
 fb9cbda2e9eadaf6548bfe06a0280c0e *NAMESPACE
-34d5b94aaa45a26fef6ced82ac1779f6 *R/RcppExports.R
+cefb035abd944c049afc8965e1c25699 *R/RcppExports.R
 50d73abd65db92b6884e9a1790f7ded7 *R/hpaBinary_generics.R
 6f624a14ba5c893d01a1d9398674d0f1 *R/hpaML_generics.R
 be7e28203faa1c990c64a32a74fd4c43 *R/hpaSelection_generics.R
@@ -59,7 +59,7 @@ a0c3e600711f0bd81c59bcf4d02c9cb2 *src/Makevars
 8f25336fa3ada54b574dee146a5bd11d *src/Makevars.win
 ad51a7a1bdde68bd00c445a727a69f99 *src/ParallelFunctions.cpp
 e471e8499d7d04109b8c5cbe707c2b8b *src/ParallelFunctions.h
-8435a694ad40220f88f9a4c59693ee48 *src/RcppExports.cpp
+a08f1b19465995f0e024fd6c534f0a5e *src/RcppExports.cpp
 4855d4eec2bae468de5ad7fe5126dcf6 *src/hpa.h
 cb278f1bce7878189962814e03c8000d *src/hpa0.cpp
 bf1ea2584023ee8f2e8b4eee90bef5b4 *src/hpa0.h

@@ -892,5 +892,5 @@ ehsa <- function(m, knots, mean = 0, sd = 1, power = 1) {
 
 # Register entry points for exported C++ functions
 methods::setLoadAction(function(ns) {
-    .Call('_hpa_RcppExport_registerCCallable', PACKAGE = 'hpa')
+    .Call(`_hpa_RcppExport_registerCCallable`)
 })
