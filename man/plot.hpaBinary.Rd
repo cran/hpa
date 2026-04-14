@@ -2,7 +2,7 @@
 % Please edit documentation in R/hpaBinary_generics.R
 \name{plot.hpaBinary}
 \alias{plot.hpaBinary}
-\title{Plot hpaBinary random errors approximated density}
+\title{Plot the approximated density of hpaBinary random errors}
 \usage{
 \method{plot}{hpaBinary}(x, y = NULL, ...)
 }
@@ -11,9 +11,9 @@
 
 \item{y}{this parameter currently ignored}
 
-\item{...}{further arguments to be passed to \code{\link[base]{plot}}
+\item{...}{further arguments to be passed to the \code{\link[base]{plot}}
 function.}
 }
 \description{
-Plot hpaBinary random errors approximated density
+Plot the approximated density of hpaBinary random errors
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hpaSelection_generics.R
 \name{coef.hpaSelection}
 \alias{coef.hpaSelection}
-\title{Extract coefficients from hpaSelection object}
+\title{Extract coefficients from a hpaSelection object}
 \usage{
 \method{coef}{hpaSelection}(object, ..., type = "all")
 }
@@ -11,11 +11,11 @@
 
 \item{...}{further arguments (currently ignored)}
 
-\item{type}{character; if "all" (default) then all estimated parameters
-values will be returned. If "selection" then selection equation coefficients
-estimates will be provided. If "outcome" then outcome equation coefficients
+\item{type}{character; if "all" (default) then all estimated parameter
+values will be returned. If "selection" then selection equation coefficient
+estimates will be provided. If "outcome" then outcome equation coefficient
 estimates will be returned.}
 }
 \description{
-Extract coefficients from hpaSelection object
+Extract coefficients from a hpaSelection object
 }

@@ -12,5 +12,5 @@
 \item{...}{further arguments (currently ignored)}
 }
 \description{
-This function calculates log-likelihood for "hpaML" object
+This function calculates log-likelihood for a "hpaML" object
 }

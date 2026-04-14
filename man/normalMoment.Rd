@@ -27,24 +27,24 @@ variable with mean = \code{mean} and standard deviation = \code{sd}.
 Note that i-th vector's component value corresponds to the (i-1)-th moment.}
 
 \item{is_validation}{logical value indicating whether function input 
-arguments should be validated.  Set it to \code{FALSE} for slight
+arguments should be validated.  Set it to \code{FALSE} for a slight
 performance boost (default value is \code{TRUE}).}
 
 \item{is_central}{logical; if \code{TRUE}, then central moments 
 will be calculated.}
 
 \item{diff_type}{string value indicating the type of the argument
-the moment should be differentiated respect to.
-Default value is \code{"NO"} so the moments itself will be returned. 
+the moment should be differentiated with respect to.
+Default value is \code{"NO"} so the moments themselves will be returned. 
 Alternative values are \code{"mean"} and \code{"sd"}. Also 
 \code{"x_lower"} and \code{"x_upper"} values are available for 
 \code{\link[hpa]{truncatedNormalMoment}}.}
 }
 \value{
 This function returns \code{k}-th order moment of
-normal distribution which mean equals to \code{mean} and standard deviation 
-is \code{sd}. If \code{return_all_moments} is \code{TRUE} then see this 
-argument description above for output details.
+normal distribution whose mean equals \code{mean} and whose standard 
+deviation equals \code{sd}. If \code{return_all_moments} is \code{TRUE} 
+then see this argument description above for output details.
 }
 \description{
 This function recursively calculates k-th order moment of 
@@ -55,9 +55,9 @@ This function estimates \code{k}-th order moment of normal
 distribution which mean equals to \code{mean} and standard deviation 
 equals to \code{sd}.\cr
 
-Note that parameter \code{k} value automatically converts 
-to integer. So passing non-integer \code{k} value will not cause 
-any errors but the calculations will be performed for rounded 
+Note that the value of parameter \code{k} automatically converts 
+to an integer. So passing a non-integer \code{k} value will not cause 
+any errors but the calculations will be performed for the rounded 
 \code{k} value only.
 }
 \examples{

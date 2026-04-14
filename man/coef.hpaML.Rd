@@ -2,7 +2,7 @@
 % Please edit documentation in R/hpaML_generics.R
 \name{coef.hpaML}
 \alias{coef.hpaML}
-\title{Extract coefficients from hpaML object}
+\title{Extract coefficients from a hpaML object}
 \usage{
 \method{coef}{hpaML}(object, ...)
 }
@@ -12,5 +12,5 @@
 \item{...}{further arguments (currently ignored)}
 }
 \description{
-Extract coefficients from hpaML object
+Extract coefficients from a hpaML object
 }

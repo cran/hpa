@@ -28,9 +28,9 @@ using namespace RcppParallel;
 //' @template k_integer_Template
 //' @template diff_type_Template
 //' @return This function returns \code{k}-th order moment of
-//' normal distribution which mean equals to \code{mean} and standard deviation 
-//' is \code{sd}. If \code{return_all_moments} is \code{TRUE} then see this 
-//' argument description above for output details.
+//' normal distribution whose mean equals \code{mean} and whose standard 
+//' deviation equals \code{sd}. If \code{return_all_moments} is \code{TRUE} 
+//' then see this argument description above for output details.
 //' @examples
 //' ## Calculate 5-th order moment of normal random variable which
 //' ## mean equals to 3 and standard deviation is 5.
@@ -67,7 +67,7 @@ NumericVector normalMoment(int k = 0,
 		}
 		if (sd <= 0)
 		{
-			stop("parameter sd should be positive integer");
+			stop("parameter sd should be positive numeric value");
 		}
 		if((diff_type != "NO") && (diff_type != "mean") && (diff_type != "sd"))
 		{
@@ -76,22 +76,22 @@ NumericVector normalMoment(int k = 0,
 	}
 	// ------------------------------------------------------------
 	
-	// Estimate unconditional (on truncation) variance
+	// Estimate unconditional variance
 	double sd_squared = pow(sd, 2);
 	
-	// Initialize matrix to store the moments
+	// Initialize vector to store the moments
 	NumericVector moments(k + 1, 1.0);
 	
-	// Initialize matrix to store the moments derivatives if need
+	// Initialize vector to store the moments derivatives if need
 	NumericVector moments_diff(k + 1, 1.0);
 	
-	// Check weather central moment should be calculated
+	// Check whether central moment should be calculated
 	if(is_central)
 	{
 	  mean = 0;
 	}
 	
-	// The zero moment always equals 1 and its derivatives respect to
+	// The zero moment always equals 1 and its derivatives with respect to
 	// mean and sd parameters are 0
 	moments[0] = 1;
 	moments_diff[0] = 0;
@@ -105,8 +105,8 @@ NumericVector normalMoment(int k = 0,
 		return(moments);
 	}
 	
-	// If the moment is 1 it equals to mean, its derivative respect to
-	// mean equals 1 and respect to sd equals zero
+	// If the moment is 1 it equals to mean, its derivative with respect to
+	// mean equals 1, and with respect to sd equals zero
 	moments[1] = mean;
 	if(diff_type == "mean")
   {
@@ -140,7 +140,7 @@ NumericVector normalMoment(int k = 0,
 		moments[i] = (i - 1) * sd_squared * moments[i - 2] + mean * moments[i - 1];
 	}
 	
-	  // calculate derivative respect to mean if need
+	  // calculate derivative with respect to mean if needed
 	if(diff_type == "mean")
 	{
 	  for (int i = 2; i <= k; i++)
@@ -150,7 +150,7 @@ NumericVector normalMoment(int k = 0,
 	  }
 	 }
 	  
-	  // calculate derivative respect to mean if need
+	  // calculate derivative with respect to sd if needed
 	 if(diff_type == "sd")
 	 {
 	   for (int i = 2; i <= k; i++)
@@ -163,7 +163,7 @@ NumericVector normalMoment(int k = 0,
 
 	// Return depends on return_all_moments value
 	
-	  // if all moments should be returned
+	  // if only k-th moment should be returned
 	if (!return_all_moments)
 	{
 	  if(diff_type != "NO")
@@ -175,7 +175,7 @@ NumericVector normalMoment(int k = 0,
 		return(moments_return);
 	}
 
-	  // if only k-th moment should be returned
+	  // if all moments should be returned
 	if(diff_type != "NO")
 	{
 	  return(moments_diff);
@@ -277,7 +277,7 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 
 	if (x_upper.size() == 0)
 	{
-		x_lower = NumericVector::create(max_value);
+		x_upper = NumericVector::create(max_value);
 	}
 
 	// Get number of observations
@@ -293,7 +293,7 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 		}
 		if (sd <= 0)
 		{
-			stop("parameter sd should be positive integer");
+			stop("parameter sd should be positive numeric value");
 		}
 		if ((x_upper.size() != n) && (x_upper[0] != max_value))
 		{
@@ -313,11 +313,11 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 		}
 		if ((pdf_upper.size() != n) && (pdf_upper.size() != 0))
 		{
-			stop("vectors x_lower and pdf_upper should have the same length");
+			stop("vectors x_upper and pdf_upper should have the same length");
 		}
 		if ((cdf_upper.size() != n) && (cdf_upper.size() != 0))
 		{
-			stop("vectors x_lower and cdf_upper should have the same length");
+			stop("vectors x_upper and cdf_upper should have the same length");
 		}
 		if ((cdf_difference.size() != n) && (cdf_difference.size() != 0))
 		{
@@ -330,13 +330,13 @@ NumericMatrix truncatedNormalMoment(int k = 1,
 		}
 		if(sum(x_lower >= x_upper) > 0)
 		{
-		  stop("x_lower values should not be greater then x_upper values");
+		  stop("x_lower values should not be greater than x_upper values");
 		}
 	}
 	//------------------------------------------------------------
 	
 	// Store some information during calculations in order to
-	// use if for the differentiation if need
+	// use it for the differentiation if needed
 	NumericMatrix x_pow_prod_pdf_upper = NumericMatrix(n, k + 1);
 	NumericMatrix x_pow_prod_pdf_lower = NumericMatrix(n, k + 1);
 	NumericMatrix x_pow_prod_pdf_difference = NumericMatrix(n, k + 1);

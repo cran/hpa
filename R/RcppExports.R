@@ -19,8 +19,8 @@ dnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' @description Calculate in parallel for each value from vector \code{x} 
 #' distribution function of normal distribution with 
 #' mean equal to \code{mean} and standard deviation equal to \code{sd}.
-#' @param x vector of quantiles: should be numeric vector,
-#' not just double value.
+#' @param x vector of quantiles: should be a numeric vector,
+#' not just a double value.
 #' @param mean double value.
 #' @param sd double positive value.
 #' @template is_parallel_Template
@@ -30,11 +30,11 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 }
 
 #' Fast pdf and cdf for standardized univariate PGN distribution
-#' @description This function uses fast algorithms to calculate densities
-#' and probabilities (along with their derivatives) related to standardized 
+#' @description These functions use fast algorithms to calculate densities
+#' and probabilities (along with their derivatives) related to the standardized 
 #' PGN distribution.
 #' @name hpaDist0
-#' @param x numeric vector of functions arguments.
+#' @param x numeric vector of function arguments.
 #' @param pc polynomial coefficients without the first term.
 #' @param mean expected value (mean) of the distribution.
 #' @param sd standard deviation of the distribution.
@@ -42,16 +42,16 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' some calculations. Currently unavailable.
 #' @template log_Template
 #' @template is_validation_Template
-#' @param is_grad logical; if \code{TRUE} (default) then function returns 
-#' gradients respect to \code{x} and \code{pc}.
+#' @param is_grad logical; if \code{TRUE} then function returns 
+#' gradients with respect to \code{x} and \code{pc} (default is \code{FALSE}).
 #' @details Functions \code{\link[hpa]{dhpa0}} and 
 #' \code{\link[hpa]{phpa0}} are similar to \code{\link[hpa]{dhpa}} and
-#' \code{\link[hpa]{phpa}} correspondingly. However there are two key
+#' \code{\link[hpa]{phpa}}, respectively. However, there are two key
 #' differences. First, \code{\link[hpa]{dhpa0}} and \code{\link[hpa]{phpa0}}
-#' are deal with univariate PGN distribution only. Second, this distribution
-#' is standardized to zero mean and unit variances. Moreover \code{pc} is 
+#' deal only with univariate PGN distributions. Second, this distribution
+#' is standardized to zero mean and unit variance. Moreover \code{pc} is 
 #' similar to \code{pol_coefficients} argument of \code{\link[hpa]{dhpa}} but
-#' without the first component i.e. \code{pc=pol_coefficients[-1]}. Also
+#' without the first component, i.e., \code{pc = pol_coefficients[-1]}. Also
 #' \code{mean} and \code{sd} are not the arguments of the normal density
 #' but actual mean and standard deviation of the resulting distribution. So
 #' if these arguments are different from \code{0} and \code{1} correspondingly
@@ -63,16 +63,16 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #' Function \code{\link[hpa]{phpa0}} returns a list with element named
 #' \code{"prob"} that is a numeric vector of probabilities. 
 #' 
-#' If \code{is_grad = TRUE} then elements \code{"grad_x"} and \code{"grad_pc"}
-#' will be add to the list containing gradients respect to input argument
-#' \code{x} and parameters \code{pc} correspondingly. If \code{log = TRUE} then
-#' additional elements will be add to the list containing density, probability
-#' and gradient values for logarithms of corresponding functions. These
+#' If \code{is_grad = TRUE}, then elements \code{"grad_x"} and \code{"grad_pc"}
+#' will be added to the list containing gradients with respect to input 
+#' argument \code{x} and parameters \code{pc}, respectively. 
+#' If \code{log = TRUE}, then additional elements will be added to the list 
+#' containing density, probability and gradient values for logarithms of 
+#' corresponding functions. These
 #' elements will be named as \code{"grad_x_log"}, \code{"grad_pc_log"},
-#' \code{"grad_prob_log"} and \code{"grad_den_log"}.
+#' \code{"prob_log"} and \code{"den_log"}.
 #' @examples
-#' # Calculate density and probability of standartized PGN
-#' # distribution
+#' # Calculate density and probability of standardized PGN distribution
 #'   # distribution parameters
 #' pc <- c(0.5, -0.2)
 #'   # function arguments
@@ -82,13 +82,13 @@ pnorm_parallel <- function(x, mean = 0, sd = 1, is_parallel = FALSE) {
 #'   # cumulative distribution function
 #' phpa0(x, pc)
 #' 
-#' # Additionally calculate gradients respect to arguments
+#' # Additionally calculate gradients with respect to arguments
 #' # and parameters of the PGN distribution
 #' dhpa0(x, pc, is_grad = TRUE)
 #' phpa0(x, pc, is_grad = TRUE)
 #' 
-#' # Let's denote by X standardized PGN random variable and repeat
-#' # calculations for 2 * X + 1
+#' # Let X be a standardized PGN random variable and repeat
+#' # the calculations for 2 * X + 1
 #' dhpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
 #' phpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
 #' @export
@@ -123,8 +123,8 @@ phpa0 <- function(x, pc, mean = 0, sd = 1, is_parallel = FALSE, log = FALSE, is_
 #' @template opt_control_Template
 #' @template is_validation_Template
 #' @param is_x0_probit logical; if \code{TRUE} (default) then initial
-#' points for optimization routine will be
-#' obtained by probit model estimated via \link[stats]{glm} function.
+#' points for the optimization routine will be
+#' obtained by the probit model estimated via the \link[stats]{glm} function.
 #' @template is_sequence_Template
 #' @template GN_details_Template
 #' @template hpaBinary_formula_Template
@@ -138,13 +138,13 @@ phpa0 <- function(x, pc, mean = 0, sd = 1, is_parallel = FALSE, log = FALSE, is_
 #' following components:
 #' \itemize{
 #' \item \code{optim} - \code{\link[stats]{optim}} function output. 
-#' If \code{opt_type = "GA"} then it is the list containing 
-#' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
-#' \item \code{x1} - numeric vector of distribution parameters estimates.
+#' If \code{opt_type = "GA"}, then it is the list containing the outputs of 
+#' the \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions.
+#' \item \code{x1} - numeric vector of distribution parameter estimates.
 #' \item \code{mean} - mean (mu) parameter of density function estimate.
 #' \item \code{sd} - sd (sigma) parameter of density function estimate.
 #' \item \code{pol_coefficients} - polynomial coefficients estimates.
-#' \item \code{pol_degrees} - the same as \code{K} input parameter.
+#' \item \code{pol_degrees} - the same as the \code{K} input parameter.
 #' \item \code{coefficients} - regression (single index) 
 #' coefficients estimates.
 #' \item \code{cov_mat} - covariance matrix estimate.
@@ -162,7 +162,7 @@ phpa0 <- function(x, pc, mean = 0, sd = 1, is_parallel = FALSE, log = FALSE, is_
 #' \item \code{n_obs} - number of observations.
 #' \item \code{z_latent} - latent variable (single index) estimates.
 #' \item \code{z_prob} - probabilities of positive 
-#' outcome (i.e. 1) estimates.}
+#' outcome (i.e., 1) estimates.}
 #' @seealso \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, 
 #' \link[hpa]{plot.hpaBinary},
 #' \link[hpa]{logLik.hpaBinary}
@@ -197,7 +197,7 @@ summary_hpaBinary <- function(object) {
 }
 
 #' Summary for hpaBinary output
-#' @param x Object of class "hpaML"
+#' @param x Object of class "hpaBinary"
 #' @export	
 print_summary_hpaBinary <- function(x) {
     invisible(.Call(`_hpa_print_summary_hpaBinary`, x))
@@ -240,15 +240,15 @@ logLik_hpaBinary <- function(object) {
 #' An object of class "hpaML" is a list containing the following components:
 #' \itemize{
 #' \item \code{optim} - \code{\link[stats]{optim}} function output. 
-#' If \code{opt_type = "GA"} then it is the list containing 
+#' If \code{opt_type = "GA"}, then it is the list containing 
 #' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 #' \item \code{x1} - numeric vector of distribution parameters estimates.
 #' \item \code{mean} - density function mean vector estimate.
 #' \item \code{sd} - density function sd vector estimate.
 #' \item \code{pol_coefficients} - polynomial coefficients estimates.
-#' \item \code{tr_left }- the same as \code{tr_left} input parameter.
+#' \item \code{tr_left } - the same as \code{tr_left} input parameter.
 #' \item \code{tr_right} - the same as \code{tr_right} input parameter.
-#' \item \code{omit_ind }- the same as \code{omit_ind} input parameter.
+#' \item \code{omit_ind } - the same as \code{omit_ind} input parameter.
 #' \item \code{given_ind} - the same as \code{given_ind} input parameter.
 #' \item \code{cov_mat} - covariance matrix estimate.
 #' \item \code{results} - numeric matrix representing estimation results.
@@ -580,7 +580,7 @@ predict_hpaSelection <- function(object, newdata = NULL, method = "HPA", is_cond
 }
 
 #' Summarizing hpaSelection Fits
-#' @description This function summarizing hpaSelection Fits.
+#' @description This function summarizes hpaSelection Fits.
 #' @param object Object of class "hpaSelection".
 #' @return This function returns the same list as 
 #' \code{\link[hpa]{hpaSelection}} function changing its class 
@@ -625,9 +625,9 @@ logLik_hpaSelection <- function(object) {
 #' @template k_integer_Template
 #' @template diff_type_Template
 #' @return This function returns \code{k}-th order moment of
-#' normal distribution which mean equals to \code{mean} and standard deviation 
-#' is \code{sd}. If \code{return_all_moments} is \code{TRUE} then see this 
-#' argument description above for output details.
+#' normal distribution whose mean equals \code{mean} and whose standard 
+#' deviation equals \code{sd}. If \code{return_all_moments} is \code{TRUE} 
+#' then see this argument description above for output details.
 #' @examples
 #' ## Calculate 5-th order moment of normal random variable which
 #' ## mean equals to 3 and standard deviation is 5.
@@ -724,8 +724,8 @@ truncatedNormalMoment <- function(k = 1L, x_lower = numeric(0), x_upper = numeri
 #' Multivariate Polynomial Representation
 #' @name polynomialIndex
 #' @description Function \code{\link[hpa]{polynomialIndex}} 
-#' provides matrix which allows to iterate through the elements 
-#' of multivariate polynomial being aware of these elements powers. 
+#' provides a matrix which allows to iterate through the elements 
+#' of multivariate polynomial being aware of these elements' powers. 
 #' So (i, j)-th element of the matrix is power of j-th variable in i-th 
 #' multivariate polynomial element.
 #' 
@@ -746,11 +746,11 @@ truncatedNormalMoment <- function(k = 1L, x_lower = numeric(0), x_upper = numeri
 #' \eqn{i_{j}\in \{0,...,K_{j}\}}. 
 #' 
 #' Function \code{\link[hpa]{printPolynomial}} removes polynomial elements 
-#' which coefficients are zero and variables which powers are zero. Output may 
-#' contain long coefficients representation as they are not rounded.
+#' whose coefficients are zero and variables whose powers are zero. Output may 
+#' contain long coefficient representations as they are not rounded.
 #' @return Function \code{\link[hpa]{polynomialIndex}} 
-#' returns matrix which rows are 
-#' responsible for variables while columns are related to powers. 
+#' returns a matrix whose rows correspond to variables while columns 
+#' correspond to powers. 
 #' So \eqn{(i, j)}-th element of this matrix corresponds to the 
 #' power \eqn{i_{j}} of the \eqn{x_{j}} variable in \eqn{i}-th polynomial 
 #' element. Therefore \eqn{i}-th column of this matrix contains vector of
@@ -861,8 +861,8 @@ bsplineComb <- function(splines, weights) {
 #' @param sd standard deviation of a normal distribution.
 #' @template log_Template
 #' @description The set of functions similar to \code{\link[hpa]{dhpa}}-like
-#' functions. The difference is that instead of polynomial these functions
-#' utilize spline.
+#' functions. The difference is that instead of a polynomial these functions
+#' utilize a spline.
 #' @details In contrast to \code{\link[hpa]{dhpa}}-like functions these
 #' functions may deal with univariate distributions only. In future this
 #' functions will be generalized to work with multivariate distributions.
@@ -870,10 +870,10 @@ bsplineComb <- function(splines, weights) {
 #' polynomial in order to provide greater numeric stability and approximation 
 #' accuracy. To provide spline parameters please use \code{m} and \code{knots}
 #' arguments (i.e. instead of \code{pol_degrees} and \code{pol_coefficients}
-#' arguments that where used to specify the polynomial
+#' arguments that were used to specify the polynomial
 #' for \code{\link[hpa]{dhpa}}-like functions).
-#' @return Function \code{\link[hpa]{dhsa}} returns vector of probabilities
-#' of the same length as \code{x}. Function \code{\link[hpa]{ehsa}} 
+#' @return Function \code{\link[hpa]{dhsa}} returns vector of probability 
+#' densities of the same length as \code{x}. Function \code{\link[hpa]{ehsa}} 
 #' returns moment value.
 #' @seealso \code{\link[hpa]{dhpa}}, \code{\link[hpa]{bsplineGenerate}}
 #' @template dhsa_examples_Template
@@ -883,8 +883,8 @@ dhsa <- function(x, m, knots, mean = 0, sd = 1, log = FALSE) {
 }
 
 #' @name hsaDist
-#' @param power non-negative integer representing the power of the 
-#' expected value i.e. E(X ^ power) will be estimated.
+#' @param power non-negative integer representing the moment order, 
+#' i.e., E(X ^ power) will be estimated.
 #' @export
 ehsa <- function(m, knots, mean = 0, sd = 1, power = 1) {
     .Call(`_hpa_ehsa`, m, knots, mean, sd, power)

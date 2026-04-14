@@ -1,6 +1,6 @@
+#define ARMA_DONT_USE_OPENMP
 #include "spline.h"
 #include "normalMoments.h"
-#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
 
@@ -27,7 +27,7 @@ List bsplineMult(List b,
   int n_row = b_m.nrow();
   int n_col = b_m.ncol();
 
-  // If the knot has multiplicity greater then one
+  // If the knot has multiplicity greater than one
   if(t1 == t2)
   {
     b_m = NumericMatrix(n_row, n_col + 1);
@@ -253,7 +253,7 @@ NumericVector bsplineEstimate(NumericVector x,
                               NumericMatrix m, 
                               NumericVector knots)
 {
-  // Sore dimensions information
+  // Store dimensions information
   int n = x.size();
   int m_col = m.ncol();
   int m_row = m.nrow();
@@ -335,8 +335,8 @@ List bsplineComb(List splines,
 //' @param sd standard deviation of a normal distribution.
 //' @template log_Template
 //' @description The set of functions similar to \code{\link[hpa]{dhpa}}-like
-//' functions. The difference is that instead of polynomial these functions
-//' utilize spline.
+//' functions. The difference is that instead of a polynomial these functions
+//' utilize a spline.
 //' @details In contrast to \code{\link[hpa]{dhpa}}-like functions these
 //' functions may deal with univariate distributions only. In future this
 //' functions will be generalized to work with multivariate distributions.
@@ -344,10 +344,10 @@ List bsplineComb(List splines,
 //' polynomial in order to provide greater numeric stability and approximation 
 //' accuracy. To provide spline parameters please use \code{m} and \code{knots}
 //' arguments (i.e. instead of \code{pol_degrees} and \code{pol_coefficients}
-//' arguments that where used to specify the polynomial
+//' arguments that were used to specify the polynomial
 //' for \code{\link[hpa]{dhpa}}-like functions).
-//' @return Function \code{\link[hpa]{dhsa}} returns vector of probabilities
-//' of the same length as \code{x}. Function \code{\link[hpa]{ehsa}} 
+//' @return Function \code{\link[hpa]{dhsa}} returns vector of probability 
+//' densities of the same length as \code{x}. Function \code{\link[hpa]{ehsa}} 
 //' returns moment value.
 //' @seealso \code{\link[hpa]{dhpa}}, \code{\link[hpa]{bsplineGenerate}}
 //' @template dhsa_examples_Template
@@ -415,8 +415,8 @@ NumericVector dhsa(NumericVector x,
 }
 
 //' @name hsaDist
-//' @param power non-negative integer representing the power of the 
-//' expected value i.e. E(X ^ power) will be estimated.
+//' @param power non-negative integer representing the moment order, 
+//' i.e., E(X ^ power) will be estimated.
 //' @export
 // [[Rcpp::export(rng = false)]]
 double ehsa(NumericMatrix m,

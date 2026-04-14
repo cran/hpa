@@ -29,7 +29,7 @@ phpa0(
 )
 }
 \arguments{
-\item{x}{numeric vector of functions arguments.}
+\item{x}{numeric vector of function arguments.}
 
 \item{pc}{polynomial coefficients without the first term.}
 
@@ -41,14 +41,14 @@ phpa0(
 some calculations. Currently unavailable.}
 
 \item{log}{logical; if \code{TRUE} then probabilities p are given as log(p)
-or derivatives will be given respect to log(p).}
+or derivatives will be given with respect to log(p).}
 
 \item{is_validation}{logical value indicating whether function input 
-arguments should be validated.  Set it to \code{FALSE} for slight
+arguments should be validated.  Set it to \code{FALSE} for a slight
 performance boost (default value is \code{TRUE}).}
 
-\item{is_grad}{logical; if \code{TRUE} (default) then function returns 
-gradients respect to \code{x} and \code{pc}.}
+\item{is_grad}{logical; if \code{TRUE} then function returns 
+gradients with respect to \code{x} and \code{pc} (default is \code{FALSE}).}
 }
 \value{
 Both functions return a list.
@@ -57,28 +57,29 @@ Function \code{\link[hpa]{dhpa0}} returns a list with element named
 Function \code{\link[hpa]{phpa0}} returns a list with element named
 \code{"prob"} that is a numeric vector of probabilities. 
 
-If \code{is_grad = TRUE} then elements \code{"grad_x"} and \code{"grad_pc"}
-will be add to the list containing gradients respect to input argument
-\code{x} and parameters \code{pc} correspondingly. If \code{log = TRUE} then
-additional elements will be add to the list containing density, probability
-and gradient values for logarithms of corresponding functions. These
+If \code{is_grad = TRUE}, then elements \code{"grad_x"} and \code{"grad_pc"}
+will be added to the list containing gradients with respect to input 
+argument \code{x} and parameters \code{pc}, respectively. 
+If \code{log = TRUE}, then additional elements will be added to the list 
+containing density, probability and gradient values for logarithms of 
+corresponding functions. These
 elements will be named as \code{"grad_x_log"}, \code{"grad_pc_log"},
-\code{"grad_prob_log"} and \code{"grad_den_log"}.
+\code{"prob_log"} and \code{"den_log"}.
 }
 \description{
-This function uses fast algorithms to calculate densities
-and probabilities (along with their derivatives) related to standardized 
+These functions use fast algorithms to calculate densities
+and probabilities (along with their derivatives) related to the standardized 
 PGN distribution.
 }
 \details{
 Functions \code{\link[hpa]{dhpa0}} and 
 \code{\link[hpa]{phpa0}} are similar to \code{\link[hpa]{dhpa}} and
-\code{\link[hpa]{phpa}} correspondingly. However there are two key
+\code{\link[hpa]{phpa}}, respectively. However, there are two key
 differences. First, \code{\link[hpa]{dhpa0}} and \code{\link[hpa]{phpa0}}
-are deal with univariate PGN distribution only. Second, this distribution
-is standardized to zero mean and unit variances. Moreover \code{pc} is 
+deal only with univariate PGN distributions. Second, this distribution
+is standardized to zero mean and unit variance. Moreover \code{pc} is 
 similar to \code{pol_coefficients} argument of \code{\link[hpa]{dhpa}} but
-without the first component i.e. \code{pc=pol_coefficients[-1]}. Also
+without the first component, i.e., \code{pc = pol_coefficients[-1]}. Also
 \code{mean} and \code{sd} are not the arguments of the normal density
 but actual mean and standard deviation of the resulting distribution. So
 if these arguments are different from \code{0} and \code{1} correspondingly
@@ -86,8 +87,7 @@ then standardized PGN distribution will be linearly transformed to have
 mean \code{mean} and standard deviation \code{sd}.
 }
 \examples{
-# Calculate density and probability of standartized PGN
-# distribution
+# Calculate density and probability of standardized PGN distribution
   # distribution parameters
 pc <- c(0.5, -0.2)
   # function arguments
@@ -97,13 +97,13 @@ dhpa0(x, pc)
   # cumulative distribution function
 phpa0(x, pc)
 
-# Additionally calculate gradients respect to arguments
+# Additionally calculate gradients with respect to arguments
 # and parameters of the PGN distribution
 dhpa0(x, pc, is_grad = TRUE)
 phpa0(x, pc, is_grad = TRUE)
 
-# Let's denote by X standardized PGN random variable and repeat
-# calculations for 2 * X + 1
+# Let X be a standardized PGN random variable and repeat
+# the calculations for 2 * X + 1
 dhpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
 phpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
 }

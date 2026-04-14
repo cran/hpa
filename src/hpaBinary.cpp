@@ -1,9 +1,9 @@
+#define ARMA_DONT_USE_OPENMP
 #include "hpaMain.h"
 #include "hpaML.h"
 #include "hpaBinary.h"
 #include "polynomialIndex.h"
 #include "hpaValidation.h"
-#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
 
@@ -35,8 +35,8 @@ using namespace RcppParallel;
 //' @template opt_control_Template
 //' @template is_validation_Template
 //' @param is_x0_probit logical; if \code{TRUE} (default) then initial
-//' points for optimization routine will be
-//' obtained by probit model estimated via \link[stats]{glm} function.
+//' points for the optimization routine will be
+//' obtained by the probit model estimated via the \link[stats]{glm} function.
 //' @template is_sequence_Template
 //' @template GN_details_Template
 //' @template hpaBinary_formula_Template
@@ -50,13 +50,13 @@ using namespace RcppParallel;
 //' following components:
 //' \itemize{
 //' \item \code{optim} - \code{\link[stats]{optim}} function output. 
-//' If \code{opt_type = "GA"} then it is the list containing 
-//' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
-//' \item \code{x1} - numeric vector of distribution parameters estimates.
+//' If \code{opt_type = "GA"}, then it is the list containing the outputs of 
+//' the \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions.
+//' \item \code{x1} - numeric vector of distribution parameter estimates.
 //' \item \code{mean} - mean (mu) parameter of density function estimate.
 //' \item \code{sd} - sd (sigma) parameter of density function estimate.
 //' \item \code{pol_coefficients} - polynomial coefficients estimates.
-//' \item \code{pol_degrees} - the same as \code{K} input parameter.
+//' \item \code{pol_degrees} - the same as the \code{K} input parameter.
 //' \item \code{coefficients} - regression (single index) 
 //' coefficients estimates.
 //' \item \code{cov_mat} - covariance matrix estimate.
@@ -74,7 +74,7 @@ using namespace RcppParallel;
 //' \item \code{n_obs} - number of observations.
 //' \item \code{z_latent} - latent variable (single index) estimates.
 //' \item \code{z_prob} - probabilities of positive 
-//' outcome (i.e. 1) estimates.}
+//' outcome (i.e., 1) estimates.}
 //' @seealso \link[hpa]{summary.hpaBinary}, \link[hpa]{predict.hpaBinary}, 
 //' \link[hpa]{plot.hpaBinary},
 //' \link[hpa]{logLik.hpaBinary}
@@ -154,7 +154,7 @@ List hpaBinary(Rcpp::Formula formula,
 	LogicalVector is_ga_installed = requireNamespace_R(Rcpp::_["package"] = "GA", 
                                                      Rcpp::_["quietly"] = true);
 	
-	    // Check weather GA package has been installed
+	    // Check whether GA package has been installed
 	if(opt_type == "GA")
 	{
 	  if(is_ga_installed[0])
@@ -343,7 +343,7 @@ List hpaBinary(Rcpp::Formula formula,
 		x0[z_sd_ind] = 1;
 	}
 
-	// Estimate intial values via probit model using glm function
+	// Estimate initial values via probit model using glm function
 	if (is_x0_probit && !x0_given)
 	{
 	  // Calculate probit model via glm function
@@ -356,7 +356,7 @@ List hpaBinary(Rcpp::Formula formula,
 		NumericVector glm_coef = model_probit["coefficients"];
 		
 		// Coefficient for the first regressor which under some
-		// input parameters should be used for adjust purposes
+		// input parameters should be used for adjustment purposes
 		double coef_adjust = std::fabs(glm_coef[1]);
 		
 		if (coef_fixed)
@@ -397,10 +397,10 @@ List hpaBinary(Rcpp::Formula formula,
 	}
 
 	// Create list for some variables because unfortunately in Rcpp optim function 
-	// has limitation for the input arguments number
+	// has a limitation on the number of input arguments
 	
 	    // Collect some values to lists since there are limited 
-	    // number of objects could be stored in the list in Rcpp
+	    // number of objects that can be stored in the list in Rcpp
 	List is_List = List::create(
 	  Named("coef_fixed") = coef_fixed, 
 		Named("is_z_mean_fixed") = is_z_mean_fixed,
@@ -460,7 +460,7 @@ List hpaBinary(Rcpp::Formula formula,
 	List ga_List;
 	List ga_summary;
 	
-	    // lower and upper bounds for parameters space
+	    // lower and upper bounds for parameter space
 	NumericVector ga_lower = NumericVector(x1_n);
 	NumericVector ga_upper = NumericVector(x1_n);
 	
@@ -477,7 +477,7 @@ List hpaBinary(Rcpp::Formula formula,
 	    ga_suggestions(0,_) = x1;
 	  }
 
-	  // set lower and upper bounds for parameters space
+	  // set lower and upper bounds for parameter space
 	  if(opt_control.containsElementNamed("lower") && 
        opt_control.containsElementNamed("upper"))
 	  {
@@ -518,7 +518,7 @@ List hpaBinary(Rcpp::Formula formula,
   	    ga_upper[i] = z_coef_ga + 2 * std::abs(z_coef_ga);
   	  }
   	  
-  	  // bounds for the polynomial coefficients parameters
+  	  // bounds for the polynomial coefficients
   	  ga_lower[pol_coefficients_ind] = -10;
   	  ga_upper[pol_coefficients_ind] = 10;
 	  }
@@ -744,7 +744,7 @@ List hpaBinary(Rcpp::Formula formula,
 	// store standard deviation
 	NumericVector sd_dev = NumericVector(x1_n);
 	
-	// temporal index matrix for each iteration
+	// temporary index matrix for each iteration
 	NumericVector sample_ind = NumericVector(n_obs);
 	
 	// list to store bootstrap results
@@ -867,13 +867,13 @@ List hpaBinary(Rcpp::Formula formula,
 	String first_coef_name = z_df_names[1];
 	z_df_names.erase(0); // remove dependend variable name
 	
-	// for intercept if need
+	// for intercept if needed
 	if (!is_z_constant_fixed)
 	{
 		z_df_names.push_back("(Intercept)");
 	}
 	
-	// remove first regressors if its coefficient is fixed
+	// remove the first regressor if its coefficient is fixed
 	if (coef_fixed)
 	{
 	  z_df_names.erase(0);
@@ -931,7 +931,7 @@ List hpaBinary(Rcpp::Formula formula,
 
 	// Estimate latent variable and probabilities
 
-		// coefficients for independend variables
+		// coefficients for independent variables
 	arma::vec z_coef_arma = as<arma::vec>(z_coef);
 
 		// get estimates for z*
@@ -1208,7 +1208,7 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
   double sd_fixed = fixed_List["sd_fixed"];
   double constant_fixed = fixed_List["constant_fixed"];
   
-  // Get parameters number
+  // Get number of parameters
   int n_param = x0.size();
   
   // Get estimated regressors number
@@ -1310,7 +1310,7 @@ List hpaBinaryLnLOptim_grad_List(NumericVector x0, List hpaBinary_args)
                                       "all",
                                       is_parallel, true, false);
 
-  // Store gradients respect to
+  // Store gradients with respect to
   
     // polynomial coefficients
   for (int i = 0; i < (pol_coefficients_n - 1); i++) // for each parameter
@@ -1474,7 +1474,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
     z_coef_R.push_front(1); // add identity coefficient for fixed value
   }
   
-  // Prepare precision related values for numeric differentiation
+  // Prepare precision-related values for numeric differentiation
   double machinePrecision = std::numeric_limits<double>::epsilon();
   double my_precision = std::sqrt(machinePrecision);
   
@@ -1509,7 +1509,7 @@ NumericMatrix hpaBinaryLnLOptim_hessian(NumericVector x0, List hpaBinary_args)
     x0_eps[i] = x0[i];
   }
   
-  // Make hessian to be symmetric
+  // Make the Hessian symmetric
   for (int i = 0; i < n_param; i++)   // for each parameter
   {
     for (int j = i; j < n_param; j++) // for each parameter
@@ -1568,7 +1568,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue,
 		// extract polynomial coefficients
 	double K = pol_coefficients.size() - 1;
 
-	// Check wheather new data frame has been supplied
+	// Check whether new data frame has been supplied
 	DataFrame data = newdata;
 
 	if (newdata.size() == 0)
@@ -1588,7 +1588,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue,
                                Rcpp::_["data"] = data);
 	int z_df_n = z_df.size();
 
-	// Extract binary dependend variable
+	// Extract binary dependent variable
 	NumericVector z = z_df[0]; // it is reference
 	int n_obs = z.size();
 	
@@ -1598,7 +1598,7 @@ NumericVector predict_hpaBinary(List object, DataFrame newdata = R_NilValue,
 	                         !is_z_constant_fixed);      // -1 because of 
 	int z_d_col = z_d.ncol();                            // dependent variable
 	
-	  // the constant located in last column of regressors matrix
+	  // the constant is located in the last column of the regressors matrix
 	if (!is_z_constant_fixed)
 	{
 	  z_d(_, z_d_col -  1) = (NumericVector(n_obs) + 1); // add constant
@@ -1659,7 +1659,7 @@ List summary_hpaBinary(List object)
 }
 
 //' Summary for hpaBinary output
-//' @param x Object of class "hpaML"
+//' @param x Object of class "hpaBinary"
 //' @export	
 // [[Rcpp::export]]
 void print_summary_hpaBinary(List x)

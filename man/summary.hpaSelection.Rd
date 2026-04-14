@@ -17,5 +17,5 @@ as \code{\link[hpa]{hpaSelection}}
 function changing its class to "summary.hpaSelection".
 }
 \description{
-This function summarizing hpaSelection Fits
+This function summarizes hpaSelection Fits
 }

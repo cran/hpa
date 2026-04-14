@@ -2,7 +2,7 @@
 % Please edit documentation in R/hpaBinary_generics.R
 \name{vcov.hpaBinary}
 \alias{vcov.hpaBinary}
-\title{Extract covariance matrix from hpaBinary object}
+\title{Extract covariance matrix from a hpaBinary object}
 \usage{
 \method{vcov}{hpaBinary}(object, ...)
 }
@@ -12,5 +12,5 @@
 \item{...}{further arguments (currently ignored)}
 }
 \description{
-Extract covariance matrix from hpaBinary object
+Extract covariance matrix from a hpaBinary object
 }

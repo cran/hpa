@@ -12,7 +12,7 @@ predict_hpaBinary(object, newdata = NULL, is_prob = TRUE)
 \item{newdata}{An optional data frame (for \link[hpa]{hpaBinary} and
 \link[hpa]{hpaSelection}) or numeric matrix (for \link[hpa]{hpaML})
 in which to look for variables with which to predict. If omitted,
-the original data frame (matrix) used.}
+the original data frame (matrix) is used.}
 
 \item{is_prob}{logical; if TRUE (default) 
 then function returns predicted probabilities. 

@@ -1,3 +1,4 @@
+#define ARMA_DONT_USE_OPENMP
 #include "polynomialIndex.h"
 #include <RcppArmadillo.h>
 using namespace Rcpp;
@@ -20,7 +21,7 @@ void pol_Validate(NumericVector pol_degrees = NumericVector(0),
   // Validation for polynomial degrees
   bool pol_degrees_is_na = any(is_na(pol_degrees));
   bool pol_degrees_is_nan = any(is_nan(pol_degrees));
-  bool pol_degrees_is_epmpy = (n == 0);
+  bool pol_degrees_is_empty = (n == 0);
   
   bool pol_degrees_is_notposint = false;
   for(int i = 0; i < n; i ++)
@@ -34,7 +35,7 @@ void pol_Validate(NumericVector pol_degrees = NumericVector(0),
   }
   
   if(pol_degrees_is_na | pol_degrees_is_nan | 
-     pol_degrees_is_epmpy | pol_degrees_is_notposint)
+     pol_degrees_is_empty | pol_degrees_is_notposint)
   {
       stop("pol_degrees should be not empty vector of non-negative integer values.");
   }
@@ -50,7 +51,7 @@ void pol_Validate(NumericVector pol_degrees = NumericVector(0),
     
     if(pol_degrees_prod != m)
     {
-      stop("pol_coefficients length do not much pol_degrees elements. Please insure that: length(pol_degrees) == prod(pol_coefficients + 1).");
+      stop("pol_coefficients length does not much pol_degrees elements. Please ensure that: length(pol_degrees) == prod(pol_coefficients + 1).");
     }
     
     bool pol_coefficients_is_na = any(is_na(pol_coefficients));

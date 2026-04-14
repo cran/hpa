@@ -1,3 +1,4 @@
+#define ARMA_DONT_USE_OPENMP
 #include "hpaMain.h"
 #include "hpaML.h"
 #include "polynomialIndex.h"
@@ -41,15 +42,15 @@ using namespace RcppParallel;
 //' An object of class "hpaML" is a list containing the following components:
 //' \itemize{
 //' \item \code{optim} - \code{\link[stats]{optim}} function output. 
-//' If \code{opt_type = "GA"} then it is the list containing 
+//' If \code{opt_type = "GA"}, then it is the list containing 
 //' \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 //' \item \code{x1} - numeric vector of distribution parameters estimates.
 //' \item \code{mean} - density function mean vector estimate.
 //' \item \code{sd} - density function sd vector estimate.
 //' \item \code{pol_coefficients} - polynomial coefficients estimates.
-//' \item \code{tr_left }- the same as \code{tr_left} input parameter.
+//' \item \code{tr_left } - the same as \code{tr_left} input parameter.
 //' \item \code{tr_right} - the same as \code{tr_right} input parameter.
-//' \item \code{omit_ind }- the same as \code{omit_ind} input parameter.
+//' \item \code{omit_ind } - the same as \code{omit_ind} input parameter.
 //' \item \code{given_ind} - the same as \code{given_ind} input parameter.
 //' \item \code{cov_mat} - covariance matrix estimate.
 //' \item \code{results} - numeric matrix representing estimation results.
@@ -138,7 +139,7 @@ List hpaML(NumericVector data,
       // Warning concerning large number of bootstrap iterations
     if(boot_iter > 1000)
     {
-      warning("Since boot_iter is large estimation may take lots of time.");
+      warning("Since boot_iter is large, estimation may take lots of time.");
     }
   
     int target_dim = x.ncol();
@@ -157,20 +158,20 @@ List hpaML(NumericVector data,
     int n_given_ind = given_ind.size();
     if((n_given_ind != 0) && (n_given_ind != target_dim))
     {
-      stop("given_ind length should be the same as the length of pol_degrees");
+      stop("given_ind length should be the same as the length of pol_degrees.");
     }
     
     int n_omit_ind = omit_ind.size();
     if((n_omit_ind != 0) && (n_omit_ind != target_dim))
     {
-      stop("omit_ind length should be the same as the length of pol_degrees");
+      stop("omit_ind length should be the same as the length of pol_degrees.");
     }
     
     // Validate truncation points
     if((tr_left.size() != tr_right.size()) &&
        (tr_left.size() != 0) && (tr_right.size() != 0))
     {
-      stop("tr_left and tr_right should be vectors of the same dimensions");
+      stop("tr_left and tr_right should be vectors of the same dimensions.");
     }
   }
 	
@@ -178,7 +179,7 @@ List hpaML(NumericVector data,
 	LogicalVector is_ga_installed = requireNamespace_R(Rcpp::_["package"] = "GA", 
                                                      Rcpp::_["quietly"] = true);
 
-	    // check weather GA package has been installed
+	    // check whether GA package has been installed
 	if((opt_type == "GA") || (opt_type == "ga"))
 	{
 	  if(is_ga_installed[0])
@@ -533,8 +534,8 @@ List hpaML(NumericVector data,
 	// Get covariance matrix estimate of "cov_type" type
 	NumericMatrix cov_mat;                                // covariance matrix
 	
-	arma::mat H_part;                                     // butter of sandwich 
-	arma::mat J_part;                                     // bread of sandwich
+	arma::mat H_part;                                     // bread of sandwich 
+	arma::mat J_part;                                     // butter of sandwich
 	
 	NumericMatrix my_hessian = optim_results["hessian"];  // Hessian matrix
 	
@@ -633,7 +634,7 @@ List hpaML(NumericVector data,
 	     List hpaML_args_boot = hpaML_args;
 	     hpaML_args_boot["x_data"] = boot_sample;
 
-	     // Perform estimaton
+	     // Perform estimation
 	     List boot_results = optim(
 	       Rcpp::_["par"] = x1,
 	       Rcpp::_["fn"] = Rcpp::InternalFunction(&hpaLnLOptim),
@@ -664,7 +665,7 @@ List hpaML(NumericVector data,
 	  // Matrix to store the results
 	NumericMatrix results(x1_n, 3);
 
-	  // Provide columns names for the matrix
+	  // Provide column names for the matrix
 	StringVector results_cols = StringVector::create(
 	  "Estimate", "Std. Error", "P(>|z|)");
 	StringVector results_rows(x1_n);
@@ -833,8 +834,8 @@ List hpaLnLOptim_List(NumericVector x0, List hpaML_args)
 	  
 	  return_aggregate = sum(return_individual);
 	  
-	  // if there is some problems related to precision when truncation
-	  // has been incorporated then return great negative number
+	  // if there are some problems related to precision when truncation
+	  // has been incorporated then return large negative number
 	  
 	  if(ihpa(tr_left, tr_right,
 	    pol_coefficients, pol_degrees,
@@ -889,7 +890,7 @@ double hpaLnLOptim(NumericVector x0, List hpaML_args)
   return(return_aggregate);
 }
 
-// Get individual component (log-lkelihood function contributions) 
+// Get individual component (log-likelihood function contributions) 
 // from hpaLnLOptim_List
 NumericVector hpaLnLOptim_ind(NumericVector x0, List hpaML_args)
 {
@@ -929,7 +930,7 @@ List hpaLnLOptim_grad_List(NumericVector x0, List hpaML_args)
   // Initialize vector to store gradient (jacobian) values
   NumericMatrix my_grad = NumericMatrix(n_obs, n_param);
   
-  // Assign values based on their indecies
+  // Assign values based on their indices
   NumericVector mean = x0[mean_ind];
   NumericVector sd = x0[sd_ind];
   
@@ -993,7 +994,7 @@ List hpaLnLOptim_grad_List(NumericVector x0, List hpaML_args)
   return(return_List);
 }
 
-// Get aggregaate component (log-lkelihood function gradient) 
+// Get aggregate component (log-likelihood function gradient) 
 // from hpaLnLOptim_grad_List
 NumericVector hpaLnLOptim_grad(NumericVector x0, List hpaML_args)
 {
@@ -1022,7 +1023,7 @@ NumericMatrix hpaLnLOptim_grad_ind(NumericVector x0, List hpaML_args)
   return(return_individual);
 }
 
-// Perform log-likelihood function hessian estimation 
+// Perform log-likelihood function Hessian estimation 
 // for Phillips-Gallant-Nychka distribution at point
 NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
 {
@@ -1040,7 +1041,7 @@ NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
   // Get parameters number
   int n_param = x0.size();
   
-  // Initialize vector to store hessian values
+  // Initialize vector to store Hessian values
   NumericMatrix my_hessian = NumericMatrix(n_param, n_param);
   
   // Assign values based on their indices
@@ -1067,7 +1068,7 @@ NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
   NumericVector g_plus;
   NumericVector g_minus;
   
-  // Perform hessian numeric estimation
+  // Perform Hessian numerical estimation
   for (int i = 0; i < n_param; i++) // for each parameter
   {
     // Calculate g(x + eps)
@@ -1078,14 +1079,14 @@ NumericMatrix hpaLnLOptim_hessian(NumericVector x0, List hpaML_args)
     x0_eps[i] = x0[i] - eps[i];
     g_minus = hpaLnLOptim_grad(x0_eps, hpaML_args);
     
-    // Store the results to hessian
+    // Store the results to Hessian
     my_hessian(_, i) = (g_plus - g_minus) / (2 * eps[i]);
     
     // Set x0_eps value to default
     x0_eps[i] = x0[i];
   }
 
-  // Make hessian to be symmetric
+  // Make Hessian symmetric
   for (int i = 0; i < n_param; i++)   // for each parameter
   {
     for (int j = i; j < n_param; j++) // for each parameter
@@ -1227,7 +1228,7 @@ void print_summary_hpaML(List x)
 	print_R(as_table(cbind(results, stars)));
 
 	cat_R("---\n");
-	cat_R("Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
+	cat_R("Signif. codes: 0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
 
 	cat_R("--------------------------------------------------------------\n");
 }

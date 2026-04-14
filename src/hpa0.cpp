@@ -8,11 +8,11 @@ using namespace RcppArmadillo;
 // [[Rcpp::interfaces(r, cpp)]]
 
 //' Fast pdf and cdf for standardized univariate PGN distribution
-//' @description This function uses fast algorithms to calculate densities
-//' and probabilities (along with their derivatives) related to standardized 
+//' @description These functions use fast algorithms to calculate densities
+//' and probabilities (along with their derivatives) related to the standardized 
 //' PGN distribution.
 //' @name hpaDist0
-//' @param x numeric vector of functions arguments.
+//' @param x numeric vector of function arguments.
 //' @param pc polynomial coefficients without the first term.
 //' @param mean expected value (mean) of the distribution.
 //' @param sd standard deviation of the distribution.
@@ -20,16 +20,16 @@ using namespace RcppArmadillo;
 //' some calculations. Currently unavailable.
 //' @template log_Template
 //' @template is_validation_Template
-//' @param is_grad logical; if \code{TRUE} (default) then function returns 
-//' gradients respect to \code{x} and \code{pc}.
+//' @param is_grad logical; if \code{TRUE} then function returns 
+//' gradients with respect to \code{x} and \code{pc} (default is \code{FALSE}).
 //' @details Functions \code{\link[hpa]{dhpa0}} and 
 //' \code{\link[hpa]{phpa0}} are similar to \code{\link[hpa]{dhpa}} and
-//' \code{\link[hpa]{phpa}} correspondingly. However there are two key
+//' \code{\link[hpa]{phpa}}, respectively. However, there are two key
 //' differences. First, \code{\link[hpa]{dhpa0}} and \code{\link[hpa]{phpa0}}
-//' are deal with univariate PGN distribution only. Second, this distribution
-//' is standardized to zero mean and unit variances. Moreover \code{pc} is 
+//' deal only with univariate PGN distributions. Second, this distribution
+//' is standardized to zero mean and unit variance. Moreover \code{pc} is 
 //' similar to \code{pol_coefficients} argument of \code{\link[hpa]{dhpa}} but
-//' without the first component i.e. \code{pc=pol_coefficients[-1]}. Also
+//' without the first component, i.e., \code{pc = pol_coefficients[-1]}. Also
 //' \code{mean} and \code{sd} are not the arguments of the normal density
 //' but actual mean and standard deviation of the resulting distribution. So
 //' if these arguments are different from \code{0} and \code{1} correspondingly
@@ -41,16 +41,16 @@ using namespace RcppArmadillo;
 //' Function \code{\link[hpa]{phpa0}} returns a list with element named
 //' \code{"prob"} that is a numeric vector of probabilities. 
 //' 
-//' If \code{is_grad = TRUE} then elements \code{"grad_x"} and \code{"grad_pc"}
-//' will be add to the list containing gradients respect to input argument
-//' \code{x} and parameters \code{pc} correspondingly. If \code{log = TRUE} then
-//' additional elements will be add to the list containing density, probability
-//' and gradient values for logarithms of corresponding functions. These
+//' If \code{is_grad = TRUE}, then elements \code{"grad_x"} and \code{"grad_pc"}
+//' will be added to the list containing gradients with respect to input 
+//' argument \code{x} and parameters \code{pc}, respectively. 
+//' If \code{log = TRUE}, then additional elements will be added to the list 
+//' containing density, probability and gradient values for logarithms of 
+//' corresponding functions. These
 //' elements will be named as \code{"grad_x_log"}, \code{"grad_pc_log"},
-//' \code{"grad_prob_log"} and \code{"grad_den_log"}.
+//' \code{"prob_log"} and \code{"den_log"}.
 //' @examples
-//' # Calculate density and probability of standartized PGN
-//' # distribution
+//' # Calculate density and probability of standardized PGN distribution
 //'   # distribution parameters
 //' pc <- c(0.5, -0.2)
 //'   # function arguments
@@ -60,13 +60,13 @@ using namespace RcppArmadillo;
 //'   # cumulative distribution function
 //' phpa0(x, pc)
 //' 
-//' # Additionally calculate gradients respect to arguments
+//' # Additionally calculate gradients with respect to arguments
 //' # and parameters of the PGN distribution
 //' dhpa0(x, pc, is_grad = TRUE)
 //' phpa0(x, pc, is_grad = TRUE)
 //' 
-//' # Let's denote by X standardized PGN random variable and repeat
-//' # calculations for 2 * X + 1
+//' # Let X be a standardized PGN random variable and repeat
+//' # the calculations for 2 * X + 1
 //' dhpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
 //' phpa0(x, pc, is_grad = TRUE, mean = 1, sd = 2)
 //' @export
@@ -81,7 +81,7 @@ List dhpa0(
     bool is_validation = true,
     bool is_grad = false)
 {
-  // Validation if need
+  // Validation if needed
   if (is_validation)
   {
     if (sd <= 0)
@@ -98,23 +98,22 @@ List dhpa0(
   // Create output list
   List return_list;
   
-  // Some dimensions related constants
+  // Some dimensions-related constants
   const int n = x.size();
   const int K = pc.size();
   
-  // Deal with infinite values if need
+  // Deal with infinite values if needed
   if (x.has_inf())
   {
     // Find infinite and finite values indexes
     arma::uvec finite_ind = arma::find_finite(x);
-    arma::uvec infinite_neg_ind = arma::find(x == (-arma::datum::inf));
     arma::uvec infinite_ind = arma::find(x == arma::datum::inf);
     arma::vec x_finite = x.elem(finite_ind);
     
     // Calculate density for infinite values
     arma::vec den_new = arma::vec(n);
     
-    // Take logarithm of infinite probabilities if need
+    // Take logarithm of infinite probabilities if needed
     arma::vec den_log_new = arma::vec(n, arma::fill::value(-arma::datum::inf));
     
     // Prepare zero derivatives for infinite arguments
@@ -194,7 +193,7 @@ List dhpa0(
   pc1.at(0) = 1;
   pc1.subvec(1, K) = pc;
   
-  // Denominator and moments nominator
+  // Denominator and moments numerator
   arma::vec moments = {1, 0, 1, 0, 3, 0, 15, 0, 105, 0, 945, 0, 10395, 0,
                        135135, 0, 2027025, 0, 34459425, 0, 654729075};
   double denom = 0;
@@ -242,7 +241,7 @@ List dhpa0(
   double esd = sqrt(evar);
   double sd_adj = esd / sd;
   
-  // Nominator
+  // Numerator
   arma::vec x0 = x - mean;
   arma::vec x_adj = sd_adj * x0 + e1;
   arma::mat x_pow(n, K + 1);
@@ -262,7 +261,7 @@ List dhpa0(
   arma::vec den = (sd_adj / denom) * (den_norm % den_nom);
   return_list["den"] = den;
   
-  // Take the log if need
+  // Take the log if needed
   arma::vec den_log;
   if (log)
   {
@@ -275,7 +274,7 @@ List dhpa0(
     return(return_list);
   }
   
-  // Calculate derivative respect to argument of the function
+  // Calculate the derivative with respect to the argument of the function
   arma::vec den_d_x_unadj = (x_pow.cols(0, K - 1) * 
                              ((2 * pc) % arma::linspace<arma::vec>(1, K, K))) / 
                             x_pc - x_adj;
@@ -287,7 +286,7 @@ List dhpa0(
     return_list["grad_x"] = den_d_x % den;
   }
   
-  // Calculate moments related parts
+  // Calculate moment-related parts
   arma::vec e0_d_pc(K);
   arma::vec e1_d_pc(K);
   arma::vec e2_d_pc(K);
@@ -307,7 +306,7 @@ List dhpa0(
   arma::vec sd_d_pc = var_d_pc / (2 * esd);
   arma::vec e_d_pc = sd_d_pc / sd;
   
-  // Calculate derivative respect to log-density before
+  // Calculate derivative with respect to log-density before
   // accounting for moments
   arma::mat den_d_pc = x_pow.cols(1, K).each_col() / x_pc;
   den_d_pc = 2 * (den_d_pc.each_row() - e0_d_pc.t());
@@ -321,11 +320,11 @@ List dhpa0(
    }
   return_list["grad_pc_log"] = den_d_pc;
   
-  // // Derivative respect to standard deviation
+  // // Derivative with respect to standard deviation
   // arma::vec grad_sd_log = den_d_x_unadj % ((-sd_adj / sd) * x0) - (1 / sd);
   // return_list["grad_sd_log"] = grad_sd_log;
   // 
-  // // Derivative respect to mean
+  // // Derivative with respect to mean
   // arma::vec grad_mean_log = den_d_x_unadj * (-sd_adj);
   // return_list["grad_mean_log"] = grad_mean_log;
   
@@ -353,7 +352,7 @@ List phpa0(
     bool is_validation = true,
     bool is_grad = false)
 {
-  // Validation if need
+  // Validation if needed
   if (is_validation)
   {
     if (sd <= 0)
@@ -370,12 +369,12 @@ List phpa0(
   // Create output list
   List return_list;
   
-  // Some dimensions related constants
+  // Some dimensions-related constants
   const int n = x.size();
   const int K = pc.size();
   const int m = 2 * K + 1;
   
-  // Deal with infinite values if need
+  // Deal with infinite values if needed
   if (x.has_inf())
   {
     // Find infinite and finite values indexes
@@ -388,7 +387,7 @@ List phpa0(
     arma::vec prob_new = arma::vec(n);
     prob_new.elem(infinite_ind).ones();
     
-    // Take logarithm of infinite probabilities if need
+    // Take logarithm of infinite probabilities if needed
     arma::vec prob_log_new = arma::vec(n);
     prob_log_new.elem(infinite_neg_ind).fill(-arma::datum::inf);
     
@@ -469,7 +468,7 @@ List phpa0(
   pc1.at(0) = 1;
   pc1.subvec(1, K) = pc;
   
-  // Denominator and moments nominator
+  // Denominator and moments numerator
   arma::vec moments = {1, 0, 1, 0, 3, 0, 15, 0, 105, 0, 945, 0, 10395, 0,
                        135135, 0, 2027025, 0, 34459425, 0, 654729075, 0,
                        13749310575, 0, 316234143225, 0, 7905853580625, 0,
@@ -548,7 +547,7 @@ List phpa0(
       
   }
   
-  // Calculate the nominator
+  // Calculate the numerator
   arma::vec nom(n);
   for (int i = 0; i <= K; i++)
   {
@@ -581,7 +580,7 @@ List phpa0(
     return(return_list);
   }
   
-  // Calculate density if need
+  // Calculate density if needed
   arma::vec x_pc = x_pow.cols(0, K) * pc1;
   arma::vec den_nom = arma::pow(x_pc, 2);
   
@@ -614,7 +613,7 @@ List phpa0(
   arma::vec sd_d_pc = var_d_pc / (2 * esd);
   arma::vec e_d_pc = sd_d_pc / sd;
   
-  // Calculate derivative respect to log-probability before
+  // Calculate derivative with respect to log-probability before
   // accounting for moments
   arma::mat prob_d_pc = etr_d_pc.each_col() / nom;
   prob_d_pc = 2 * (prob_d_pc.each_row() - e0_d_pc.t());
@@ -628,11 +627,11 @@ List phpa0(
   }
   return_list["grad_pc_log"] = prob_d_pc;
   
-  // // Derivative respect to standard deviation
+  // // Derivative with respect to standard deviation
   // arma::vec grad_sd_log = grad_x_log_adj % ((-sd_adj / sd) * x0);
   // return_list["grad_sd_log"] = grad_sd_log;
   // 
-  // // Derivative respect to mean
+  // // Derivative with respect to mean
   // arma::vec grad_mean_log = grad_x_log_adj * (-sd_adj);
   // return_list["grad_mean_log"] = grad_mean_log;
   

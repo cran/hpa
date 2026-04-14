@@ -10,19 +10,19 @@ polynomialIndex(pol_degrees = numeric(0), is_validation = TRUE)
 printPolynomial(pol_degrees, pol_coefficients, is_validation = TRUE)
 }
 \arguments{
-\item{pol_degrees}{non-negative integer vector of polynomial 
+\item{pol_degrees}{a non-negative integer vector of polynomial 
 degrees (orders).}
 
 \item{is_validation}{logical value indicating whether function input 
-arguments should be validated.  Set it to \code{FALSE} for slight
+arguments should be validated.  Set it to \code{FALSE} for a slight
 performance boost (default value is \code{TRUE}).}
 
 \item{pol_coefficients}{numeric vector of polynomial coefficients.}
 }
 \value{
 Function \code{\link[hpa]{polynomialIndex}} 
-returns matrix which rows are 
-responsible for variables while columns are related to powers. 
+returns a matrix whose rows correspond to variables while columns 
+correspond to powers. 
 So \eqn{(i, j)}-th element of this matrix corresponds to the 
 power \eqn{i_{j}} of the \eqn{x_{j}} variable in \eqn{i}-th polynomial 
 element. Therefore \eqn{i}-th column of this matrix contains vector of
@@ -35,8 +35,8 @@ contains polynomial symbolic representation.
 }
 \description{
 Function \code{\link[hpa]{polynomialIndex}} 
-provides matrix which allows to iterate through the elements 
-of multivariate polynomial being aware of these elements powers. 
+provides a matrix which allows to iterate through the elements 
+of multivariate polynomial being aware of these elements' powers. 
 So (i, j)-th element of the matrix is power of j-th variable in i-th 
 multivariate polynomial element.
 
@@ -57,17 +57,17 @@ to variables \eqn{(x_{1},...,x_{m})} respectively. Note that
 \eqn{i_{j}\in \{0,...,K_{j}\}}. 
 
 Function \code{\link[hpa]{printPolynomial}} removes polynomial elements 
-which coefficients are zero and variables which powers are zero. Output may 
-contain long coefficients representation as they are not rounded.
+whose coefficients are zero and variables whose powers are zero. Output may 
+contain long coefficient representations as they are not rounded.
 }
 \examples{
 ## Get polynomial indexes matrix for the polynomial 
-## which degrees are (1, 3, 5)
+## whose degrees are (1, 3, 5)
 
 polynomialIndex(c(1, 3, 5))
 \donttest{
 ## Consider multivariate polynomial of degrees (2, 1) such that coefficients
-## for elements which powers sum is even are 2 and for those which powers sum
+## for elements whose powers sum is even are 2 and for those whose powers sum
 ## is odd are 5. So the polynomial is 2+5x2+5x1+2x1x2+2x1^2+5x1^2x2 where
 ## x1 and x2 are polynomial variables.
 
@@ -80,18 +80,18 @@ pol_matrix <- polynomialIndex(pol_degrees)
 # Calculate polynomial elements' powers sums
 pol_powers_sum <- pol_matrix[1, ] + pol_matrix[2, ]
 
-# Let's create polynomial coefficients vector filling it
+# Let's create a polynomial coefficients vector filling it
 # with NA values
 pol_coefficients <- rep(NA, (pol_degrees[1] + 1) * (pol_degrees[2] + 1))
 
-# Now let's fill coefficients vector with correct values
+# Now let's fill the coefficients vector with correct values
 pol_coefficients[pol_powers_sum \%\% 2 == 0] <- 2
 pol_coefficients[pol_powers_sum \%\% 2 != 0] <- 5
 
-# Finally, let's check that correspondence is correct
+# Finally, let's check that the correspondence is correct
 printPolynomial(pol_degrees, pol_coefficients)
 }
-## Let's represent polynomial 0.3+0.5x2-x2^2+2x1+1.5x1x2+x1x2^2
+## Let's represent a polynomial 0.3+0.5x2-x2^2+2x1+1.5x1x2+x1x2^2
 
 pol_degrees <- c(1, 2)
 pol_coefficients <- c(0.3, 0.5, -1, 2, 1.5, 1)

@@ -11,7 +11,7 @@
 
 \item{y}{this parameter currently ignored}
 
-\item{...}{further arguments to be passed to \code{\link[base]{plot}}
+\item{...}{further arguments to be passed to the \code{\link[base]{plot}}
 function.}
 
 \item{type}{character; if "outcome" then function plots the graph for 

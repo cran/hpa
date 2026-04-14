@@ -21,11 +21,11 @@ hpaML(
 )
 }
 \arguments{
-\item{data}{numeric matrix which rows are realizations of independent 
+\item{data}{numeric matrix whose rows are realizations of independent and 
 identically distributed random vectors while columns correspond to
 variables.}
 
-\item{pol_degrees}{non-negative integer vector of polynomial 
+\item{pol_degrees}{a non-negative integer vector of polynomial 
 degrees (orders).}
 
 \item{tr_left}{numeric vector of left (lower) truncation limits.}
@@ -34,54 +34,55 @@ degrees (orders).}
 
 \item{given_ind}{logical or numeric vector indicating whether corresponding 
 random vector component is conditioned. By default it is a logical 
-vector of \code{FALSE} values. If \code{give_ind[i]} equals \code{TRUE} or 
-\code{i} then \code{i}-th column of \code{x} matrix will contain 
+vector of \code{FALSE} values. If \code{given_ind[i]} equals \code{TRUE} or 
+\code{i} then the \code{i}-th column of \code{x} matrix will contain 
 conditional values.}
 
-\item{omit_ind}{logical or numeric vector indicating whether corresponding
-random component is omitted. By default it is a logical vector 
-of \code{FALSE} values. If \code{omit_ind[i]} equals \code{TRUE} or \code{i} 
-then values in \code{i}-th column of \code{x} matrix will be ignored.}
+\item{omit_ind}{logical or numeric vector indicating whether the 
+corresponding random vector component is omitted. By default it is a 
+logical vector of \code{FALSE} values. If \code{omit_ind[i]} equals 
+\code{TRUE} or \code{i} then the values in the \code{i}-th column of the 
+\code{x} matrix will be ignored.}
 
-\item{x0}{numeric vector of optimization routine initial values.
+\item{x0}{numeric vector of the optimization routine initial values.
 Note that \code{x0=c(pol_coefficients[-1], mean, sd)}. For 
-\code{pol_coefficients}, \code{mean} and \code{sd} documentation 
+\code{pol_coefficients}, \code{mean}, and \code{sd} documentation, 
 see \code{\link[hpa]{dhpa}} function.}
 
 \item{cov_type}{character determining the type of covariance matrix to be
 returned and used for summary. If \code{cov_type = "hessian"} then negative
-inverse of Hessian matrix will be applied. If \code{cov_type = "gop"} then
-inverse of Jacobian outer products will be used.
-If \code{cov_type = "sandwich"} (default) then sandwich covariance matrix
+inverse of the Hessian matrix will be applied. If \code{cov_type = "gop"} 
+then inverse of the Jacobian outer product will be used.
+If \code{cov_type = "sandwich"} (default) then the sandwich covariance matrix
 estimator will be applied. If \code{cov_type = "bootstrap"} then bootstrap
 with \code{boot_iter} iterations will be used.
 If \code{cov_type = "hessianFD"} or \code{cov_type = "sandwichFD"} then
 (probably) more accurate but computationally demanding central difference 
 Hessian approximation will be calculated for the inverse Hessian and 
-sandwich estimators correspondingly. Central differences are computed via
+sandwich estimators, respectively. Central differences are computed via
 analytically provided gradient. This Hessian matrix estimation approach
-seems to be less accurate than BFGS approximation if polynomial order
-is high (usually greater then 5).}
+seems to be less accurate than the BFGS approximation if polynomial order
+is high (usually greater than 5).}
 
 \item{boot_iter}{the number of bootstrap iterations
-for \code{cov_type = "bootstrap"} covariance matrix estimator type.}
+for the covariance matrix estimator when \code{cov_type = "bootstrap"}.}
 
 \item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
-large enough samples (about more than 1000 observations).}
+large enough samples (more than 1000 observations).}
 
 \item{opt_type}{string value determining the type of the optimization
-routine to be applied. The default is \code{"optim"} meaning that BFGS method
-from the \code{\link[stats]{optim}} function will be applied.
-If \code{opt_type = "GA"} then \code{\link[GA]{ga}} function will be
+routine to be applied. The default is \code{"optim"} meaning that the 
+BFGS method from the \code{\link[stats]{optim}} function will be applied.
+If \code{opt_type = "GA"} then the \code{\link[GA]{ga}} function will be
 additionally applied.}
 
 \item{opt_control}{a list containing arguments to be passed to the
-optimization routine depending on \code{opt_type} argument value.
+optimization routine depending on the \code{opt_type} argument value.
 Please see details to get additional information.}
 
 \item{is_validation}{logical value indicating whether function input 
-arguments should be validated.  Set it to \code{FALSE} for slight
+arguments should be validated.  Set it to \code{FALSE} for a slight
 performance boost (default value is \code{TRUE}).}
 }
 \value{
@@ -89,15 +90,15 @@ This function returns an object of class "hpaML".\cr \cr
 An object of class "hpaML" is a list containing the following components:
 \itemize{
 \item \code{optim} - \code{\link[stats]{optim}} function output. 
-If \code{opt_type = "GA"} then it is the list containing 
+If \code{opt_type = "GA"}, then it is the list containing 
 \code{\link[stats]{optim}} and \code{\link[GA]{ga}} functions outputs.
 \item \code{x1} - numeric vector of distribution parameters estimates.
 \item \code{mean} - density function mean vector estimate.
 \item \code{sd} - density function sd vector estimate.
 \item \code{pol_coefficients} - polynomial coefficients estimates.
-\item \code{tr_left }- the same as \code{tr_left} input parameter.
+\item \code{tr_left } - the same as \code{tr_left} input parameter.
 \item \code{tr_right} - the same as \code{tr_right} input parameter.
-\item \code{omit_ind }- the same as \code{omit_ind} input parameter.
+\item \code{omit_ind } - the same as \code{omit_ind} input parameter.
 \item \code{given_ind} - the same as \code{given_ind} input parameter.
 \item \code{cov_mat} - covariance matrix estimate.
 \item \code{results} - numeric matrix representing estimation results.
@@ -115,9 +116,9 @@ Gallant and Nychka in 1987. Please, see \code{\link[hpa]{dhpa}} 'Details'
 section to get more information concerning this approximating function.
 }
 \details{
-Densities Hermite polynomial approximation approach has been
+The Hermite polynomial approximation approach for densities has been
 proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
-approximate unknown distribution density with scaled Hermite polynomial.
+approximate unknown distribution density with a scaled Hermite polynomial.
 For more information please refer to the literature listed below.
 
 Let's use notations introduced in \code{\link[hpa]{dhpa}} 'Details' 
@@ -128,34 +129,34 @@ quasi log-likelihood function:
 
 where (in addition to previously defined notations):
 
-\eqn{x_{i}} - are observations i.e. \code{data} matrix rows.
+\eqn{x_{i}} - are observations, i.e., the \code{data} matrix rows.
 
-\eqn{n} - is sample size i.e. the number of \code{data} matrix rows.
+\eqn{n} - is sample size, i.e., the number of \code{data} matrix rows.
 
 Arguments \code{pol_degrees}, \code{tr_left}, \code{tr_right},
 \code{given_ind} and \code{omit_ind} affect the form of 
-\eqn{f_{\xi}\left(x_{i};\alpha, \mu, \sigma)\right)} in a way described in 
+\eqn{f_{\xi}\left(x_{i};\alpha, \mu, \sigma\right)} in a way described in 
 \code{\link[hpa]{dhpa}} 'Details' section. Note that change of
-\code{given_ind} and \code{omit_ind} values may result in estimator which
-statistical properties has not been rigorously investigated yet.
+\code{given_ind} and \code{omit_ind} values may result in estimator whose 
+statistical properties have not been rigorously investigated yet.
 
-The first polynomial coefficient (zero powers) 
-set to 1 for identification purposes i.e. \eqn{\alpha_{(0,...,0)}=1}.
+The first polynomial coefficient (zero powers) is 
+set to 1 for identification purposes, i.e., \eqn{\alpha_{(0,...,0)}=1}.
 
 All \code{NA} and \code{NaN} values will be removed from \code{data} matrix.
 
-The function calculates standard errors via sandwich estimator
+The function calculates standard errors via the sandwich estimator
 and significance levels are reported taking into account quasi maximum
 likelihood estimator (QMLE) asymptotic normality. If one wants to switch
 from QMLE to semi-nonparametric estimator (SNPE) during hypothesis testing
-then covariance matrix should be estimated again using bootstrap.
+then covariance matrix should be estimated again using the bootstrap.
 
 This function maximizes (quasi) log-likelihood function 
-via \code{\link[stats]{optim}} function setting its \code{method} 
-argument to "BFGS". If \code{opt_type = "GA"} then genetic
-algorithm from \code{\link[GA]{ga}} function
+via the \code{\link[stats]{optim}} function setting its \code{method} 
+argument to "BFGS". If \code{opt_type = "GA"} then the genetic
+algorithm from the \code{\link[GA]{ga}} function
 will be additionally (after \code{\link[stats]{optim}} putting its
-solution (\code{par}) into \code{suggestions} matrix) applied in order to 
+solution (\code{par}) into the \code{suggestions} matrix) applied in order to 
 perform global optimization. Note that global optimization takes
 much more time (usually minutes but sometimes hours or even days). 
 The number of iterations and population size of the genetic algorithm
@@ -163,12 +164,12 @@ will grow linearly along with the number of estimated parameters.
 If it seems that global maximum has not been found then it
 is possible to continue the search restarting the function setting 
 its input argument \code{x0} to \code{x1} output value. Note that
-if \code{cov_type = "bootstrap"} then \code{\link[GA]{ga}}
+if \code{cov_type = "bootstrap"} then the \code{\link[GA]{ga}}
 function will not be used for bootstrap iterations since it
 may be extremely time consuming.
 
-If \code{opt_type = "GA"} then \code{opt_control} should be the
-list containing the values to be passed to \code{\link[GA]{ga}}
+If \code{opt_type = "GA"} then \code{opt_control} should be a 
+list containing the values to be passed to the \code{\link[GA]{ga}}
 function. It is possible to pass arguments \code{lower}, \code{upper},
 \code{popSize}, \code{pcrossover}, \code{pmutation}, \code{elitism},
 \code{maxiter}, \code{suggestions}, \code{optim}, \code{optimArgs},
@@ -176,36 +177,36 @@ function. It is possible to pass arguments \code{lower}, \code{upper},
 Note that it is possible to set \code{population},
 \code{selection}, \code{crossover} and \code{mutation} arguments changing
 \code{\link[GA]{ga}} default parameters via \code{\link[GA]{gaControl}} 
-function. These arguments information reported in \code{\link[GA]{ga}}.
+function. These arguments information is reported in \code{\link[GA]{ga}}.
 In order to provide manual values for \code{lower} and \code{upper} bounds
-please follow parameters ordering mentioned above for the
+please follow the parameters ordering mentioned above for the
 \code{x0} argument. If these bounds are not provided manually then
 they (except those related to the polynomial coefficients)
 will depend on the estimates obtained
 by local optimization via \code{\link[stats]{optim}} function
-(this estimates will be in the middle
+(these estimates will be in the middle
 between \code{lower} and \code{upper}).
 Specifically for each sd parameter \code{lower} (\code{upper}) bound
 is 5 times lower (higher) than this
-parameter \code{\link[stats]{optim}} estimate.
+parameter's \code{\link[stats]{optim}} estimate.
 For each mean and regression coefficient parameter its lower and 
 upper bounds deviate from corresponding \code{\link[stats]{optim}} estimate
 by two absolute values of this estimate.
 Finally, lower and upper bounds for each polynomial
-coefficient are \code{-10} and \code{10} correspondingly (do not depend
+coefficient are \code{-10} and \code{10}, respectively (do not depend
 on their \code{\link[stats]{optim}} estimates).
 
-The following arguments are differ from their defaults in
+The following arguments differ from their defaults in
 \code{\link[GA]{ga}}:
 \itemize{
-\item \code{pmutation = 0.2},
-\item \code{optim = TRUE},
+\item \code{pmutation = 0.2}.
+\item \code{optim = TRUE}.
 \item \code{optimArgs =
-list("method" = "Nelder-Mead", "poptim" = 0.2, "pressel" = 0.5)},
-\item \code{seed = 8},
+list("method" = "Nelder-Mead", "poptim" = 0.2, "pressel" = 0.5)}.
+\item \code{seed = 8}.
 \item \code{elitism = 2 + round(popSize * 0.1)}.}
 
-The arguments \code{popSize} and \code{maxiter} of
+The arguments \code{popSize} and \code{maxiter} of the 
 \code{\link[GA]{ga}} function have been set proportional to the number of
 estimated polynomial coefficients:
 \itemize{
@@ -230,7 +231,7 @@ pol_degrees <- c(4)
 ml_result <- hpa::hpaML(data = x, pol_degrees = pol_degrees)
 summary(ml_result)
 
-# Get predicted probabilites (density values) approximations
+# Get predicted probabilities (density values) approximations
 predict(ml_result)
 
 # Plot density approximation
@@ -254,7 +255,7 @@ ml_result <- hpaML(data = x, pol_degrees = as.vector(pol_degrees),
 				tr_left = 0)
 summary(ml_result)
 
-# Get predicted probabilites (density values) approximations
+# Get predicted probabilities (density values) approximations
 predict(ml_result)
 
 # Plot density approximation
@@ -291,8 +292,8 @@ plot(ml_result, ind = 2)
 plot(ml_result, ind = 2, given = c(1, NA, NA))
 
 ## Approximate Student (t) distribution and plot densities approximated
-## under different hermite polynomial degrees against 
-## true density (of Student distribution)
+## under different Hermite polynomial degrees against 
+## the true density (of Student distribution)
 
 # Simulate 5000 realizations of t-distribution with 5 degrees of freedom
 n <- 5000
@@ -311,11 +312,11 @@ for(i in 1:4)
 test_values <- seq(qt(0.001, df), qt(0.999, df), 0.001)
 n0 <- length(test_values)
 
-# t-distribution density function at test values points
+# t-distribution density function at the test values points
 true_pred <- dt(test_values, df)
 
 # Create matrix of lists where i-th element contains 
-# densities predictions for K=i
+# density predictions for K=i
 PGN_pred <- matrix(list(), 4, 1)
 for(i in 1:4)
 {
@@ -342,8 +343,7 @@ ggplot(h, aes(values, predictions)) + geom_point(aes(color = Density)) +
                           text = element_text(size=26),
                           legend.title=element_text(size=20), 
                           legend.text=element_text(size=28)) +
-  guides(colour = guide_legend(override.aes = list(size=10))
-  )
+  guides(colour = guide_legend(override.aes = list(size=10)))
 
 # Get informative estimates summary for K=4
 summary(ml_result[[4]])
@@ -363,7 +363,7 @@ pol_degrees <- c(2)
 ml_result <- hpa::hpaML(data = x, pol_degrees = pol_degrees)
  summary(ml_result)
 
-# Get predicted probabilites (density values) approximations
+# Get predicted probabilities (density values) approximations
 predict(ml_result)
 
 # Plot the results

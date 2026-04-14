@@ -9,7 +9,7 @@
 #' predictions will be estimated. Otherwise unconditional 
 #' predictions will be returned.
 #' @param type character; if "outcome" (default) then predictions for 
-#' selection equation will be estimated according to \code{method}.
+#' outcome equation will be estimated according to \code{method}.
 #' If "selection" then selection equation predictions (probabilities) 
 #' will be returned.
 #' @template elipsis_Template
@@ -42,7 +42,7 @@ predict.hpaSelection <- function (object,  ...,
 }
 ###
 #' Summarizing hpaSelection Fits
-#' @description This function summarizing hpaSelection Fits
+#' @description This function summarizes hpaSelection Fits
 #' @param object Object of class "hpaSelection"
 #' @template elipsis_Template
 #' @return This function returns the same list 
@@ -85,7 +85,7 @@ plot.hpaSelection <- function (x, y = NULL, ..., type = "outcome")
   
   if(!(type %in% c("outcome", "selection")))
   {
-    stop("type argument should be either outcome or selection")
+    stop("type argument should be either 'outcome' or 'selection'.")
   }
   
   is_outcome <- TRUE
@@ -182,7 +182,8 @@ plot.hpaSelection <- function (x, y = NULL, ..., type = "outcome")
 
 ###
 #' Calculates log-likelihood for "hpaSelection" object
-#' @description This function calculates log-likelihood for "hpaSelection" object
+#' @description This function calculates log-likelihood for a 
+#' "hpaSelection" object
 #' @usage \method{logLik}{hpaSelection}(object, ...)
 #' @param object Object of class "hpaSelection"
 #' @template elipsis_Template
@@ -209,7 +210,7 @@ print.hpaSelection <- function (x, ...)
   {
     warning("Additional arguments passed through ... are ignored.")   
   }
-  cat(paste("It is the object of class",class(x),"\n"))
+  cat(paste("It is an object of class",class(x),"\n"))
   cat("It contains the following elements:\n")
   cat(names(x), sep = ", ")
   cat("\n")
@@ -223,11 +224,11 @@ print.hpaSelection <- function (x, ...)
   cat("Please, use summary() function to get additional information\n")
 }
 
-#' Extract coefficients from hpaSelection object
+#' Extract coefficients from a hpaSelection object
 #' @param object Object of class "hpaSelection"
-#' @param type character; if "all" (default) then all estimated parameters
-#' values will be returned. If "selection" then selection equation coefficients
-#' estimates will be provided. If "outcome" then outcome equation coefficients
+#' @param type character; if "all" (default) then all estimated parameter
+#' values will be returned. If "selection" then selection equation coefficient
+#' estimates will be provided. If "outcome" then outcome equation coefficient
 #' estimates will be returned.
 #' @template elipsis_Template
 coef.hpaSelection <- function (object, ..., type = "all")
@@ -250,7 +251,7 @@ coef.hpaSelection <- function (object, ..., type = "all")
   return (object$x1)
 }
 
-#' Extract covariance matrix from hpaSelection object
+#' Extract covariance matrix from a hpaSelection object
 #' @param object Object of class "hpaSelection"
 #' @template elipsis_Template
 vcov.hpaSelection <- function (object, ...)

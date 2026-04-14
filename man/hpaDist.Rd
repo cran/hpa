@@ -177,24 +177,25 @@ rhpa(
 }
 \arguments{
 \item{x}{numeric matrix of function arguments and
-conditional values. Note that \code{x} rows are points (observations)
-while random vectors components (variables) are columns.}
+conditional values. Note that the rows of \code{x} are points (observations)
+while the random vector components (the variables) are columns.}
 
 \item{pol_coefficients}{numeric vector of polynomial coefficients.}
 
-\item{pol_degrees}{non-negative integer vector of polynomial 
+\item{pol_degrees}{a non-negative integer vector of polynomial 
 degrees (orders).}
 
 \item{given_ind}{logical or numeric vector indicating whether corresponding 
 random vector component is conditioned. By default it is a logical 
-vector of \code{FALSE} values. If \code{give_ind[i]} equals \code{TRUE} or 
-\code{i} then \code{i}-th column of \code{x} matrix will contain 
+vector of \code{FALSE} values. If \code{given_ind[i]} equals \code{TRUE} or 
+\code{i} then the \code{i}-th column of \code{x} matrix will contain 
 conditional values.}
 
-\item{omit_ind}{logical or numeric vector indicating whether corresponding
-random component is omitted. By default it is a logical vector 
-of \code{FALSE} values. If \code{omit_ind[i]} equals \code{TRUE} or \code{i} 
-then values in \code{i}-th column of \code{x} matrix will be ignored.}
+\item{omit_ind}{logical or numeric vector indicating whether the 
+corresponding random vector component is omitted. By default it is a 
+logical vector of \code{FALSE} values. If \code{omit_ind[i]} equals 
+\code{TRUE} or \code{i} then the values in the \code{i}-th column of the 
+\code{x} matrix will be ignored.}
 
 \item{mean}{numeric vector of expected values.}
 
@@ -202,46 +203,49 @@ then values in \code{i}-th column of \code{x} matrix will be ignored.}
 
 \item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
-large enough samples (about more than 1000 observations).}
+large enough samples (more than 1000 observations).}
 
 \item{log}{logical; if \code{TRUE} then probabilities p are given as log(p)
-or derivatives will be given respect to log(p).}
+or derivatives will be given with respect to log(p).}
 
 \item{is_validation}{logical value indicating whether function input 
-arguments should be validated.  Set it to \code{FALSE} for slight
+arguments should be validated.  Set it to \code{FALSE} for a slight
 performance boost (default value is \code{TRUE}).}
 
 \item{x_lower}{numeric matrix of lower integration limits.
-Note that \code{x_lower} rows are observations while variables are columns.}
-
-\item{x_upper}{numeric matrix of upper integration limits.
-Note that \code{x_upper} rows are observations while variables
+Note that the rows of \code{x_lower} are observations while the variables 
 are columns.}
 
-\item{expectation_powers}{integer vector of random vector components powers.}
+\item{x_upper}{numeric matrix of upper integration limits.
+Note that the rows of \code{x_upper} are observations while the variables
+are columns.}
+
+\item{expectation_powers}{integer vector of random vector components' powers.}
 
 \item{tr_left}{numeric matrix of left (lower) truncation limits.
-Note that \code{tr_left} rows are observations while variables are columns.
+Note that the rows of \code{tr_left} are observations while the columns
+are variables.
 If \code{tr_left} and \code{tr_right} are single row matrices then the same 
 truncation limits will be applied to all observations that are determined 
-by the first rows of these matrices.}
+by the first row of these matrices.}
 
 \item{tr_right}{numeric matrix of right (upper) truncation limits.
-Note that \code{tr_right} rows are observations while variables are columns.
+Note that the rows of \code{tr_right} are observations while the columns
+are variables.
 If \code{tr_left} and \code{tr_right} are single row matrices then the same 
 truncation limits will be applied to all observations that are determined 
-by the first rows of these matrices.}
+by the first row of these matrices.}
 
-\item{type}{determines the partial derivatives to be included into the
+\item{type}{determines the partial derivatives to be included in the
 gradient. If \code{type="pol_coefficients"} then gradient will contain 
-partial derivatives respect to polynomial coefficients listed in the
+partial derivatives with respect to polynomial coefficients listed in the
 same order as \code{pol_coefficients}. Other available types are 
 \code{type = "mean"} and \code{type = "sd"}.
 For function \code{\link[hpa]{dhpaDiff}} it is possible to take
 gradient respect to the x points setting \code{type="x"}.
 For function \code{\link[hpa]{ihpaDiff}} it is possible to take
-gradient respect to the x lower and upper points setting 
-\code{type = "x_lower"} or \code{type = "upper"} correspondingly.
+gradient with respect to the \code{x_lower} and \code{x_upper} points setting 
+\code{type = "x_lower"} or \code{type = "x_upper"}, respectively.
 In order to get full gradient please set \code{type="all"}.}
 
 \item{p}{numeric vector of probabilities}
@@ -259,26 +263,26 @@ Functions \code{\link[hpa]{ihpa}} and
 
 If \code{x} argument has not been provided or is a single row
 matrix then function 
-\code{\link[hpa]{ehpa}} returns moment value. Otherwise it returns vector of 
-length \code{nrow(x)} containing moments values.
+\code{\link[hpa]{ehpa}} returns a moment value. Otherwise it returns a 
+vector of length \code{nrow(x)} containing moment values.
 
 If \code{tr_left} and \code{tr_right} arguments are single row matrices then
-function \code{\link[hpa]{etrhpa}} returns moment value.
+function \code{\link[hpa]{etrhpa}} returns a moment value.
 Otherwise it returns vector of length
 \code{max(nrow(tr_left), nrow(tr_right))} containing moments values.
 
 Functions \code{\link[hpa]{dhpaDiff}} and \code{\link[hpa]{ihpaDiff}} 
-return Jacobin matrix. The number
-of columns depends on \code{type} argument. The number of rows is
+return Jacobian matrix. The number
+of columns depends on the \code{type} argument. The number of rows is
 \code{nrow(x)} for \code{\link[hpa]{dhpaDiff}} and 
 \code{nrow(x_upper)} for
 \code{\link[hpa]{ihpaDiff}}
 
-If \code{mean} or \code{sd} are not specified they assume the default 
+If \code{mean} or \code{sd} are not specified, they default to the default 
 values of \eqn{m}-dimensional vectors of 0 and 1, respectively. 
-If \code{x_lower} is not specified then it is the matrix of the 
+If \code{x_lower} is not specified then it is a matrix of the 
 same size as \code{x_upper} containing negative infinity values only. If
-\code{expectation_powers} is not specified then it is \eqn{m}-dimensional
+\code{expectation_powers} is not specified then it is an \eqn{m}-dimensional
 vector of 0 values.
 
 Please see 'Details' section for additional information.
@@ -286,34 +290,34 @@ Please see 'Details' section for additional information.
 \description{
 Approximation of truncated, marginal and conditional densities,
 moments and cumulative probabilities of multivariate distributions via
-Hermite polynomial based approach proposed by Gallant and Nychka in 1987.
+a Hermite polynomial based approach proposed by Gallant and Nychka in 1987.
 
-Density approximating function is scale adjusted product of two terms. 
-The first one is squared multivariate polynomial of \code{pol_degrees}  
-degrees with \code{pol_coefficients} coefficients vector. 
+Density approximating function is scale-adjusted product of two terms. 
+The first one is squared multivariate polynomial of degree \code{pol_degrees}  
+with a vector of coefficients \code{pol_coefficients}. 
 The second is product of independent normal random variables' densities with 
 expected values and standard deviations given by \code{mean} and \code{sd} 
-vectors correspondingly. Approximating function satisfies properties of 
+vectors, respectively. Approximating function satisfies properties of 
 density function thus generating a broad family of distributions.
 Characteristics of these distributions 
 (moments, quantiles, probabilities and so on) 
-may provide accurate approximations to characteristic of other
+may provide accurate approximations to the characteristic of other
 distributions. Moreover it is usually possible to provide arbitrary close
-approximation by the means of polynomial degrees increase.
+approximation by means of polynomial degrees increasing.
 }
 \details{
 It is possible to approximate densities 
 \code{\link[hpa]{dhpa}}, cumulative probabilities
-\code{\link[hpa]{phpa}}, \code{\link[hpa]{ihpa}}, moments
-\code{\link[hpa]{ehpa}} as well as their truncated
+\code{\link[hpa]{phpa}}, interval probabilities \code{\link[hpa]{ihpa}}, 
+moments \code{\link[hpa]{ehpa}} as well as their truncated
 \code{\link[hpa]{dtrhpa}}, \code{\link[hpa]{itrhpa}}, 
 \code{\link[hpa]{etrhpa}} forms
 and gradients \code{\link[hpa]{dhpaDiff}}, \code{\link[hpa]{ihpaDiff}}.
-Note that \code{\link[hpa]{phpa}} is special of \code{\link[hpa]{ihpa}}
-where \code{x}
-corresponds to \code{x_upper} while \code{x_lower} is matrix of
-negative infinity values. So  \code{\link[hpa]{phpa}} intended to approximate 
-cumulative
+Note that \code{\link[hpa]{phpa}} is a special case of 
+\code{\link[hpa]{ihpa}} where \code{x}
+corresponds to \code{x_upper} while \code{x_lower} is a matrix of
+negative infinity values. So \code{\link[hpa]{phpa}} is intended to 
+approximate cumulative
 distribution functions while \code{\link[hpa]{ihpa}} approximates 
 probabilities that
 random vector components will be between values determined by rows of 
@@ -321,7 +325,7 @@ random vector components will be between values determined by rows of
 
 
 Since density approximating function is non-negative and integrates
-to 1 it is density function for some \eqn{m}-variate 
+to 1, it is a density function for some \eqn{m}-variate 
 random vector \eqn{\xi}. Approximating function \eqn{f_{\xi }(x)} 
 has the following form:
 \deqn{f_{\xi }(x) = f_{\xi }(x;\mu, \sigma, \alpha) =
@@ -336,12 +340,12 @@ has the following form:
 \limits_{r=1}^{m}\mathcal{M}({i}_{r}+{j}_{r};{{\mu }_{r}},{\sigma }_{r})}},}
 where:
 
-\eqn{x = (x_{1},...x_{m})} - is vector of arguments i.e. rows
+\eqn{x = (x_{1}, ..., x_{m})} - is vector of arguments i.e. rows
  of \code{x} matrix in \code{\link[hpa]{dhpa}}.
  
 \eqn{{\alpha }_{({i}_{1},\cdots,{i}_{m})}} - is polynomial coefficient
 corresponding to \code{pol_coefficients[k]} element. In order to investigate
-correspondence between \code{k} and \eqn{({i}_{1},\cdots,{i}_{m})} values 
+correspondence between \code{k} and \eqn{({i}_{1},\cdots,{i}_{m})} values, 
 please see 'Examples' section below or \code{\link[hpa]{polynomialIndex}} 
 function 'Details', 'Value' and 'Examples' sections. Note that if \eqn{m=1}
 then \code{pol_coefficients[k]} simply corresponds to \eqn{\alpha_{k-1}}.
@@ -350,17 +354,17 @@ then \code{pol_coefficients[k]} simply corresponds to \eqn{\alpha_{k-1}}.
 \code{pol_degrees} argument so \code{pol_degrees[i]} determines \eqn{K_{i}}.
 
 \eqn{\phi 
-(.;{\mu }_{t},{\sigma }_{t})} - is normal random variable density function 
+(.;{\mu }_{t},{\sigma }_{t})} - is a normal random variable density function 
 where \eqn{\mu_{t}} and \eqn{\sigma_{t}} are mean and standard deviation 
 determined by \code{mean[t]} and \code{sd[t]} arguments values.
 
 \eqn{\mathcal{M}(q;{{\mu }_{r}},{\sigma }_{r})} - is \eqn{q}-th order
-moment of normal random variable with mean \eqn{{\mu }_{r}} and standard
+moment of a normal random variable with mean \eqn{{\mu }_{r}} and standard
 deviation \eqn{{\sigma }_{r}}. Note that function 
 \code{\link[hpa]{normalMoment}} allows to calculate and differentiate normal 
 random variable's moments.
 
-\eqn{\psi} - constant term insuring that \eqn{f_{\xi }(x)} is
+\eqn{\psi} - constant term insuring that \eqn{f_{\xi }(x)} is a 
 density function.
 
 Therefore \code{\link[hpa]{dhpa}} allows to calculate \eqn{f_{\xi}(x)} 
@@ -368,7 +372,7 @@ values at points
 determined by rows of \code{x} matrix given polynomial 
 degrees \code{pol_degrees} (\eqn{K}) as well as \code{mean} (\eqn{\mu}), 
 \code{sd} (\eqn{\sigma}) and \code{pol_coefficients} (\eqn{\alpha}) 
-parameters values. Note that \code{mean}, \code{sd} and \code{pol_degrees} are 
+parameter values. Note that \code{mean}, \code{sd} and \code{pol_degrees} are 
 \eqn{m}-variate vectors while \code{pol_coefficients} has
 \code{prod(pol_degrees + 1)} elements.
 
@@ -399,7 +403,7 @@ values.
 \eqn{\mathcal{M}_{TR}(q;
 \underline{x}_{r},\overline{x}_{r},\mu_{r},\sigma_{r})} - is 
 \eqn{q}-th order
-moment of truncated (from above by \eqn{\overline{x}_{r}} and from below by
+moment of a truncated (from above by \eqn{\overline{x}_{r}} and from below by
 \eqn{\underline{x}_{r}}) 
 normal random variable with mean \eqn{{\mu }_{r}} and standard
 deviation \eqn{{\sigma }_{r}}. Note that function 
@@ -407,12 +411,12 @@ deviation \eqn{{\sigma }_{r}}. Note that function
 differentiate truncated normal random variable's moments.
 
 \eqn{\overline{x} = (\overline{x}_{1},...,\overline{x}_{m})} - 
-vector of upper integration limits
-i.e. rows of \code{x_upper} matrix in \code{\link[hpa]{ihpa}}.
+vector of upper integration limits,
+i.e., rows of the \code{x_upper} matrix in \code{\link[hpa]{ihpa}}.
 
 \eqn{\underline{x} = (\underline{x}_{1},...,\underline{x}_{m})} - 
-vector of lower integration limits
-i.e. rows of \code{x_lower} matrix in \code{\link[hpa]{ihpa}}.
+vector of lower integration limits,
+i.e., rows of the \code{x_lower} matrix in \code{\link[hpa]{ihpa}}.
 
 Therefore \code{\link[hpa]{ihpa}} allows to calculate interval distribution 
 function \eqn{\bar{F}_{\xi}(\underline{x},\bar{x})}
@@ -435,65 +439,65 @@ Expected value powered product approximation is as follows:
 where \eqn{(k_{1},...,k_{m})} are integer powers determined by
 \code{expectation_powers} argument of \code{\link[hpa]{ehpa}} so
 \code{expectation_powers[t]} assigns \eqn{k_{t}}. Note that argument \code{x}
-in \code{\link[hpa]{ehpa}} allows to determined conditional values.
+in \code{\link[hpa]{ehpa}} allows to determine conditional values.
 
 Expanding polynomial degrees \eqn{(K_{1},...,K_{m})} it is possible to 
-provide arbitrary close approximation to density of some \eqn{m}-variate 
+provide arbitrarily close approximation to a density of some \eqn{m}-variate 
 random vector \eqn{\xi^{\star}}. So actually \eqn{f_{\xi}(x)}
 approximates \eqn{f_{\xi^{\star}}(x)}. Accurate approximation requires
-appropriate \code{mean}, \code{sd} and \code{pol_coefficients} values
-selection. In order to get sample estimates of these parameters please apply 
+selection of appropriate \code{mean}, \code{sd} and \code{pol_coefficients} 
+values. In order to get sample estimates of these parameters, apply 
 \code{\link[hpa]{hpaML}} function.
 
 In order to perform calculation for marginal distribution of some 
-\eqn{\xi} components please provide omitted 
+\eqn{\xi} components, provide omitted 
 components via \code{omit_ind} argument.
-For examples if ones assume \eqn{m=5}-variate distribution
+For examples if one assumes \eqn{m=5}-variate distribution
 and wants to deal with \eqn{1}-st, \eqn{3}-rd, and \eqn{5}-th components 
 only i.e. \eqn{(\xi_{1},\xi_{3},\xi_{5})} then set 
 \code{omit_ind = c(FALSE, TRUE, FALSE, TRUE, FALSE)}
 indicating that \eqn{\xi_{2}} and \eqn{\xi_{4}} should be 'omitted' from
 \eqn{\xi} since \eqn{2}-nd and \eqn{4}-th values of \code{omit_ind} are
 \code{TRUE}.
-Then \code{x} still should be \eqn{5} column matrix but 
+Then \code{x} still should be a \eqn{5} column matrix but 
 values in \eqn{2}-nd and \eqn{4}-th columns will not affect 
 calculation results. Meanwhile note that marginal distribution of \code{t}
-components of \eqn{\xi} usually do not coincide with any marginal
+components of \eqn{\xi} usually does not coincide with any marginal
 distribution generated by \code{t}-variate density approximating function.
 
-In order to perform calculation for conditional distribution i.e. given 
-fixed values for some \eqn{\xi} components please provide these
+In order to perform calculation for conditional distribution, i.e., given 
+fixed values for some \eqn{\xi} components, provide these
 components via \code{given_ind} argument.
-For example if ones assume \eqn{m=5}-variate distribution
+For example, if one assumes \eqn{m=5}-variate distribution
 and wants to deal with \eqn{1}-st, \eqn{3}-rd, and \eqn{5}-th components 
-given fixed values (suppose 8 and 10) for the other two components i.e. 
-\eqn{(\xi|\xi_{2} = 8, \xi_{4} = 10)} then set 
+given fixed values (suppose 8 and 10) for the other two components, i.e., 
+\eqn{(\xi|\xi_{2} = 8, \xi_{4} = 10)}, then set 
 \code{given_ind = c(FALSE, TRUE, FALSE, TRUE, FALSE)} and
 \code{x[2] = 8}, \code{x[4] = 10} where for simplicity it is assumed that
-\code{x} is single row \eqn{5} column matrix; it is possible to provide  
-different conditional values for the same components simply setting different  
+\code{x} is a single row \eqn{5} column matrix; it is possible to provide  
+different conditional values for the same components by setting different  
 values to different \code{x} rows.
 
 Note that it is possible to combine \code{given_ind} and \code{omit_ind}
-arguments. However it is wrong to set both \code{given_ind[i]} and 
+arguments. However, it is wrong to set both \code{given_ind[i]} and 
 \code{omit_ind[i]} to \code{TRUE}. Also at least one value should be
-\code{FALSE} both for \code{given_ind} and \code{omit_ind}.
+\code{FALSE} for both \code{given_ind} and \code{omit_ind}.
 
-In order to consider truncated distribution of \eqn{\xi} i.e. 
+In order to consider truncated distribution of \eqn{\xi}, i.e., 
 \eqn{\left(\xi|\overline{a}_{1}\leq\xi_{1}\leq\overline{b}_{1},
 \cdots,\overline{a}_{m}\leq\xi_{m}\leq\overline{b}_{m}\right)}
 please set lower (left) truncation points \eqn{\overline{a}} and 
 upper (right) truncation points \eqn{\overline{b}} via \code{tr_left} 
-and \code{tr_right} arguments correspondingly. Note that if lower truncation
-points are negative infinite and upper truncation points are positive
-infinite then \code{\link[hpa]{dtrhpa}}, \code{\link[hpa]{itrhpa}} and 
+and \code{tr_right} arguments, respectively. Note that if lower truncation
+points are negative infinity and upper truncation points are positive
+infinity, then \code{\link[hpa]{dtrhpa}}, \code{\link[hpa]{itrhpa}} and 
 \code{\link[hpa]{etrhpa}} are similar to \code{\link[hpa]{dhpa}},
 \code{\link[hpa]{ihpa}} and \code{\link[hpa]{ehpa}} correspondingly.
 
 In order to calculate Jacobian of \eqn{f_{\xi }(x;\mu, \sigma, \alpha)}
 and \eqn{\bar{F}_{\xi}(\underline{x},\bar{x};\mu, \sigma, \alpha)} w.r.t
-all ore some particular parameters please apply \code{\link[hpa]{dhpaDiff}}
-and \code{\link[hpa]{ihpaDiff}} functions correspondingly specifying
+all or some particular parameters, apply \code{\link[hpa]{dhpaDiff}}
+and \code{\link[hpa]{ihpaDiff}} functions, respectively, specifying
 parameters of interest via \code{type} argument. If \code{x} or
 \code{x_lower} and \code{x_upper} are single row matrices then gradients
 will be calculated.
@@ -501,30 +505,31 @@ will be calculated.
 For further information please see 'Examples' section. Note that examples
 are given separately for each function.
 
-If \code{given_ind} and (or) \code{omit_ind} are numeric vectors
+If \code{given_ind} and/or \code{omit_ind} are numeric vectors
 then they are insensitive to the order of elements. 
 For example \code{given_ind = c(5, 2, 3)} is similar 
 to \code{given_ind = c(2, 3, 5)}.
 
-Densities Hermite polynomial approximation approach has been
+The Hermite polynomial approximation approach for densities has been
 proposed by A. Gallant and D. W. Nychka in 1987. The main idea is to
-approximate unknown distribution density with scaled Hermite polynomial.
+approximate unknown distribution density with a scaled Hermite polynomial.
 For more information please refer to the literature listed below.
 }
 \examples{
 ## Example demonstrating dhpa function application.
-## Let's approximate some three random variables (i.e. X1, X2 and X3) 
-## joint density function at points  x = (0,1, 0.2, 0.3) and 
+## Let's approximate three random variables (i.e. X1, X2 and X3) 
+## the joint density function at points  x = (0,1, 0.2, 0.3) and 
 ## y = (0.5, 0.8, 0.6) with Hermite polynomial of (1, 2, 3) degrees which 
-## polynomial coefficients equal 1 except coefficient related  to x1*(x^3) 
-## polynomial element which equals 2. Also suppose that normal density 
-## related mean vector equals (1.1, 1.2, 1.3) while standard deviations 
+## polynomial coefficients equal 1 except the coefficient related to 
+## x1*(x3^2) 
+## polynomial element which equals 2. Also suppose that the normal density's 
+## related mean vector equals (1.1, 1.2, 1.3) while the standard deviation 
 ## vector is (2.1, 2.2, 2.3).
 
 # Prepare initial values
 x <- matrix(c(0.1, 0.2, 0.3), nrow = 1)   # x point as a single row matrix
 y <- matrix(c(0.5, 0.8, 0.6), nrow = 1)   # y point as a single row matrix
-x_y <- rbind(x, y)                        # matrix which rows are x and y
+x_y <- rbind(x, y)                        # matrix whose rows are x and y
 mean <- c(1.1, 1.2, 1.3)
 sd <- c(2.1, 2.2, 2.3)
 pol_degrees <- c(1, 2, 3)
@@ -601,12 +606,12 @@ dhpa(x = x_y,
      omit_ind = omit_ind)  
         
 ## Example demonstrating phpa function application.
-## Let's approximate some three random variables (X1, X2, X3) 
-## joint cumulative distribution function (cdf) at point (0,1, 0.2, 0.3)
-## with Hermite polynomial of (1, 2, 3) degrees which polynomial 
-## coefficients equal 1 except coefficient related to x1*(x^3) polynomial 
-## element which equals 2. Also suppose that normal density related
-## mean vector equals (1.1, 1.2, 1.3) while standard deviations
+## Let's approximate three random variables (X1, X2, X3) the 
+## joint cumulative distribution function (cdf) at point (0.1, 0.2, 0.3)
+## with a Hermite polynomial of (1, 2, 3) degrees whose polynomial 
+## coefficients equal 1 except the coefficient related to x1*(x3^2) 
+## polynomial element which equals 2. Also suppose that the normal density's
+## mean vector equals (1.1, 1.2, 1.3) while the standard deviation
 ## vector is (2.1, 2.2, 2.3).
 
 ## Prepare initial values
@@ -640,10 +645,10 @@ phpa(x = x,
      mean = mean, sd = sd)
 	
 # Condition second component to be 0.5
-# Substitute x second component with conditional value 0.5
+# Substitute x second component with the conditional value 0.5
 x <- matrix(c(0.1, 0.5, 0.3), nrow = 1) # or simply x[2] <- 0.5
 
-# Set TRUE to the second component indicating that it is conditioned
+# Set the second component to TRUE indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
 # Calculate conditional (on X2 = 0.5) cdf approximation at point x
@@ -656,7 +661,7 @@ phpa(x = x,
 # Consider third component marginal distribution
 # conditioned on the second component 0.5 value
 
-# Set TRUE to the first component indicating that it is omitted
+# Set the first component to TRUE indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
 # Calculate conditional (on X2 = 0.5) marginal (for X3) cdf 
@@ -669,13 +674,13 @@ phpa(x = x,
       omit_ind = omit_ind)
 
 ## Example demonstrating ihpa function application.
-## Let's approximate some three random variables (X1, X2, X3) joint interval 
-## distribution function (intdf) at lower and upper points (0,1, 0.2, 0.3) 
-## and (0,4, 0.5, 0.6) correspondingly with Hermite polynomial of (1, 2, 3) 
-## degrees which polynomial coefficients equal 1 except coefficient related 
-## to x1*(x^3) polynomial element which equals 2. Also suppose that normal
-## density related mean vector equals (1.1, 1.2, 1.3) while standard
-## deviations vector is (2.1, 2.2, 2.3).
+## Let's approximate three random variables (X1, X2, X3) the joint interval 
+## distribution function (intdf) at lower and upper points (0.1, 0.2, 0.3) 
+## and (0,4, 0.5, 0.6), respectively, with a Hermite polynomial of (1, 2, 3) 
+## degrees whose polynomial coefficients equal 1 except the coefficient 
+## related to x1*(x3^2) polynomial element which equals 2. Also suppose that 
+## the normal density's mean vector equals (1.1, 1.2, 1.3) while the standard
+## deviation vector is (2.1, 2.2, 2.3).
 
 ## Prepare initial values
 x_lower <- matrix(c(0.1, 0.2, 0.3), nrow=1)
@@ -709,13 +714,13 @@ ihpa(x_lower = x_lower, x_upper = x_upper,
      mean = mean, sd = sd)
 	
 # Condition second component to be 0.7
-# Substitute x second component with conditional value 0.7
+# Substitute x second component with the conditional value 0.7
 x_upper <- matrix(c(0.4, 0.7, 0.6), nrow = 1)
 
-# Set TRUE to the second component indicating that it is conditioned
+# Set the second component to TRUE indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
-# Calculate conditional (on X2 = 0.5) intdf approximation 
+# Calculate conditional (on X2 = 0.7) the intdf approximation 
 # at points x_lower and x_upper
 ihpa(x_lower = x_lower, x_upper = x_upper,
      pol_coefficients = pol_coefficients, 
@@ -725,11 +730,11 @@ ihpa(x_lower = x_lower, x_upper = x_upper,
 	
 # Consider third component marginal distribution
 # conditioned on the second component 0.7 value
-# Set TRUE to the first component indicating that it is omitted
+# Set the first component to TRUE indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
-# Calculate conditional (on X2 = 0.5) marginal (for X3) 
-# intdf approximation at points x_lower and x_upper
+# Calculate conditional (on X2 = 0.7) marginal (for X3)
+# the intdf approximation at points x_lower and x_upper
 ihpa(x_lower = x_lower, x_upper = x_upper,
      pol_coefficients = pol_coefficients, 
      pol_degrees = pol_degrees,
@@ -737,12 +742,12 @@ ihpa(x_lower = x_lower, x_upper = x_upper,
      given_ind = given_ind, omit_ind = omit_ind)
 	
 ## Example demonstrating ehpa function application.
-## Let's approximate some three random variables (X1, X2, X3) powered product 
+## Let's approximate some random variables (X1, X2, X3) the powered product 
 ## expectation for powers (3, 2, 1) with Hermite polynomial of (1, 2, 3) 
-## degrees which polynomial coefficients equal 1 except coefficient 
-## related to x1*(x^3) polynomial element which equals 2.
-## Also suppose that normal density related mean vector equals 
-## (1.1, 1.2, 1.3) while standard deviations vector is (2.1, 2.2, 2.3).
+## degrees whose polynomial coefficients equal 1 except the coefficient 
+## related to x1*(x3^2) polynomial element which equals 2.
+## Also suppose that the normal density's mean vector equals 
+## (1.1, 1.2, 1.3) while the standard deviation vector is (2.1, 2.2, 2.3).
 
 # Prepare initial values
 expectation_powers = c(3,2,1)
@@ -757,7 +762,7 @@ pol_ind <- polynomialIndex(pol_degrees)
 pol_coefficients <- rep(1, ncol(pol_ind))
 pol_degrees_n <- length(pol_degrees)
 
-#Assign coefficient 2 to the polynomial element (x1 ^ 1)*(x2 ^ 0)*(x3 ^ 2)
+# Assign coefficient 2 to the polynomial element (x1 ^ 1)*(x2 ^ 0)*(x3 ^ 2)
 pol_coefficients[apply(pol_ind, 2, function(x) all(x == c(1, 0, 2)))] <- 2
 
 # Visualize correspondence between polynomial elements and their coefficients
@@ -774,9 +779,9 @@ ehpa(pol_coefficients = pol_coefficients,
      expectation_powers = expectation_powers)
 	
 # Condition second component to be 0.5
-# Substitute x second component with conditional value 0.5
+# Substitute x second component with the conditional value 0.5
 x <- matrix(c(NA, 0.5, NA), nrow = 1)
-#Set TRUE to the second component indicating that it is conditioned
+# Set the second component to TRUE indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
 # Calculate conditional (on X2 = 0.5) expected powered product approximation
@@ -789,7 +794,7 @@ ehpa(x = x,
 	
 # Consider third component marginal distribution
 # conditioned on the second component 0.5 value
-# Set TRUE to the first component indicating that it is omitted
+# Set the first component to TRUE indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
 # Calculate conditional (on X2 = 0.5) marginal (for X3) expected powered 
@@ -803,14 +808,14 @@ ehpa(x = x,
      omit_ind = omit_ind)
 	
 ## Example demonstrating etrhpa function application.
-## Let's approximate some three truncated random variables (X1, X2, X3) 
-## powered product expectation for powers (3, 2, 1) with Hermite polynomial 
-## of (1,2,3) degrees which polynomial coefficients equal 1 except 
-## coefficient related to x1*(x^3) polynomial element which equals 2. Also
-## suppose that normal density related mean vector equals (1.1, 1.2, 1.3) 
-## while standard deviations vector is (2.1, 2.2, 2.3). Suppose that lower  
-## and upper truncation points are (-1.1,-1.2,-1.3) and (1.1,1.2,1.3) 
-## correspondingly.
+## Let's approximate three truncated random variables (X1, X2, X3) the 
+## powered product expectation for powers (3, 2, 1) with a Hermite polynomial 
+## of (1,2,3) degrees whose polynomial coefficients equal 1 except the 
+## coefficient related to x1*(x3^2) polynomial element which equals 2. Also
+## suppose that the normal density's mean vector equals (1.1, 1.2, 1.3) 
+## while the standard deviation vector is (2.1, 2.2, 2.3). Suppose that lower  
+## and upper truncation points are (-1.1,-1.2,-1.3) and (1.1,1.2,1.3), 
+## respectively.
 
 # Prepare initial values
 expectation_powers = c(3,2,1)
@@ -844,13 +849,13 @@ etrhpa(pol_coefficients = pol_coefficients,
        tr_left = tr_left, tr_right = tr_right)
        
 ## Example demonstrating dtrhpa function application.
-## Let's approximate some three random variables (X1, X2, X3) joint density 
-## function at point (0,1, 0.2, 0.3) with Hermite polynomial of (1,2,3)  
-## degrees which polynomial coefficients equal 1 except coefficient related 
-## to x1*(x^3) polynomial element which equals 2. Also suppose that normal 
-## density related mean vector equals (1.1, 1.2, 1.3) while standard 
+## Let's approximate three random variables (X1, X2, X3) the joint density 
+## function at point (0.1, 0.2, 0.3) with Hermite polynomial of (1,2,3)  
+## degrees whose polynomial coefficients equal 1 except the coefficient 
+## related to x1*(x3^2) polynomial element which equals 2. Also suppose that 
+## the normal density's mean vector equals (1.1, 1.2, 1.3) while the standard 
 ## deviations vector is (2.1, 2.2, 2.3). Suppose that lower and upper 
-## truncation points are (-1.1,-1.2,-1.3) and (1.1,1.2,1.3) correspondingly.
+## truncation points are (-1.1,-1.2,-1.3) and (1.1,1.2,1.3), respectively.
 
 # Prepare initial values
 x <- matrix(c(0.1, 0.2, 0.3), nrow=1)
@@ -886,9 +891,9 @@ dtrhpa(x = x,
        tr_right = tr_right)
 	
 # Condition second component to be 0.5
-# Substitute x second component with conditional value 0.5
+# Substitute x second component with the conditional value 0.5
 x <- matrix(c(0.1, 0.5, 0.3), nrow = 1)
-# Set TRUE to the second component indicating that it is conditioned
+# Set the second component to TRUE indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 # Calculate conditional (on x2 = 0.5) density approximation at point x
 dtrhpa(x = x,
@@ -900,7 +905,7 @@ dtrhpa(x = x,
 	
 # Consider third component marginal distribution
 # conditioned on the second component 0.5 value
-# Set TRUE to the first component indicating that it is omitted
+# Set the first component to TRUE indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
 # Calculate conditional (on X2 = 0.5) marginal (for X3) 
@@ -913,14 +918,14 @@ dtrhpa(x = x,
        tr_left = tr_left, tr_right = tr_right)
        
 ## Example demonstrating itrhpa function application.
-## Let's approximate some three truncated random variables (X1, X2, X3) joint 
+## Let's approximate three truncated random variables (X1, X2, X3) the joint 
 ## interval distribution function at lower and upper points (0,1, 0.2, 0.3) 
-## and (0,4, 0.5, 0.6) correspondingly with Hermite polynomial of (1 ,2, 3) 
-## degrees which polynomial coefficients equal 1 except coefficient
-## related to x1*(x^3) polynomial element which equals 2. Also suppose 
-## that normal density related mean vector equals (1.1, 1.2, 1.3) while 
-## standard deviations vector is (2.1, 2.2, 2.3). Suppose that lower and 
-## upper truncation are (-1.1,-1.2,-1.3) and (1.1,1.2,1.3) correspondingly.
+## and (0.4, 0.5, 0.6), respectively, with a Hermite polynomial of (1 ,2, 3) 
+## degrees whose polynomial coefficients equal 1 except the coefficient
+## related to x1*(x3^2) polynomial element which equals 2. Also suppose 
+## that the normal density's mean vector equals (1.1, 1.2, 1.3) while 
+## the standard deviation vector is (2.1, 2.2, 2.3). Suppose that lower and 
+## upper truncation are (-1.1,-1.2,-1.3) and (1.1,1.2,1.3), respectively.
 
 # Prepare initial values
 x_lower <- matrix(c(0.1, 0.2, 0.3), nrow=1)
@@ -955,12 +960,12 @@ itrhpa(x_lower = x_lower, x_upper = x_upper,
        tr_left = tr_left, tr_right = tr_right)
     
 # Condition second component to be 0.7
-# Substitute x second component with conditional value 0.7
+# Substitute x second component with the conditional value 0.7
 x_upper <- matrix(c(0.4, 0.7, 0.6), nrow = 1)
-# Set TRUE to the second component indicating that it is conditioned
+# Set the second component to TRUE indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
-# Calculate conditional (on X2 = 0.5) intdf 
+# Calculate conditional (on X2 = 0.7) the intdf 
 # approximation at points x_lower and x_upper
 itrhpa(x_lower = x_lower, x_upper = x_upper,
        pol_coefficients = pol_coefficients, 
@@ -971,10 +976,10 @@ itrhpa(x_lower = x_lower, x_upper = x_upper,
     
 # Consider third component marginal distribution
 # conditioned on the second component 0.7 value
-# Set TRUE to the first component indicating that it is omitted
+# Set the first component to TRUE indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
-# Calculate conditional (on X2 = 0.5) marginal (for X3) intdf 
+# Calculate conditional (on X2 = 0.7) marginal (for X3) the intdf 
 # approximation at points x_lower and x_upper
 itrhpa(x_lower = x_lower, x_upper = x_upper,
        pol_coefficients = pol_coefficients, 
@@ -984,13 +989,14 @@ itrhpa(x_lower = x_lower, x_upper = x_upper,
        tr_left = tr_left, tr_right = tr_right)
        
 ## Example demonstrating dhpaDiff function application.
-## Let's approximate some three random variables (X1, X2, X3) joint density
-## function at point (0,1, 0.2, 0.3) with Hermite polynomial of (1,2,3)
-## degrees which polynomial coefficients equal 1 except coefficient related
-## to x1*(x^3) polynomial element which equals 2. Also suppose that normal
-## density related mean vector equals (1.1, 1.2, 1.3) while standard
-## deviations vector is (2.1, 2.2, 2.3). In this example let's calculate
-## density approximating function's gradient respect to various parameters
+## Let's approximate three random variables (X1, X2, X3) the joint density
+## function at point (0.1, 0.2, 0.3) with a Hermite polynomial of (1,2,3)
+## degrees whose polynomial coefficients are 1 except the coefficient related
+## to x1*(x3^2) polynomial element which equals 2. Also suppose that the 
+## normal density related mean vector equals (1.1, 1.2, 1.3) while the 
+## standard deviations vector is (2.1, 2.2, 2.3). In this example let's 
+## calculate the density approximating function's gradient with respect 
+## to various parameters
 
 # Prepare initial values
 x <- matrix(c(0.1, 0.2, 0.3), nrow = 1)
@@ -1015,21 +1021,21 @@ as.data.frame(rbind(pol_ind, pol_coefficients),
               optional = TRUE)
 printPolynomial(pol_degrees, pol_coefficients)
 
-# Calculate density approximation gradient 
-# respect to polynomial coefficients at point x
+# Calculate density approximation gradient with 
+# respect to the polynomial coefficients at point x
 dhpaDiff(x = x,
          pol_coefficients = pol_coefficients, 
          pol_degrees = pol_degrees,
          mean = mean, sd = sd)
 	
 # Condition second component to be 0.5
-# Substitute x second component with conditional value 0.5
+# Substitute x second component with the conditional value 0.5
 x <- matrix(c(0.1, 0.5, 0.3), nrow = 1)
 # Set TRUE to the second component indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
 # Calculate conditional (on x2 = 0.5) density approximation's 
-# gradient respect to polynomial coefficients at point x
+# gradient with respect to polynomial coefficients at point x
 dhpaDiff(x = x,
          pol_coefficients = pol_coefficients, 
          pol_degrees = pol_degrees,
@@ -1042,7 +1048,7 @@ dhpaDiff(x = x,
 omit_ind <- c(TRUE, FALSE, FALSE)
 
 # Calculate conditional (on X2 = 0.5) marginal (for X3) density 
-# approximation's gradient respect to: 
+# approximation's gradient with respect to: 
   # polynomial coefficients
 dhpaDiff(x = x,
          pol_coefficients = pol_coefficients, 
@@ -1076,8 +1082,8 @@ dhpaDiff(x = x,
          type = "x")
          
 ## Example demonstrating ehpaDiff function application.
-## Let's approximate some three random variables (X1, X2, X3) expectation
-## of the form E((X1 ^ 3) * (x2 ^ 1) * (X3 ^ 2)) and calculate the gradient
+## Let's approximate three random variables (X1, X2, X3) the expectation
+## of the form E((X1 ^ 3) * (X2 ^ 1) * (X3 ^ 2)) and calculate the gradient
 
 # Distribution parameters
 mean <- c(1.1, 1.2, 1.3)
@@ -1090,7 +1096,7 @@ pol_coefficients <- rep(1, pol_coefficients_n)
 expectation_powers <- c(3, 1, 2)
 
 # Calculate expectation approximation gradient 
-# respect to all parameters
+# with respect to all parameters
 ehpaDiff(pol_coefficients = pol_coefficients, 
          pol_degrees = pol_degrees,
          mean = mean, sd = sd,
@@ -1110,15 +1116,15 @@ ehpaDiff(x = x,
          expectation_powers = expectation_powers,
          type = "all")
 ## Example demonstrating ihpaDiff function application.
-## Let's approximate some three random variables (X1, X2, X3 ) joint interval 
+## Let's approximate three random variables (X1, X2, X3 ) the joint interval 
 ## distribution function (intdf) at lower and upper points (0,1, 0.2, 0.3) 
-## and (0,4, 0.5, 0.6) correspondingly with Hermite polynomial of (1, 2, 3) 
-## degrees which polynomial coefficients equal 1 except coefficient 
-## related to x1*(x^3) polynomial element which equals 2.
-## Also suppose that normal density related mean vector equals 
-## (1.1, 1.2, 1.3) while standard deviations vector is (2.1, 2.2, 2.3).
-## In this example let's calculate interval distribution approximating 
-## function gradient respect to polynomial coefficients.
+## and (0.4, 0.5, 0.6), respectively, with a Hermite polynomial of (1, 2, 3) 
+## degrees whose polynomial coefficients equal 1 except the coefficient 
+## related to x1*(x3^2) polynomial element which equals 2.
+## Also suppose that the normal density's mean vector equals 
+## (1.1, 1.2, 1.3) while the standard deviation vector is (2.1, 2.2, 2.3).
+## In this example let's calculate the interval distribution approximating 
+## function gradient with respect to the polynomial coefficients.
 
 # Prepare initial values
 x_lower <- matrix(c(0.1, 0.2, 0.3), nrow=1)
@@ -1145,7 +1151,7 @@ as.data.frame(rbind(pol_ind, pol_coefficients),
               optional = TRUE)
 printPolynomial(pol_degrees, pol_coefficients)
 
-# Calculate intdf approximation gradient respect to 
+# Calculate intdf approximation gradient with respect to the 
 # polynomial coefficients at points x_lower and x_upper
 ihpaDiff(x_lower = x_lower, x_upper = x_upper, 
          pol_coefficients = pol_coefficients, 
@@ -1153,14 +1159,14 @@ ihpaDiff(x_lower = x_lower, x_upper = x_upper,
          mean = mean, sd = sd)
 	
 # Condition second component to be 0.7
-# Substitute x second component with conditional value 0.7
+# Substitute x second component with the conditional value 0.7
 x_upper <- matrix(c(0.4, 0.7, 0.6), nrow = 1)
 
-# Set TRUE to the second component indicating that it is conditioned
+# Set the second component to TRUE indicating that it is conditioned
 given_ind <- c(FALSE, TRUE, FALSE)
 
-# Calculate conditional (on X2 = 0.5) intdf approximation
-# respect to polynomial coefficients at points x_lower and x_upper
+# Calculate conditional (on X2 = 0.7) the intdf approximation
+# with respect to the polynomial coefficients at points x_lower and x_upper
 ihpaDiff(x_lower = x_lower, x_upper = x_upper,
          pol_coefficients = pol_coefficients, 
          pol_degrees = pol_degrees,
@@ -1169,11 +1175,11 @@ ihpaDiff(x_lower = x_lower, x_upper = x_upper,
 	
 # Consider third component marginal distribution
 # conditioned on the second component 0.7 value
-# Set TRUE to the first component indicating that it is omitted
+# Set the first component to TRUE indicating that it is omitted
 omit_ind <- c(TRUE, FALSE, FALSE)
 
-# Calculate conditional (on X2 = 0.5) marginal (for X3) intdf approximation
-# respect to:
+# Calculate conditional (on X2 = 0.7) marginal (for X3) the intdf 
+# approximation with respect to:
   # polynomial coefficients
 ihpaDiff(x_lower = x_lower, x_upper = x_upper,
          pol_coefficients = pol_coefficients, 
@@ -1230,7 +1236,7 @@ qhpa(p = p,
      mean = mean, sd = sd)
      
 ## Sub-example 2 - marginal distribution
-## Consider random vector (X1, X2) and quantile of X1
+## Consider random vector (X1, X2) and the quantile of X1
 
 # Distribution parameters
 mean <- c(1, 1.2)
@@ -1247,12 +1253,11 @@ qhpa(p = p,
      pol_coefficients = pol_coefficients, 
      pol_degrees = pol_degrees,
      mean = mean, sd = sd,
-     omit_ind = 2)                          # set omitted variable index
+     omit_ind = 2)                          # set the omitted variable index
      
 ## Sub-example 3 - marginal and conditional distribution
 ## Consider random vector (X1, X2, X3) and 
-
-## quantiles of X1|X3 and X1|(X2,X3)
+## the quantiles of X1|X3 and X1|(X2,X3)
 mean <- c(1, 1.2, 0.9)
 sd <- c(2, 3, 2.5)
 pol_degrees <- c(1, 1, 1)
@@ -1265,23 +1270,23 @@ p <- 0.7
 # Calculate quantile of X1|X3 = 0.2
 qhpa(p = p,
      x = matrix(c(NA, NA, 0.2), nrow = 1),  # set any values to
-                                            # unconditioned and 
+                                            # the unconditioned and 
                                             # omitted components
      pol_coefficients = pol_coefficients, 
      pol_degrees = pol_degrees,
      mean = mean, sd = sd,
-     omit_ind = 2,                          # set omitted variable index
-     given_ind = 3)                         # set conditioned variable index
+     omit_ind = 2,                          # set the omitted variable index
+     given_ind = 3)                         # set the conditioned variable index
      
 # Calculate quantile of X1|(X2 = 0.5, X3 = 0.2)
 qhpa(p = p,
-     x = matrix(c(NA, 0.5, 0.2), nrow = 1), # set any values to 
+     x = matrix(c(NA, 0.5, 0.2), nrow = 1), # set any values to the 
                                             # unconditioned and 
                                             # omitted components
      pol_coefficients = pol_coefficients, 
      pol_degrees = pol_degrees,
      mean = mean, sd = sd,
-     given_ind = c(2, 3))                   # set conditioned
+     given_ind = c(2, 3))                   # set the conditioned
                                             # variables indexes
         
 ## Examples demonstrating rhpa function application.

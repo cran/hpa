@@ -41,7 +41,7 @@ print.summary.hpaML <- function (x, ...)
 
 ###
 #' Calculates log-likelihood for "hpaML" object
-#' @description This function calculates log-likelihood for "hpaML" object
+#' @description This function calculates log-likelihood for a "hpaML" object
 #' @usage \method{logLik}{hpaML}(object, ...)
 #' @param object Object of class "hpaML"
 #' @template elipsis_Template
@@ -68,7 +68,7 @@ print.hpaML <- function (x, ...)
   {
     warning("Additional arguments passed through ... are ignored.")   
   }
-  cat(paste("It is the object of class",class(x),"\n"))
+  cat(paste("It is an object of class",class(x),"\n"))
   cat("It contains the following elements:\n")
   cat(names(x), sep = ", ")
   cat("\n")
@@ -114,7 +114,7 @@ plot.hpaML <- function (x, y = NULL, ...,
 
   if ((ind < 0) | (ind > data_col))
   {
-    stop("data_col argument should be positive integer not greater then number of columns in data.")   
+    stop("ind argument should be positive integer not greater than number of columns in data.")   
   }
   
   if(is.null(given))
@@ -123,7 +123,7 @@ plot.hpaML <- function (x, y = NULL, ...,
   } else {
     if (length(given) != data_col)
     {
-      stop("given argument length should be the same as then number of columns in data.")   
+      stop("given argument length should be the same as the number of columns in data.")   
     }
   }
   
@@ -149,7 +149,7 @@ plot.hpaML <- function (x, y = NULL, ...,
   # Estimate moments
   if(is.null(given))
   {
-    guven <- vector(mode = "numeric")
+    given <- vector(mode = "numeric")
   }
   
   h_mean <- ehpa(x = given,
@@ -274,7 +274,7 @@ plot.hpaML <- function (x, y = NULL, ...,
   do.call(plot, plot_args)
 }
 
-#' Extract coefficients from hpaML object
+#' Extract coefficients from a hpaML object
 #' @param object Object of class "hpaML"
 #' @template elipsis_Template
 coef.hpaML <- function (object, ...)
@@ -287,7 +287,7 @@ coef.hpaML <- function (object, ...)
   return(object$x1)
 }
 
-#' Extract covariance matrix from hpaML object
+#' Extract covariance matrix from a hpaML object
 #' @param object Object of class "hpaML"
 #' @template elipsis_Template
 vcov.hpaML <- function (object, ...)

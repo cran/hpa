@@ -15,7 +15,7 @@ dnorm_parallel(x, mean = 0, sd = 1, is_parallel = FALSE)
 
 \item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
-large enough samples (about more than 1000 observations).}
+large enough samples (more than 1000 observations).}
 }
 \description{
 Calculate in parallel for each value from vector \code{x} 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/hpaBinary_generics.R
 \name{coef.hpaBinary}
 \alias{coef.hpaBinary}
-\title{Extract coefficients from hpaBinary object}
+\title{Extract coefficients from a hpaBinary object}
 \usage{
 \method{coef}{hpaBinary}(object, ...)
 }
@@ -12,5 +12,5 @@
 \item{...}{further arguments (currently ignored)}
 }
 \description{
-Extract coefficients from hpaBinary object
+Extract coefficients from a hpaBinary object
 }

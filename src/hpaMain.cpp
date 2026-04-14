@@ -1,9 +1,9 @@
+#define ARMA_DONT_USE_OPENMP
 #include "normalMoments.h"
 #include "polynomialIndex.h"
 #include "hpaMain.h"
 #include "ParallelFunctions.h"
 #include "hpaValidation.h"
-#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
 
@@ -50,7 +50,7 @@ List hpaMain(
   
   if(pol_degrees_n == 0)
   {
-    stop("pol_degrees vector should be provided");
+    stop("pol_degrees vector should be provided.");
   }
   
   // Get number of observations
@@ -93,7 +93,7 @@ List hpaMain(
     x_lower = as<NumericMatrix>(x_lower_vec);
     }
   
-  // Validation Stuff
+  // Validation
   if (is_validation)
   {
     int target_dim = pol_degrees_n;
@@ -131,7 +131,7 @@ List hpaMain(
     }
     sd_Validate(sd);
     
-    // Validate expectations powers vectors
+    // Validate expectation powers vectors
     int n_expectation_powers = expectation_powers.size();
     if ((n_expectation_powers != 0) && 
         (n_expectation_powers != target_dim))
@@ -169,27 +169,27 @@ List hpaMain(
 	LogicalVector given_ind_logical = LogicalVector(pol_degrees_n);
 	LogicalVector omit_ind_logical = LogicalVector(pol_degrees_n);
   
-    // additional validation if need
+    // additional validation if needed
 	if(is_validation)
 	{
 	  if ((given_ind.size() > pol_degrees_n))
 	  {
-	    stop("given_ind do not match pol_degrees dimensions");
+	    stop("given_ind do not match pol_degrees dimensions.");
 	  }
 	  
 	  if ((omit_ind.size() > pol_degrees_n))
 	  {
-	    stop("omit_ind do not match pol_degrees dimensions");
+	    stop("omit_ind do not match pol_degrees dimensions.");
 	  }
 	  
 	  if ((min(given_ind) < 0) || (max(given_ind) > pol_degrees_n))
 	  {
-	    stop("incorrect values supplied to given_ind");
+	    stop("incorrect values supplied to given_ind.");
 	  }
 	  
 	  if ((min(omit_ind) < 0) || (max(omit_ind) > pol_degrees_n))
 	  {
-	    stop("incorrect values supplied to omit_ind");
+	    stop("incorrect values supplied to omit_ind.");
 	  }
 	}
 	
@@ -213,13 +213,13 @@ List hpaMain(
 	  }
 	}
 	
-	  // additional validation if need
+	  // additional validation if needed
 	if(is_validation)
 	{
 	  ind_Validate(given_ind_logical, omit_ind_logical);
 	}
 	
-	// Fill mean and sd with defaults if need
+	// Fill mean and sd with defaults if needed
 	if (mean.size() == 0)
 	{
 		mean = NumericVector(pol_degrees_n);
@@ -232,7 +232,7 @@ List hpaMain(
 		std::fill(sd.begin(), sd.end(), 1);
 	}
 
-	// Control for the expected powered product powers values
+	// Control for the expected power product values
 	if ((expectation_powers.size() == 0) || ((type != "expectation") && 
                                            (type != "expectation truncated")))
 	{
@@ -262,13 +262,13 @@ List hpaMain(
             cdf_difference_product.end(), 
             1);
 	
-	// control for zero moments during numeric differentiation if need
+	// control for zero moments during numeric differentiation if needed
 	if ((grad_type == "mean") || (grad_type == "sd") || (grad_type == "all"))
 	{
 	  mean[mean == 0] = std::numeric_limits<double>::epsilon();
 	}
 	
-	// control for zero x_lower during numeric differentiation if need
+	// control for zero x_lower during numeric differentiation if needed
 	if ((grad_type == "x_lower") || (grad_type == "all"))
 	{
 	  for (int i = 0; i < pol_degrees_n; i++)
@@ -279,7 +279,7 @@ List hpaMain(
 	  }
 	}
 	
-	// control for zero x_upper during numeric differentiation if need
+	// control for zero x_upper during numeric differentiation if needed
 	// and substitute x for x_upper
 	if (grad_type == "x")
 	{
@@ -375,7 +375,7 @@ List hpaMain(
   			}
   		}
 
-  		// Calculate cdf_difference and pdf_difference if need
+  		// Calculate cdf_difference and pdf_difference if needed
   		// for gradient calculations
   		if ((grad_type == "mean") || (grad_type == "x_lower") ||
           (grad_type == "x_upper") || (grad_type == "all"))
@@ -506,7 +506,7 @@ List hpaMain(
 		}
 	}
 
-	// Calculate truncated moments derivatives if need
+	// Calculate truncated moments derivatives if needed
 
 	// Calculate x powers (x ^ polynomial_degree)
 	LogicalVector x_cond(pol_degrees_n);
@@ -544,11 +544,11 @@ List hpaMain(
 
 	// Calculate main expression
 
-	// Initialize values to store temporal results
+	// Initialize values to store temporary results
 	NumericVector value_pgn(n);                          // nominator
 	std::fill(value_pgn.begin(), value_pgn.end(), 0);
 
-	NumericVector psi(n);                                // denominator
+	NumericVector psi(n);                                // numerator
 	std::fill(psi.begin(), psi.end(), 0);
 
 	NumericVector value_sum_element(n);
@@ -556,7 +556,7 @@ List hpaMain(
 	int polynomial_sum = 0;
 	
 	// Initialize values to store gradient 
-	// information if need
+	// information if needed
 	  // for polynomial coefficients
 	NumericMatrix pc_grad;
 	NumericMatrix pc_grad_value;
@@ -578,7 +578,7 @@ List hpaMain(
 	NumericMatrix x_lower_grad_value;
 	NumericMatrix x_lower_grad_psi;
 	
-	  // preallocate memory to store gradient specific information if need
+	  // preallocate memory to store gradient-specific information if needed
 	if ((grad_type == "pol_coefficients") || (grad_type == "all"))
 	{
 	  pc_grad = NumericMatrix(n, pol_coefficients_n);
@@ -618,7 +618,7 @@ List hpaMain(
 		  double pol_coefficients_prod = pol_coefficients[i] * 
 		                                 pol_coefficients[j];
 		  
-			// Initialize temporal value
+			// Initialize temporary value
 			std::fill(value_sum_element.begin(), value_sum_element.end(), 1);
 			std::fill(psi_sum_element.begin(), psi_sum_element.end(), 1);
 
@@ -681,7 +681,7 @@ List hpaMain(
 			                                    pol_coefficients_prod;
 			psi = psi + psi_sum_element_adj;
 
-			// gradient specific storage respect to
+			// gradient-specific storage with respect to
 
 			  // mean
 			if ((grad_type == "mean") || (grad_type == "all"))
@@ -862,14 +862,14 @@ List hpaMain(
   	} else {
   	  return_value = value_pgn * pdf_product / psi;
   	}
-  	// Take the logarithm if need
+  	// Take the logarithm if needed
   	if (log)
   	{
   	  return_value = Rcpp::log(return_value);
   	}
 	}
 
-	// Return gradient specific values if need
+	// Return gradient-specific values if needed
 
 	  // for polynomial coefficients
 	if ((grad_type == "pol_coefficients") || (grad_type == "all"))
@@ -1293,7 +1293,7 @@ NumericVector dtrhpa(
       stop("tr_left and tr_right should be matrices of the same dimensions.");
     }
     
-    // Insure that all values are between
+    // Ensure that all values are between
     // lower and upper truncation points
     if ((tr_left.size() == 1) || (tr_right.size() == 1))
     {
@@ -1303,7 +1303,7 @@ NumericVector dtrhpa(
         double tr_right_value = tr_right[i];
         if (tr_left_value >= tr_right_value)
         {
-          stop("tr_right element's should greater than corresponding tr_left elements");
+          stop("tr_right elements should be greater than corresponding tr_left elements");
         }
         for (int j = 0; j < n; j++)
         {
@@ -1432,7 +1432,7 @@ NumericVector itrhpa(
         double tr_right_value = tr_right[i];
         if (tr_left_value >= tr_right_value)
         {
-          stop("tr_right element's should greater than corresponding tr_left elements");
+          stop("tr_right elements should be greater than corresponding tr_left elements");
         }
         for (int j = 0; j < n; j++)
         {
@@ -2092,10 +2092,10 @@ NumericVector qhpa(
   
   if (sum(given_ind_logical | omit_ind_logical) != (pol_degrees_n - 1))
   {
-    stop("incorrect given_ind and (or) omit_ind vectors, please check that there is exactly one not given and not omitted component");
+    stop("incorrect given_ind and/or omit_ind vectors, please check that there is exactly one not given and not omitted component");
   }
   
-  // Load additional inveronments
+  // Load additional environments
     
     // stats environment
   Rcpp::Environment stats_env("package:stats");
@@ -2106,27 +2106,23 @@ NumericVector qhpa(
   Rcpp::Function sort_R = base_env["sort"];
   Rcpp::Function which_max_R = base_env["which.max"];
   
-    // sort quantiles levels
+    // sort quantile levels
   List p_sort_list = sort_R(Rcpp::_["x"] = p, 
                             Rcpp::_["index.return"] = true);
   NumericVector p_sort = p_sort_list["x"];
   NumericVector p_ind = p_sort_list["ix"];
-  // ПОЧИНИТЬ СОРТИРОВКУ!!!!!!!!!!!!!!!!!!!!!!!!!!
-  p_ind = seq(1, n);
-  p_sort = p;
-  // ПОЧИНИТЬ СОРТИРОВКУ!!!!!!!!!!!!!!!!!!!!!!!!!!
-  p_ind = p_ind - 1;
+  NumericVector p_ind0 = p_ind - 1;
   for(int i = 0; i < pol_degrees_n; i++)
   {
     NumericVector x_tmp = x(_, i);
-    x_tmp = x_tmp[p_ind];
+    x_tmp = x_tmp[p_ind0];
     x(_, i) = x_tmp;
   }
   
   // Vector of quantiles
   NumericVector q = NumericVector(n);
   
-  // Optimization control parmeters
+  // Optimization control parameters
   double tol = std::sqrt(std::numeric_limits<double>::epsilon()) * 0.01;
   List PGN_control = List::create(
     Named("maxit") = 100000000,
@@ -2157,7 +2153,7 @@ NumericVector qhpa(
   {
     NumericVector x_new = x(i, _);
     
-    // For extreme quantiles values set
+    // For extreme quantile values, set
     // higher optimization accuracy
     PGN_control["abstol"] = tol * (0.5 - std::abs(0.5 - p_sort[i]));
     
@@ -2183,7 +2179,7 @@ NumericVector qhpa(
   }
   
   // Account for sorting
-  q = q[p_ind];
+  q = q[p_ind0];
   
   return(q);
 }
@@ -2237,14 +2233,12 @@ NumericMatrix rhpa(
   // Initialize matrix to store the quantiles
   NumericMatrix q = NumericMatrix(n, pol_degrees_n);
   
-  // Indicate 
-  
-    // omitted components
+  // Omitted components
   NumericVector omit_ind = NumericVector(pol_degrees_n);
   omit_ind = omit_ind + 1;
   omit_ind[0] = 0;
   
-    // conditioned components
+  // Conditioned components
   NumericVector given_ind = NumericVector(pol_degrees_n);
   
   // Apply inverse transform sampling method
@@ -2256,7 +2250,7 @@ NumericMatrix rhpa(
                  given_ind, omit_ind,
                  mean, sd);
 
-    // for the rest components
+    // for the remaining components
   for(int i = 1; i < pol_degrees_n; i++)
   {
     u_new = u(_, i);

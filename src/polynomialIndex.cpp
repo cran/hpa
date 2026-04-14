@@ -1,6 +1,6 @@
+#define ARMA_DONT_USE_OPENMP
 #include "polynomialIndex.h"
 #include "hpaValidation.h"
-#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 using namespace Rcpp;
 using namespace RcppArmadillo;
@@ -10,8 +10,8 @@ using namespace RcppArmadillo;
 //' Multivariate Polynomial Representation
 //' @name polynomialIndex
 //' @description Function \code{\link[hpa]{polynomialIndex}} 
-//' provides matrix which allows to iterate through the elements 
-//' of multivariate polynomial being aware of these elements powers. 
+//' provides a matrix which allows to iterate through the elements 
+//' of multivariate polynomial being aware of these elements' powers. 
 //' So (i, j)-th element of the matrix is power of j-th variable in i-th 
 //' multivariate polynomial element.
 //' 
@@ -32,11 +32,11 @@ using namespace RcppArmadillo;
 //' \eqn{i_{j}\in \{0,...,K_{j}\}}. 
 //' 
 //' Function \code{\link[hpa]{printPolynomial}} removes polynomial elements 
-//' which coefficients are zero and variables which powers are zero. Output may 
-//' contain long coefficients representation as they are not rounded.
+//' whose coefficients are zero and variables whose powers are zero. Output may 
+//' contain long coefficient representations as they are not rounded.
 //' @return Function \code{\link[hpa]{polynomialIndex}} 
-//' returns matrix which rows are 
-//' responsible for variables while columns are related to powers. 
+//' returns a matrix whose rows correspond to variables while columns 
+//' correspond to powers. 
 //' So \eqn{(i, j)}-th element of this matrix corresponds to the 
 //' power \eqn{i_{j}} of the \eqn{x_{j}} variable in \eqn{i}-th polynomial 
 //' element. Therefore \eqn{i}-th column of this matrix contains vector of
@@ -66,7 +66,7 @@ NumericMatrix polynomialIndex(NumericVector pol_degrees = NumericVector(0),
   // Convert pol_degrees to std vector of integer values
 	std::vector<int> degrees = as<std::vector<int> >(pol_degrees);
 
-	// Initiale degrees related variables
+	// Initialize degrees related variables
 	int degrees_size = degrees.size();
 	std::vector<int> degrees_products(degrees_size);
 
@@ -106,17 +106,17 @@ NumericMatrix polynomialIndex(NumericVector pol_degrees = NumericVector(0),
 		}
 
 		int ind_pattern_times = coefficients_size / ind_pattern.size(); //times pattern repeats
-		ind_pattern_full[i].reserve(coefficients_size); //preallocate memorry to increase insertation speed
+		ind_pattern_full[i].reserve(coefficients_size); //preallocate memory to increase insertion speed
 
 		for (int j = 0; j < ind_pattern_times; j++)
 		{
-			// Repeat pattern untill the end of the pattern matrix row
+			// Repeat pattern until the end of the pattern matrix row
 			ind_pattern_full[i].insert(ind_pattern_full[i].end(), 
                                  ind_pattern.begin(), ind_pattern.end());
 		}
 
-		// Pattern defined for rows while coefficients indexes are located in columns
-		// of pattern matrix. Lets copy values from patterns to coefficients indexes
+		// Pattern defined for rows while coefficient indices are located in columns
+		// of pattern matrix. Let's copy values from patterns to coefficients indexes
 		for (int j = 0; j < coefficients_size; j++)
 		{
 			coefficients_vec(i, j) = (double)(ind_pattern_full[i][j]);
@@ -153,12 +153,12 @@ Rcpp::String printPolynomial(NumericVector pol_degrees,
 	// Initialize variable to store the polynomial symbolic representation
 	std::string pol_string = "";
 
-	// Iteratite throught polynomial coefficients and variables
+	// Iterative through polynomial coefficients and variables
 	for (int i = 0; i < pol_coefficients_n; i++)
 	{
-		if ((pol_coefficients[i] != 0) | (i == 0))
+		if ((pol_coefficients[i] != 0) || (i == 0))
 		{
-			if ((pol_coefficients[i] != 1) | (i == 0))
+			if ((pol_coefficients[i] != 1) || (i == 0))
 			{
 				String pol_string_R = paste0((double)pol_coefficients[i]);
 				pol_string += pol_string_R;

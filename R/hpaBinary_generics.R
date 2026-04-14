@@ -44,7 +44,7 @@ print.summary.hpaBinary <- function (x, ...)
   return(print_summary_hpaBinary(x))
 }
 ###
-#' Plot hpaBinary random errors approximated density
+#' Plot the approximated density of hpaBinary random errors
 #' @param x Object of class "hpaBinary"
 #' @param y this parameter currently ignored
 #' @template elipsis_plot_Template
@@ -121,7 +121,7 @@ plot.hpaBinary <- function (x, y = NULL, ...)
 
 ###
 #' Calculates log-likelihood for "hpaBinary" object
-#' @description This function calculates log-likelihood for "hpaBinary" object
+#' @description This function calculates log-likelihood for a "hpaBinary" object
 #' @usage \method{logLik}{hpaBinary}(object, ...)
 #' @param object Object of class "hpaBinary"
 #' @template elipsis_Template
@@ -148,7 +148,7 @@ print.hpaBinary <- function (x, ...)
   {
     warning("Additional arguments passed through ... are ignored.")   
   }
-  cat(paste("It is the object of class",class(x),"\n"))
+  cat(paste("It is an object of class",class(x),"\n"))
   cat("It contains the following elements:\n")
   cat(names(x), sep = ", ")
   cat("\n")
@@ -161,7 +161,7 @@ print.hpaBinary <- function (x, ...)
   cat("Please, use summary() function to get additional information\n")
 }
 
-#' Extract coefficients from hpaBinary object
+#' Extract coefficients from a hpaBinary object
 #' @param object Object of class "hpaBinary"
 #' @template elipsis_Template
 coef.hpaBinary <- function (object, ...)
@@ -174,7 +174,7 @@ coef.hpaBinary <- function (object, ...)
   return(object$x1)
 }
 
-#' Extract covariance matrix from hpaBinary object
+#' Extract covariance matrix from a hpaBinary object
 #' @param object Object of class "hpaBinary"
 #' @template elipsis_Template
 vcov.hpaBinary <- function (object, ...)

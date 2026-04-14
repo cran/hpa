@@ -1,3 +1,4 @@
+#define ARMA_DONT_USE_OPENMP
 #include "ParallelFunctions.h"
 #include <RcppArmadillo.h>
 #include <RcppParallel.h>
@@ -50,13 +51,13 @@ double sqrt_parallel(double x)
 // Parallel pow of vectors (struct)
 struct ParallelVectorPowStruct : public Worker
 {
-  // source matrix
+  // source vector
   const RVector<double> input;
   
-  // powers matrix
+  // powers vector
   const RVector<double> input_powers;
   
-  // destination matrix
+  // destination vector
   RVector<double> output;
   
   // type of power (0 - general, 1 - square, 2 - square root)
@@ -116,7 +117,7 @@ NumericVector ParallelVectorPow(NumericVector x, double value = 1)
     return (x * x);
   }
   
-  // allocate the output matrix
+  // allocate the output vector
   NumericVector output(x.size());
   
   if (value == 1)
@@ -130,7 +131,7 @@ NumericVector ParallelVectorPow(NumericVector x, double value = 1)
     return (output);
   }
   
-  // allocate the powers matrix
+  // allocate the powers vector
   NumericVector input_powers(x.size());
   std::fill(input_powers.begin(), input_powers.end(), value);
   
@@ -170,16 +171,16 @@ struct ParallelVectorExpStruct : public Worker
 // Parallel exponent of vector elements
 NumericVector ParallelVectorExp(NumericVector x) 
 {
-  // allocate the output matrix
+  // allocate the output vector
   NumericVector output(x.size());
   
-  // ParallelVectorPowStruct functor
+  // ParallelVectorPowStruct function
   ParallelVectorExpStruct parallelVectorExpStruct(x, output);
   
   // call parallelFor to do the work
   parallelFor(0, x.length(), parallelVectorExpStruct);
   
-  // return the output matrix
+  // return the output vector
   return (output);
 }
 
@@ -238,8 +239,8 @@ struct ParallelVectorNormalCDFStruct : public Worker
 //' @description Calculate in parallel for each value from vector \code{x} 
 //' distribution function of normal distribution with 
 //' mean equal to \code{mean} and standard deviation equal to \code{sd}.
-//' @param x vector of quantiles: should be numeric vector,
-//' not just double value.
+//' @param x vector of quantiles: should be a numeric vector,
+//' not just a double value.
 //' @param mean double value.
 //' @param sd double positive value.
 //' @template is_parallel_Template

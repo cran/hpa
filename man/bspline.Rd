@@ -14,8 +14,8 @@ bsplineEstimate(x, m, knots)
 bsplineComb(splines, weights)
 }
 \arguments{
-\item{knots}{sorted in ascending order numeric vector representing
-knots of the spline.}
+\item{knots}{a numeric vector sorted in ascending order representing
+the knots of the spline.}
 
 \item{degree}{positive integer representing degree of the spline.}
 
@@ -26,10 +26,10 @@ speed boost.}
 \item{x}{numeric vector representing the points at which the 
 spline should be estimated.}
 
-\item{m}{numeric matrix which rows correspond to spline intervals
-while columns represent variables powers. Therefore the element 
+\item{m}{numeric matrix whose rows correspond to the spline intervals
+while columns represent the variables powers. Therefore the element 
 in i-th row and j-th column represents the coefficient associated with
-the variable that 1) belongs to the i-th interval i.e. between i-th and
+the variable that 1) belongs to the i-th interval i.e. between the i-th and
 (i + 1)-th knots 2) raised to the power of (j - 1).}
 
 \item{splines}{list being returned by the 
@@ -76,7 +76,7 @@ In order to evaluate one of these b-splines at particular points
 \code{\link[hpa]{bsplineEstimate}} function should be applied.
 }
 \examples{
-# Let's generate all b-splines of degree 3 with knots 
+# Let's generate all b-splines of degree 3 with knot
 # vector (-2.1, 1.5, 1.5, 2.2, 3.7, 4.2, 5)
 b <- bsplineGenerate(knots = c(-2.1, 1.5, 1.5, 2.2, 3.7, 4.2, 5), 
                      degree = 3)
@@ -85,10 +85,10 @@ b <- bsplineGenerate(knots = c(-2.1, 1.5, 1.5, 2.2, 3.7, 4.2, 5),
 b[[1]]
 
 # Take a linear combination of these splines with 
-# weights 1.6, -1.2 and 3.2.
+# weights 1.6, -1.2, and 3.2.
 b_comb <- bsplineComb(splines = b, weights = c(1.6, -1.2, 3.2))
 
-# Estimate this spline value at points (-3, 0.7, 2.5, 3.8, 10)
+# Estimate these spline values at points (-3, 0.7, 2.5, 3.8, 10)
 b_values <- bsplineEstimate(x = c(-3, 0.7, 2.5, 3.8, 10),  
                             knots = b_comb$knots, 
                             m = b_comb$m)

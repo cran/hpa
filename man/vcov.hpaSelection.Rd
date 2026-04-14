@@ -2,7 +2,7 @@
 % Please edit documentation in R/hpaSelection_generics.R
 \name{vcov.hpaSelection}
 \alias{vcov.hpaSelection}
-\title{Extract covariance matrix from hpaSelection object}
+\title{Extract covariance matrix from a hpaSelection object}
 \usage{
 \method{vcov}{hpaSelection}(object, ...)
 }
@@ -12,5 +12,5 @@
 \item{...}{further arguments (currently ignored)}
 }
 \description{
-Extract covariance matrix from hpaSelection object
+Extract covariance matrix from a hpaSelection object
 }

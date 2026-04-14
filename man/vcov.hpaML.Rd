@@ -2,7 +2,7 @@
 % Please edit documentation in R/hpaML_generics.R
 \name{vcov.hpaML}
 \alias{vcov.hpaML}
-\title{Extract covariance matrix from hpaML object}
+\title{Extract covariance matrix from a hpaML object}
 \usage{
 \method{vcov}{hpaML}(object, ...)
 }
@@ -12,5 +12,5 @@
 \item{...}{further arguments (currently ignored)}
 }
 \description{
-Extract covariance matrix from hpaML object
+Extract covariance matrix from a hpaML object
 }

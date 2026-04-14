@@ -21,7 +21,7 @@
 \item{newdata}{An optional data frame (for \link[hpa]{hpaBinary} and
 \link[hpa]{hpaSelection}) or numeric matrix (for \link[hpa]{hpaML})
 in which to look for variables with which to predict. If omitted,
-the original data frame (matrix) used.}
+the original data frame (matrix) is used.}
 
 \item{method}{string value indicating prediction method based 
 on hermite polynomial approximation "HPA" or Newey method "Newey".}
@@ -31,7 +31,7 @@ predictions will be estimated. Otherwise unconditional
 predictions will be returned.}
 
 \item{type}{character; if "outcome" (default) then predictions for 
-selection equation will be estimated according to \code{method}.
+outcome equation will be estimated according to \code{method}.
 If "selection" then selection equation predictions (probabilities) 
 will be returned.}
 }

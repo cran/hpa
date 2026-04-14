@@ -33,20 +33,20 @@ truncatedNormalMoment(
 \item{sd}{positive numeric standard deviation.}
 
 \item{pdf_lower}{non-negative numeric matrix of precalculated normal
-density functions with mean \code{mean} and standard deviation \code{sd} at
-points given by \code{x_lower}.}
+density functions with mean \code{mean} and the standard deviation \code{sd}
+at points given by \code{x_lower}.}
 
 \item{cdf_lower}{non-negative numeric matrix of 
-precalculated normal cumulative distribution functions
+precalculated values of normal cumulative distribution functions 
 with mean \code{mean} and standard deviation 
 \code{sd} at points given by \code{x_lower}.}
 
 \item{pdf_upper}{non-negative numeric matrix of precalculated normal
-density functions with mean \code{mean} and standard deviation \code{sd} at
-points given by \code{x_upper}.}
+density functions with mean \code{mean} and the standard deviation \code{sd} 
+at points given by \code{x_upper}.}
 
 \item{cdf_upper}{non-negative numeric matrix of
-precalculated normal cumulative distribution functions
+precalculated values of normal cumulative distribution functions 
 with mean \code{mean} and standard deviation
 \code{sd} at points given by \code{x_upper}.}
 
@@ -61,16 +61,16 @@ Note that element in i-th row and j-th column of this matrix corresponds to
 the i-th observation (j-1)-th order moment.}
 
 \item{is_validation}{logical value indicating whether function input 
-arguments should be validated.  Set it to \code{FALSE} for slight
+arguments should be validated.  Set it to \code{FALSE} for a slight
 performance boost (default value is \code{TRUE}).}
 
 \item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
-large enough samples (about more than 1000 observations).}
+large enough samples (more than 1000 observations).}
 
 \item{diff_type}{string value indicating the type of the argument
-the moment should be differentiated respect to.
-Default value is \code{"NO"} so the moments itself will be returned. 
+the moment should be differentiated with respect to.
+Default value is \code{"NO"} so the moments themselves will be returned. 
 Alternative values are \code{"mean"} and \code{"sd"}. Also 
 \code{"x_lower"} and \code{"x_upper"} values are available for 
 \code{\link[hpa]{truncatedNormalMoment}}.}
@@ -97,17 +97,18 @@ for \code{x_lower} and \code{x_upper} are not provided then their default
 values will be set to \code{-(.Machine$double.xmin * 0.99)} and 
 \code{(.Machine$double.xmax * 0.99)} correspondingly.
 
-Note that parameter \code{k} value automatically converts 
-to integer. So passing non-integer \code{k} value will not cause 
-any errors but the calculations will be performed for rounded 
+Note that the value of parameter \code{k} automatically converts 
+to an integer. So passing a non-integer \code{k} value will not cause 
+any errors but the calculations will be performed for the rounded 
 \code{k} value only.
 
-If there is precalculated density or cumulative distribution
+If there are precalculated density functions or 
+cumulative distribution
 functions at standardized truncation points (subtract \code{mean} 
 and then divide by \code{sd}) then it is possible to provide
 them through \code{pdf_lower}, \code{pdf_upper}, 
 \code{cdf_lower} and \code{cdf_upper} arguments in
-order to decrease number of calculations.
+order to decrease the number of calculations.
 }
 \examples{
 ## Calculate 5-th order moment of three truncated normal random  

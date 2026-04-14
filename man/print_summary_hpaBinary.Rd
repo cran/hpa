@@ -7,7 +7,7 @@
 print_summary_hpaBinary(x)
 }
 \arguments{
-\item{x}{Object of class "hpaML"}
+\item{x}{Object of class "hpaBinary"}
 }
 \description{
 Summary for hpaBinary output

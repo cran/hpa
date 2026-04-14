@@ -7,8 +7,8 @@
 pnorm_parallel(x, mean = 0, sd = 1, is_parallel = FALSE)
 }
 \arguments{
-\item{x}{vector of quantiles: should be numeric vector,
-not just double value.}
+\item{x}{vector of quantiles: should be a numeric vector,
+not just a double value.}
 
 \item{mean}{double value.}
 
@@ -16,7 +16,7 @@ not just double value.}
 
 \item{is_parallel}{if \code{TRUE} then multiple cores will be
 used for some calculations. It usually provides speed advantage for
-large enough samples (about more than 1000 observations).}
+large enough samples (more than 1000 observations).}
 }
 \description{
 Calculate in parallel for each value from vector \code{x} 

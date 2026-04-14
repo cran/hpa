@@ -14,34 +14,34 @@ ehsa(m, knots, mean = 0, sd = 1, power = 1)
 \item{x}{numeric vector of values for which the function should 
 be estimated.}
 
-\item{m}{numeric matrix which rows correspond to spline intervals
-while columns represent variables powers. Therefore the element 
+\item{m}{numeric matrix whose rows correspond to the spline intervals
+while columns represent the variables powers. Therefore the element 
 in i-th row and j-th column represents the coefficient associated with
-the variable that 1) belongs to the i-th interval i.e. between i-th and
+the variable that 1) belongs to the i-th interval i.e. between the i-th and
 (i + 1)-th knots 2) raised to the power of (j - 1).}
 
-\item{knots}{sorted in ascending order numeric vector representing
-knots of the spline.}
+\item{knots}{a numeric vector sorted in ascending order representing
+the knots of the spline.}
 
 \item{mean}{expected value of a normal distribution.}
 
 \item{sd}{standard deviation of a normal distribution.}
 
 \item{log}{logical; if \code{TRUE} then probabilities p are given as log(p)
-or derivatives will be given respect to log(p).}
+or derivatives will be given with respect to log(p).}
 
-\item{power}{non-negative integer representing the power of the 
-expected value i.e. E(X ^ power) will be estimated.}
+\item{power}{non-negative integer representing the moment order, 
+i.e., E(X ^ power) will be estimated.}
 }
 \value{
-Function \code{\link[hpa]{dhsa}} returns vector of probabilities
-of the same length as \code{x}. Function \code{\link[hpa]{ehsa}} 
+Function \code{\link[hpa]{dhsa}} returns vector of probability 
+densities of the same length as \code{x}. Function \code{\link[hpa]{ehsa}} 
 returns moment value.
 }
 \description{
 The set of functions similar to \code{\link[hpa]{dhpa}}-like
-functions. The difference is that instead of polynomial these functions
-utilize spline.
+functions. The difference is that instead of a polynomial these functions
+utilize a spline.
 }
 \details{
 In contrast to \code{\link[hpa]{dhpa}}-like functions these
@@ -51,13 +51,13 @@ The main idea of these functions is to use squared spline instead of squared
 polynomial in order to provide greater numeric stability and approximation 
 accuracy. To provide spline parameters please use \code{m} and \code{knots}
 arguments (i.e. instead of \code{pol_degrees} and \code{pol_coefficients}
-arguments that where used to specify the polynomial
+arguments that were used to specify the polynomial
 for \code{\link[hpa]{dhpa}}-like functions).
 }
 \examples{
-## Examples demonstrating dhsa and ehsa functions application.
+## Examples demonstrating dhsa and ehsa functions' application.
 
-# Generate a b-splines
+# Generate b-splines
 b <- bsplineGenerate(knots = c(-2.1, 1.5, 1.5, 2.2, 3.7, 4.2, 5),
                      degree = 3)
                       

@@ -15,5 +15,5 @@ This function returns the same list as
 to "summary.hpaSelection".
 }
 \description{
-This function summarizing hpaSelection Fits.
+This function summarizes hpaSelection Fits.
 }

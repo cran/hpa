@@ -1,10 +1,10 @@
+#define ARMA_DONT_USE_OPENMP
 #include "hpaMain.h"
 #include "hpaML.h"
 #include "hpaSelection.h"
 #include "hpaBinary.h"
 #include "polynomialIndex.h"
 #include "hpaValidation.h"
-#define ARMA_DONT_USE_OPENMP
 #include <RcppArmadillo.h>
 
 using namespace RcppArmadillo;
@@ -181,7 +181,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
       // Warning concerning large number of bootstrap iterations
     if (boot_iter > 1000)
     {
-      warning("Since boot_iter is large estimation may take lots of time.");
+      warning("Since boot_iter is large, estimation may take lots of time.");
     }
     
      // Validate polynomial degrees
@@ -219,7 +219,7 @@ Rcpp::List hpaSelection(Rcpp::Formula selection,
 	LogicalVector is_ga_installed = requireNamespace_R(Rcpp::_["package"] = "GA", 
                                                      Rcpp::_["quietly"] = true);
 	
-	    // check weather GA package has been installed
+	    // check whether GA package has been installed
 	if(opt_type == "GA")
 	{
 	  if(is_ga_installed[0])
@@ -1313,7 +1313,7 @@ List hpaSelectionLnLOptim_List(NumericVector x0, List hpaSelection_args)
     selection_sd = std::sqrt(std::numeric_limits<double>::epsilon());
   }
 
-  // coefficients for independend variables
+  // coefficients for independent variables
   arma::vec outcome_coef = as<arma::vec>(x0[y_coef_ind]);
   NumericVector z_coef_temporal = x0[z_coef_ind];
   z_coef_temporal.push_front(1); //for fixed coefficient
@@ -1522,7 +1522,7 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
   // Initialize vector to store gradient values
   NumericMatrix my_grad = NumericMatrix(n_obs_0 + n_obs_1, n_param);
 
-  // infinity matricies
+  // infinity matrices
   NumericMatrix inf_y_vec_1 = NumericMatrix(n_obs_1, 2);
   std::fill(inf_y_vec_1.begin(), inf_y_vec_1.end(), R_PosInf);
   inf_y_vec_1(_, 1) = e_h_1; // in order to condition on e_h_1
@@ -1558,7 +1558,7 @@ List hpaSelectionLnLOptim_grad_List(NumericVector x0, List hpaSelection_args)
                                       "all",
                                       is_parallel, true, false);
   
-  // Store gradients respect to
+  // Store gradients with respect to
   
     // polynomial coefficients, mean and sd
   for (int i = 0; i < (pol_coefficients_n + 3); i++) // for each parameter
@@ -1709,7 +1709,7 @@ NumericMatrix hpaSelectionLnLOptim_hessian(NumericVector x0,
     x0_eps[i] = x0[i];
   }
   
-  // Make hessian to be symmetric
+  // Make Hessian symmetric
   for (int i = 0; i < n_param; i++) // for each parameter
   {
     for (int j = i; j < n_param; j++) // for each parameter
@@ -2003,7 +2003,7 @@ List predict_hpaSelection(List object, DataFrame newdata = R_NilValue,
 }
 
 //' Summarizing hpaSelection Fits
-//' @description This function summarizing hpaSelection Fits.
+//' @description This function summarizes hpaSelection Fits.
 //' @param object Object of class "hpaSelection".
 //' @return This function returns the same list as 
 //' \code{\link[hpa]{hpaSelection}} function changing its class 
@@ -2084,7 +2084,7 @@ void print_summary_hpaSelection(List x) {
 	std::string BIC_string = "BIC: " + std::to_string(BIC) + "\n";
 	std::string n_obs_string = "Observations: " + std::to_string(n_obs) + 
 	                           " (" + std::to_string(n_censored) + 
-	                           " observed)"+ "\n";
+	                           " observed)" + "\n";
 	std::string df_string = std::to_string(df) + 
 	                        " free parameters (df = " + 
 	                        std::to_string(n_obs - df) + ")" + "\n";
